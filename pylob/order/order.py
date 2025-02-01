@@ -1,10 +1,14 @@
 from enum import Enum
 from abc import ABC, abstractmethod
 from decimal import Decimal
+import uuid
 
 from pylob import todecimal
-from pylob.utils import gen_uuid
 from pylob.consts import num
+
+class OrderSide(Enum):
+    BID = False
+    ASK = True
 
 class OrderType(Enum):
     '''
@@ -21,32 +25,29 @@ class Order(ABC):
     price      : Decimal
     quantity   : Decimal
     type       : OrderType
+    side       : OrderSide
 
     def __init__(self, price : num, quantity : num, type : OrderType):
-        self.identifier = gen_uuid()
+        self.identifier = uuid.uuid4().int
         self.price      = todecimal(price)
         self.quantity   = todecimal(quantity)
         self.type       = type
 
-    @abstractmethod
-    def is_bid(self) -> bool: pass
-
     def __repr__(self) -> str:
-        return f'Order(id={self.identifier}, p={self.price}, ' + \
+        fst, lst = str(self.identifier)[0], str(self.identifier)[-1]
+        return f'Order(id={fst}..{lst}, p={self.price}, ' + \
             f'q={self.quantity}, t={self.type})'
 
 class BidOrder(Order):
     def __init__(self, price : num, quantity : num, type : OrderType):
         super().__init__(price, quantity, type)
-
-    def is_bid(self) -> bool: return True
+        self.side = OrderSide.BID
 
     def __repr__(self) -> str: return 'Bid' + super().__repr__()
 
 class AskOrder(Order):
     def __init__(self, price : num, quantity : num, type : OrderType):
         super().__init__(price, quantity, type)
-
-    def is_bid(self) -> bool: return False
+        self.side = OrderSide.ASK
 
     def __repr__(self) -> str: return 'Ask' + super().__repr__()

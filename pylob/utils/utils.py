@@ -1,12 +1,9 @@
 from decimal import Decimal
 import uuid
 
-from ..consts import DECIMAL_PRECISION
+from pylob.consts import DECIMAL_PRECISION, num
 
-def todecimal(f : (float | int | Decimal)) -> Decimal:
+def todecimal(f : num) -> Decimal:
     dec = Decimal.from_float(f) if isinstance(f, float) else Decimal(f)
     exp = Decimal(f'0.{"0"*DECIMAL_PRECISION}')
     return dec.quantize(exp) 
-
-def gen_uuid():
-    return uuid.uuid4()
