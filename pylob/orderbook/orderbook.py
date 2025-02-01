@@ -7,12 +7,15 @@ from pylob.limit import Limit
 from pylob.consts import num
 
 class OrderBook:
+    asks : SortedDict
+    bids : SortedDict
+
     def __init__(self):
         self.asks = SortedDict()
         self.bids = SortedDict(lambda x: -x)
 
-    def place_order(self, price : num, quantity : num, type : OrderType, 
-                    side : OrderSide) -> Optional[int]:
+    def place_order(self, price : num, quantity : num, side : OrderSide, 
+                    type : OrderType = OrderType.FOK) -> Optional[int]:
         match side:
 
             case OrderSide.BID: 
@@ -48,6 +51,12 @@ class OrderBook:
         if not limit.add_order(order): return False 
         self.bids[order.price] = limit
         return True
+
+    def n_bids_limits(self): return len(self.bids)
+
+    def n_asks_limits(self): return len(self.asks)
+
+    def n_limits(self): return self.n_asks_limits() + self.n_bids_limits()
 
     def midprice(self):
         bestask, _ = self.asks.peekitem(0)

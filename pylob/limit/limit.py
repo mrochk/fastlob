@@ -53,11 +53,11 @@ class Limit:
         Check if price correct for all orders, 
         no duplicates and all of same type.
         '''
-        is_bid = self.orderq[0].is_bid() 
+        side = self.orderq[0].side 
 
         for order in self.orderq:
             if order.price != self.price: return False
-            if order.is_bid() != is_bid: return False
+            if order.side != side: return False
 
         return True
 
