@@ -8,5 +8,5 @@ def todecimal(f : (float | int | Decimal)) -> Decimal:
     exp = Decimal(f'0.{"0"*DECIMAL_PRECISION}')
     return dec.quantize(exp) 
 
-def get_uuid():
-    return int(str(uuid.uuid4().int)[:4])
+def gen_uuid():
+    return uuid.uuid4()
