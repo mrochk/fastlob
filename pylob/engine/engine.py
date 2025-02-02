@@ -33,6 +33,6 @@ class MatchingEngine:
         assert(order.quantity == 0)
 
     def place(self, order : Order, side : Side):
-        if not side.limit_exist(order.price):
+        if not side.limit_exists(order.price):
             side.add_limit(order.price())
         side.add_order(order)
