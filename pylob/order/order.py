@@ -33,6 +33,9 @@ class OrderType(Enum):
 
 @dataclass
 class Order(ABC):
+    '''
+    Base class for orders in the order-book.
+    '''
     _id       : int
     _price    : Decimal
     _quantity : Decimal
@@ -82,6 +85,9 @@ class Order(ABC):
 
 @dataclass
 class BidOrder(Order):
+    '''
+    A bid (buy) order.
+    '''
     def __init__(self, price : num, quantity : num, type : OrderType,
                  expiry : Optional[float] = None):
         super().__init__(price, quantity, type, expiry)
@@ -91,6 +97,9 @@ class BidOrder(Order):
 
 @dataclass
 class AskOrder(Order):
+    '''
+    An ask (sell) order.
+    '''
     def __init__(self, price : num, quantity : num, type : OrderType,
                  expiry : Optional[float] = None):
         super().__init__(price, quantity, type, expiry)
