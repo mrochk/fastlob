@@ -2,7 +2,7 @@ from decimal import Decimal
 from collections import deque
 from typing import Optional
 
-from pylob import todecimal
+from pylob import todecimal, OrderSide
 from pylob.order import Order
 from pylob.consts import num
 
@@ -10,85 +10,72 @@ class Limit:
     '''
     A limit is a collection of orders.
     '''
-    price    : Decimal
-    volume   : Decimal
-    orderq   : deque[Order]
-    ordermap : dict[Order]
+    _price    : Decimal
+    _side     : OrderSide
+    _volume   : Decimal
+    _orderq   : deque[Order]
+    _ordermap : dict[int, Order]
 
-    def __init__(self, price : num):
-        self.price = todecimal(price)
-        self.volume = Decimal(0)
-        self.orderq = deque()
-        self.ordermap = dict()
+    def __init__(self, price : num, side : OrderSide):
+        self._price    = todecimal(price)
+        self._side     = side
+        self._volume   = Decimal(0)
+        self._orderq   = deque()
+        self._ordermap = dict()
 
-    def add_order(self, order : Order) -> bool:
-        # do not add order if qty <= 0
-        if order.quantity <= 0: return False
+    def price(self) -> Decimal: return self._price
 
-        # do not add order is price is different
-        if self.price != order.price: return False
+    def volume(self) -> Decimal: return self._volume
 
-        # do not add same order two times
-        if order.identifier in self.ordermap.keys(): return False
+    def side(self) -> OrderSide: return self._side
+
+    def size(self) -> int: return len(self._orderq)
+
+    def add_order(self, order : Order):
+        assert order.quantity() > 0
+        assert self.price() == order.price()
+        assert not self.order_exists(order.id())
+        assert order.side() == self.side()
 
         # add order
-        self.ordermap[order.identifier] = order
-        self.orderq.append(order)
+        self._ordermap[order.id()] = order
+        self._orderq.append(order)
 
         # add volume
-        self.volume = self.volume + order.quantity
+        self._volume = self.volume() + order.quantity()
 
-        return True
+        self.sanity_check()
 
-    def get_order(self, identifier : int) -> Optional[Order]:
-        if identifier in self.ordermap: return self.ordermap[identifier]
-        return None
+    def order_exists(self, identifier : int) -> bool:
+        return identifier in self._ordermap
 
-    def execute(self, order : Order) -> bool:
-        assert order.quantity <= self.volume
+    def get_order(self, identifier : int) -> Order:
+        assert self.order_exists(identifier)
+        return self._ordermap[identifier]
 
-        to_fill = order.quantity
-        first_order : Order = self.orderq[0]
+    def next_order(self) -> Order: 
+        assert self.size() > 0
+        return self._orderq[0]
 
-        if first_order.quantity > to_fill:
-            first_order.quantity -= to_fill
-            self.volume -= to_fill
-            to_fill = 0
-            return True
+    def pop_next_order(self) -> None: 
+        assert self.size() > 0
+        order = self._orderq.popleft()
+        self._ordermap.pop(order.id())
 
-        if first_order.quantity == to_fill:
-            self.volume -= first_order.quantity
-            self.orderq.popleft()
-            to_fill = 0
-            return True
+        self.sanity_check()
 
-        # is greater
+    def display_orders(self) -> None: print(self._orderq)
 
-        self.volume -= first_order.quantity
-        order.quantity -= first_order.quantity
-        self.orderq.popleft()
-
-        return self.execute(order)
-
-    def size(self) -> int: return len(self.orderq)
-
-    def display_orders(self) -> None: print(self.orderq)
-
-    def sanity_check(self) -> bool:
+    def sanity_check(self):
         '''
-        Check if price correct for all orders, 
-        no duplicates and all of same type.
+        Check if price correct for all orders,
+        no duplicates and all of same side.
         '''
-        side = self.orderq[0].side 
-
-        for order in self.orderq:
-            if order.price != self.price: return False
-            if order.side != side: return False
-
-        return True
+        assert all([o.side() == self.side() for o in self._orderq])
+        assert all([o.price() == self.price() for o in self._orderq])
+        assert len(self._ordermap.keys()) == len(self._orderq)
+        assert self.volume() == sum([o.quantity() for o in self._orderq])
 
     def __repr__(self) -> str:
-        p = self.price
-        size = len(self.orderq)
-        volume = self.volume
-        return f'Limit(price={p}, size={size}, vol={volume})'
+        p, s, v = self.price(), self.size(), self.volume()
+        return f'Limit(price={p}, size={s}, volume={v})'

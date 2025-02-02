@@ -1,7 +1,9 @@
-from enum import Enum
-from abc import ABC, abstractmethod
-from decimal import Decimal
 import uuid
+from abc import ABC
+from enum import Enum
+from typing import Optional
+from decimal import Decimal
+from dataclasses import dataclass
 
 from pylob import todecimal
 from pylob.consts import num
@@ -11,11 +13,7 @@ class OrderSide(Enum):
     ASK = True
 
 class OrderType(Enum):
-    '''
-    FOK = Fill Or Kill       \n
-    GTC = Good Till Canceled \n
-    GTD = Good Till Day
-    '''
+    '''The type of the order, can be FOK, GTC or GTD.'''
     FOK = 1, 
     '''A fill or kill (FOK) order is a conditional order requiring the 
     transaction to be executed immediately and to its full amount at a stated 
@@ -33,34 +31,69 @@ class OrderType(Enum):
     now + 1 minute + 30 seconds
     '''
 
+@dataclass
 class Order(ABC):
-    identifier : int
-    price      : Decimal
-    quantity   : Decimal
-    type       : OrderType
-    side       : OrderSide
+    _id       : int
+    _price    : Decimal
+    _quantity : Decimal
+    _type     : OrderType
+    _side     : OrderSide
+    _expiry   : float
 
-    def __init__(self, price : num, quantity : num, type : OrderType):
-        self.identifier = uuid.uuid4().int
-        self.price      = todecimal(price)
-        self.quantity   = todecimal(quantity)
-        self.type       = type
+    def __init__(self, price : num, quantity : num, type : OrderType,
+                 expiry : Optional[float] = None):
+        '''
+        Args:
+            `price` (num): The price at which the order must sit.
+            `quantity` (num): The quantity to buy/sell.
+            `type` (OrderType): The type of order (see pylob.order.OrderType).
+            `expiry` (float): The timestamp after which the order becomes 
+            invalid, only relevant for GTD orders, otherwise can be None.
+        '''
+        if price <= 0 or quantity <= 0: raise ValueError()
+
+        self._id       = uuid.uuid4().int
+        self._price    = todecimal(price)
+        self._quantity = todecimal(quantity)
+        self._type     = type
+        self._expiry   = expiry
+
+    # getters
+    def id(self)       -> int:             return self._id
+    def price(self)    -> Decimal:         return self._price
+    def quantity(self) -> Decimal:         return self._quantity
+    def type(self)     -> OrderType:       return self._type
+    def expiry(self)   -> Optional[float]: return self._expiry
+    def side(self)     -> OrderSide:       return self._side
+
+    def partial_fill(self, quantity : num):
+        quantity = todecimal(quantity)
+        if self.quantity() < quantity:  
+            raise ValueError() # raise if negative (can be 0)
+        self._quantity -= quantity
+
+    def __eq__(self, other): 
+        return self.id() == other.id()
 
     def __repr__(self) -> str:
-        fst, lst = str(self.identifier)[0], str(self.identifier)[-1]
-        return f'Order(id={fst}..{lst}, p={self.price}, ' + \
-            f'q={self.quantity}, t={self.type})'
+        fst, lst = str(self._id)[0], str(self._id)[-1]
+        return f'Order(id={fst}..{lst}, p={self._price}, ' + \
+            f'q={self._quantity}, t={self._type})'
 
+@dataclass
 class BidOrder(Order):
-    def __init__(self, price : num, quantity : num, type : OrderType):
-        super().__init__(price, quantity, type)
-        self.side = OrderSide.BID
+    def __init__(self, price : num, quantity : num, type : OrderType,
+                 expiry : Optional[float] = None):
+        super().__init__(price, quantity, type, expiry)
+        self._side = OrderSide.BID
 
     def __repr__(self) -> str: return 'Bid' + super().__repr__()
 
+@dataclass
 class AskOrder(Order):
-    def __init__(self, price : num, quantity : num, type : OrderType):
-        super().__init__(price, quantity, type)
-        self.side = OrderSide.ASK
+    def __init__(self, price : num, quantity : num, type : OrderType,
+                 expiry : Optional[float] = None):
+        super().__init__(price, quantity, type, expiry)
+        self._side = OrderSide.ASK
 
     def __repr__(self) -> str: return 'Ask' + super().__repr__()
