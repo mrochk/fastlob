@@ -23,19 +23,14 @@ class Limit:
         self._orderq   = deque()
         self._ordermap = dict()
 
-    def price(self) -> Decimal: return self._price
-
-    def volume(self) -> Decimal: return self._volume
-
-    def side(self) -> OrderSide: return self._side
-
-    def size(self) -> int: return len(self._orderq)
+    # getters
+    def price(self)  -> Decimal:   return self._price
+    def volume(self) -> Decimal:   return self._volume
+    def side(self)   -> OrderSide: return self._side
+    def size(self)   -> int:       return len(self._orderq)
 
     def add_order(self, order : Order):
-        assert order.quantity() > 0
-        assert self.price() == order.price()
-        assert not self.order_exists(order.id())
-        assert order.side() == self.side()
+        self.add_order_sanity_check(order)
 
         # add order
         self._ordermap[order.id()] = order
@@ -44,29 +39,43 @@ class Limit:
         # add volume
         self._volume = self.volume() + order.quantity()
 
-        self.sanity_check()
+        self.limit_sanity_check()
 
     def order_exists(self, identifier : int) -> bool:
         return identifier in self._ordermap
 
     def get_order(self, identifier : int) -> Order:
-        assert self.order_exists(identifier)
+        if not self.order_exists(identifier):
+            raise ValueError(f'order with id ({identifier}) not in limit')
         return self._ordermap[identifier]
 
     def next_order(self) -> Order: 
-        assert self.size() > 0
+        if self.size() == 0: raise ValueError('order queue is empty')
         return self._orderq[0]
 
     def pop_next_order(self) -> None: 
-        assert self.size() > 0
+        if self.size() == 0: raise ValueError('order queue is empty')
         order = self._orderq.popleft()
         self._ordermap.pop(order.id())
+        self._volume -= order.quantity()
 
-        self.sanity_check()
+        self.limit_sanity_check()
 
     def display_orders(self) -> None: print(self._orderq)
 
-    def sanity_check(self):
+    def add_order_sanity_check(self, order):
+        if not self.price() == order.price(): 
+            raise ValueError(f'order price ({order.price()}) and limit ' + \
+                    f'price ({self.price()}) do not match')
+
+        if self.order_exists(order.id()): 
+            raise ValueError(f'order with id {order.id()} already in limit')
+
+        if not order.side() == self.side():
+            raise ValueError(f'order side {order.side()} does not match' + \
+                    f'limit side {self.side()}')
+
+    def limit_sanity_check(self):
         '''
         Check if price correct for all orders,
         no duplicates and all of same side.

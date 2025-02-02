@@ -2,3 +2,5 @@
 Fast &amp; minimalist limit order book implementation in pure Python.
 
 *Package currently in development.*
+
+*NOTE: LLMs are used for writing some tests.*
