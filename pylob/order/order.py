@@ -9,6 +9,7 @@ from pylob import todecimal
 from pylob.consts import num
 
 class OrderSide(Enum):
+    '''The side of an order/limit, can be BID or ASK.'''
     BID = False
     ASK = True
 
@@ -34,7 +35,8 @@ class OrderType(Enum):
 @dataclass
 class Order(ABC):
     '''
-    Base class for orders in the order-book.
+    Base abstract class for orders in the order-book.
+    Extended by BidOrder and AskOrder.
     '''
     _id       : int
     _price    : Decimal
@@ -47,10 +49,10 @@ class Order(ABC):
                  expiry : Optional[float] = None):
         '''
         Args:
-            `price` (num): The price at which the order must sit.
-            `quantity` (num): The quantity to buy/sell.
-            `type` (OrderType): The type of order (see pylob.order.OrderType).
-            `expiry` (float): The timestamp after which the order becomes 
+            price (num): The price at which the order must sit.
+            quantity (num): The quantity to buy/sell.
+            type (OrderType): The type of order (see pylob.order.OrderType).
+            expiry (float): The timestamp after which the order becomes 
             invalid, only relevant for GTD orders, otherwise can be None.
         '''
         if price <= 0 or quantity <= 0: raise ValueError()
@@ -61,21 +63,79 @@ class Order(ABC):
         self._type     = type
         self._expiry   = expiry
 
-    # getters
-    def id(self)       -> int:             return self._id
-    def price(self)    -> Decimal:         return self._price
-    def quantity(self) -> Decimal:         return self._quantity
-    def type(self)     -> OrderType:       return self._type
-    def expiry(self)   -> Optional[float]: return self._expiry
-    def side(self)     -> OrderSide:       return self._side
+    def id(self) -> int:
+        '''Getter for order identifier.
+
+        Returns:
+            int: The unique order identifier.
+        '''
+        return self._id
+
+    def price(self) -> Decimal:
+        '''Getter for order price.
+
+        Returns:
+            Decimal: The price at which the order should be matched.
+        '''
+        return self._price
+
+    def quantity(self) -> Decimal:
+        '''Getter for order quantity.
+
+        Returns:
+            Decimal: The quantity of asset the order carries.
+        '''
+        return self._quantity
+
+    def type(self) -> OrderType:
+        '''Getter for order type
+
+        Returns:
+            OrderType: The type of the order.
+        '''
+        return self._type
+
+    def expiry(self) -> Optional[float]:
+        '''Getter for the expiration date of the order. Only relevant in the 
+        case of a GTD order, otherwise may be set to `None`.
+
+        Returns:
+            Optional[float]: The expiration timestamp of the order.
+        '''
+        return self._expiry
+
+    def side(self) -> OrderSide:
+        '''Getter for the order side.
+
+        Returns:
+            OrderSide: The side of the order.
+        '''
+        return self._side
 
     def partial_fill(self, quantity : num):
+        '''Decrease the quantity of the order by some numerical value.
+
+        Args:
+            quantity (num): The amount to subtract to the order quantity.
+
+        Raises:
+            ValueError: If the quantity to subtract is negative. 
+            ValueError: If the order quantity is lower than the amount to 
+            subtract (would not be a partial fill in that case).
+        '''
         quantity = todecimal(quantity)
+
+        if quantity < 0: 
+            raise ValueError(f'can not remove negative amount ({quantity})')
+
         if self.quantity() < quantity:  
-            raise ValueError() # raise if negative (can be 0)
+            raise ValueError(f'order quantity {self.quantity()} lower ' + \
+                    'than amount to subtract ({quantity})')
+
         self._quantity -= quantity
 
     def __eq__(self, other): 
+        '''Two orders are equal if they're (unique) ids are equal.'''
         return self.id() == other.id()
 
     def __repr__(self) -> str:

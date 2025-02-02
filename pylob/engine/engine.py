@@ -8,10 +8,13 @@ from pylob.side import Side
 from pylob.order import Order
 
 def execute(order : Order, side : Side):
+    '''Execute a market order.
+
+    Args:
+        order (Order): The order to execute.
+        side (Side): The side at which the order should be executed.
     '''
-    Execute a market order.
-    '''
-    lim : Limit = side.best()
+    lim = side.best()
 
     while order.quantity() > lim.volume():
         order.partial_fill(lim.volume())
@@ -30,8 +33,11 @@ def execute(order : Order, side : Side):
     assert(order.quantity == 0)
 
 def place(order : Order, side : Side):
-    '''
-    Place a limit order.
+    '''Place a limit order.
+
+    Args:
+        order (Order): The order to place.
+        side (Side): The side at which the order should be place.
     '''
     if not side.limit_exists(order.price):
         side.add_limit(order.price())
