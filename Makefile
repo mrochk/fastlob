@@ -2,7 +2,7 @@ run:
 	@python3 main.py
 
 test:
-	@python3 -m unittest pylob/testing/*.py
+	@python3 -m unittest tests/*.py
 
 lines:
-	@find pylob -name "*.py" -not -path "pylob/testing/*" | xargs wc -l
+	@find pylob -name "*.py" | xargs wc -l
