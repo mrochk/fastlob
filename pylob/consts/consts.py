@@ -4,4 +4,4 @@ from typing import Union
 
 num = Union[Number | Decimal]
 
-DECIMAL_PRECISION = 2
+DEFAULT_DECIMAL_PRECISION = 2
