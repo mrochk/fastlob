@@ -1,25 +1,31 @@
 import pylob
 
 if __name__ == '__main__':
-    ob = pylob.OrderBook()
+    ob = pylob.OrderBook('BTC/USDT')
 
     for _ in range(10):
         for i in range(10):
-            ob.place_order(
+
+            ob.process(
                 price=10-i, 
                 quantity=10, 
-                type=pylob.OrderType.FOK,
+                type=pylob.OrderType.GTC,
                 side=pylob.OrderSide.BID
             )
-            ob.place_order(
+
+            ob.process(
                 price=12+i, 
                 quantity=10, 
-                type=pylob.OrderType.FOK,
+                type=pylob.OrderType.GTC,
                 side=pylob.OrderSide.ASK
             )
 
-    ob.display()
+    marketorder = pylob.AskOrder(
+        price=10,
+        quantity=100,
+        type=pylob.OrderType.FOK
+    )
 
-    print(ob.midprice())
+    ob.process_order(marketorder)
 
-    print(ob.spread())
+    print(ob)
