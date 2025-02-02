@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pylob"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Maxime Rochkoulets", email = "mrochkoulets@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.6"
+dependencies = [
+    "sortedcollections==2.1.0",
+    "sortedcontainers==2.4.0"
+]
+
+
+
+[project.urls]
+"Homepage" = "https://github.com/mrochk/pylob"
