@@ -2,11 +2,10 @@ import unittest
 import pylob as lob
 
 class TestOrderBook(unittest.TestCase):
-    def test_market_partial_fill(self):
-        # initializing an order-book
-        ob = lob.OrderBook('EUR/GBP')
+    def setUp(self):
+        self.ob = lob.OrderBook('A/B')
 
-        ordersp = [
+        self.orders_params = [
             lob.OrderParams(110, 100, lob.OrderSide.ASK),
             lob.OrderParams(110.5, 100, lob.OrderSide.ASK),
             lob.OrderParams(111, 100, lob.OrderSide.ASK),
@@ -20,13 +19,34 @@ class TestOrderBook(unittest.TestCase):
             lob.OrderParams(102,   100,   lob.OrderSide.BID),
         ]
 
-        for _ in range(2): ob.process_many(ordersp)
+        print()
 
-        self.assertEqual(ob.best_ask().size(), 2)
-        self.assertEqual(ob.best_ask().volume(), 200)
+    def test_market_partial_fill(self):
+        for _ in range(2): self.ob.process_many(self.orders_params)
+
+        self.assertEqual(self.ob.best_ask().size(), 2)
+        self.assertEqual(self.ob.best_ask().volume(), 200)
 
         marketo = lob.OrderParams(110, 110, lob.OrderSide.BID)
-        ob.process_one(marketo)
+        self.ob.process_one(marketo)
 
-        self.assertEqual(ob.best_ask().size(), 1)
-        self.assertEqual(ob.best_ask().volume(), 90)
+        self.assertEqual(self.ob.best_ask().size(), 1)
+        self.assertEqual(self.ob.best_ask().volume(), 90)
+
+    def test_market_limit_fill(self):
+        for _ in range(2): self.ob.process_many(self.orders_params)
+
+        self.assertEqual(self.ob.best_ask().size(), 2)
+        self.assertEqual(self.ob.best_ask().volume(), 200)
+        self.assertEqual(self.ob.best_ask().price(), 110)
+
+        print(self.ob)
+
+        marketo = lob.OrderParams(110, 200, lob.OrderSide.BID)
+        self.ob.process_one(marketo)
+
+        print(self.ob)
+
+        self.assertEqual(self.ob.best_ask().size(), 2)
+        self.assertEqual(self.ob.best_ask().volume(), 200)
+        self.assertEqual(self.ob.best_ask().price(), 110.5)

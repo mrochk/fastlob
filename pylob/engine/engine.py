@@ -16,7 +16,7 @@ def execute(order : Order, side : Side):
     '''
     lim = side.best()
 
-    while order.quantity() > lim.volume():
+    while order.quantity() >= lim.volume():
         order.partial_fill(lim.volume())
         side.remove_limit(lim.price())
         lim = side.best()
