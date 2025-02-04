@@ -28,6 +28,10 @@ class Limit:
         self._orderq   = deque()
         self._ordermap = dict()
 
+    def partial_fill(self, order_id : int, quantity : Decimal):
+        self._ordermap[order_id].partial_fill(quantity)
+        self._volume -= quantity
+
     def price(self) -> Decimal: 
         '''Getter for limit price.
 
@@ -172,4 +176,4 @@ class Limit:
 
     def __repr__(self) -> str:
         p, s, v = self.price(), self.size(), self.volume()
-        return f'Limit(price={p}, size={s}, volume={v})'
+        return f'{self.side().name}Limit(price={p}, size={s}, volume={v})'

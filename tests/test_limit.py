@@ -68,4 +68,4 @@ class TestLimit(unittest.TestCase):
     
     def test_limit_repr(self):
         self.limit.add_order(self.order1)
-        self.assertTrue(self.limit.__repr__().startswith("Limit(price=100"))
+        self.assertTrue(self.limit.__repr__().startswith("BIDLimit(price=100"))

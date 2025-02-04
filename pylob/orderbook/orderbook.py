@@ -1,5 +1,6 @@
 from io import StringIO
-from typing import Optional
+from typing import Optional, Iterable
+from dataclasses import dataclass
 from decimal import Decimal
 
 from pylob import engine, OrderSide, OrderType
@@ -7,6 +8,23 @@ from pylob.side import AskSide, BidSide
 from pylob.limit import Limit
 from pylob.order import Order, AskOrder, BidOrder
 from pylob.consts import num
+
+@dataclass(init=True, repr=True)
+class OrderParams:
+    price    : num
+    quantity : num
+    side     : OrderSide
+    type     : OrderType = OrderType.GTC
+    expiry   : Optional[float] = None
+
+    def unwrap(self):
+        return (
+            self.price, 
+            self.quantity,
+            self.side,
+            self.type,
+            self.expiry
+        )
 
 class OrderBook:
     '''
@@ -26,8 +44,7 @@ class OrderBook:
         self.ask_side = AskSide()
         self.bid_side = BidSide()
 
-    def process(self, price : num, quantity : num, side : OrderSide, 
-            type : OrderType = OrderType.GTC, expiry : float = None):
+    def process_one(self, order_params : OrderParams):
         '''Creates and processes the order corresponding to the corresponding
         arguments. 
 
@@ -42,6 +59,8 @@ class OrderBook:
         Raises:
             ValueError: If incorrect side value is passed.
         '''
+
+        price, quantity, side, type, expiry = order_params.unwrap()
 
         if price <= 0: raise ValueError(f'invalid order price ({price})')
         if quantity <= 0: raise ValueError(f'invalid order qty ({quantity})')
@@ -74,7 +93,7 @@ class OrderBook:
             case OrderSide.BID: 
                 if self.is_market(order):
                     # sanity check market
-                    operation = lambda: engine.execute(order, self.bid_side)
+                    operation = lambda: engine.execute(order, self.ask_side)
                 # else, is limit order
                 else: operation = lambda: engine.place(order, self.bid_side)
 
@@ -89,6 +108,14 @@ class OrderBook:
 
         # execute operation
         return operation()
+
+    def process_many(self, orders_params : Iterable[OrderParams]):
+        '''Process many orders at once.
+
+        Args:
+            orders (Iterable[Order]): Orders to process.
+        '''
+        for order in orders_params: self.process_one(order)
 
     def is_market(self, order : Order) -> bool:
         '''Check if an order is a market order.
@@ -197,11 +224,12 @@ class OrderBook:
 
         length = 50
 
-        for asklim in reversed(self.ask_side.values()):
+        for asklim in reversed(self.ask_side.limits()):
             length = buffer.write(mkline(asklim)) - 2
 
         buffer.write(' ' + ('-' * length) + '\n')
 
-        for bidlim in self.bid_side.values(): buffer.write(mkline(bidlim))
+        for bidlim in self.bid_side.limits(): 
+            buffer.write(mkline(bidlim))
 
         return buffer.getvalue()

@@ -23,14 +23,12 @@ def execute(order : Order, side : Side):
 
     lim_order = lim.next_order()
 
-    while order.quantity > lim_order.quantity():
+    while order.quantity() > lim_order.quantity():
         order.partial_fill(lim_order.quantity())
         lim.pop_next_order()
         lim_order = lim.next_order()
 
-    lim_order.partial_fill(order.quantity())
-
-    assert(order.quantity == 0)
+    lim.partial_fill(lim_order.id(), order.quantity())
 
 def place(order : Order, side : Side):
     '''Place a limit order.
@@ -39,6 +37,7 @@ def place(order : Order, side : Side):
         order (Order): The order to place.
         side (Side): The side at which the order should be place.
     '''
-    if not side.limit_exists(order.price):
+    if not side.limit_exists(order.price()):
         side.add_limit(order.price())
+
     side.add_order(order)

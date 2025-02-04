@@ -6,6 +6,7 @@ from pylob import OrderSide
 from pylob.order import Order
 from pylob.consts import num
 from pylob.limit import Limit
+from pylob import todecimal
 
 class Side(ABC):
     '''
@@ -15,6 +16,10 @@ class Side(ABC):
     _limits : SortedDict[Decimal, Limit]
     _side   : OrderSide
 
+    def get_limit(self, price : Decimal) -> Limit:
+        assert isinstance(price, Decimal)
+        return self._limits[price]
+
     def side(self) -> OrderSide: 
         '''Getter for side.
 
@@ -22,6 +27,14 @@ class Side(ABC):
             OrderSide: The "side" of the Side object.
         '''
         return self._side
+
+    def limits(self) -> list[Limit]: 
+        '''Getter for side.
+
+        Returns:
+            OrderSide: The "side" of the Side object.
+        '''
+        return list(self._limits.values())
 
     def size(self) -> int: 
         '''Getter for number of limits.
@@ -46,7 +59,7 @@ class Side(ABC):
         Returns:
             Decimal: The sum of the volumes of all limits in the Side. 
         '''
-        return Decimal(sum([lim.volume() for lim in self._limits.values()]))
+        return sum([lim.volume() for lim in self.limits()])
 
     def prices(self) -> set: 
         '''Getter for all prices in the side.
@@ -78,6 +91,7 @@ class Side(ABC):
         '''
         if self.limit_exists(price): 
             raise ValueError(f'price {price} already in side')
+
         self._limits[price] = Limit(price, self.side())
 
     def add_order(self, order : Order): 
@@ -92,7 +106,7 @@ class Side(ABC):
         if not self.limit_exists(order.price()): 
             raise ValueError(f'order price {order.price()} not in side')
 
-        lim : Limit = self._limits[order._price]
+        lim : Limit = self.get_limit(order.price())
         lim.add_order(order)
 
     def remove_limit(self, price : num) -> None:
