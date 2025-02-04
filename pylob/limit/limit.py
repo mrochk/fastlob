@@ -80,8 +80,6 @@ class Limit:
         # add volume
         self._volume = self.volume() + order.quantity()
 
-        self.limit_sanity_check()
-
     def order_exists(self, identifier : int) -> bool:
         '''Returns true if an order with the given id is in the limit.
 
@@ -135,8 +133,6 @@ class Limit:
         self._ordermap.pop(order.id())
         self._volume -= order.quantity()
 
-        self.limit_sanity_check()
-
         return order
 
     def display_orders(self) -> None: 
@@ -155,12 +151,12 @@ class Limit:
             raise ValueError(f'order price ({order.price()}) and limit ' + \
                     f'price ({self.price()}) do not match')
 
-        if self.order_exists(order.id()): 
-            raise ValueError(f'order with id {order.id()} already in limit')
-
         if not order.side() == self.side():
             raise ValueError(f'order side {order.side()} does not match' + \
                     f'limit side {self.side()}')
+
+        if self.order_exists(order.id()): 
+            raise ValueError(f'order with id {order.id()} already in limit')
 
     def limit_sanity_check(self) -> None:
         '''

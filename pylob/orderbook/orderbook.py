@@ -17,7 +17,7 @@ class OrderParams:
     type     : OrderType = OrderType.GTC
     expiry   : Optional[float] = None
 
-    def unwrap(self):
+    def unwrap(self) -> tuple:
         return (
             self.price, 
             self.quantity,
