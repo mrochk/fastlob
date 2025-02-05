@@ -65,9 +65,7 @@ class OrderBook:
         if price <= 0: raise ValueError(f'invalid order price ({price})')
         if quantity <= 0: raise ValueError(f'invalid order qty ({quantity})')
 
-        order = None
-
-        # create the proper order object
+        order = None # create the proper order
         match side:
             case OrderSide.BID: order = BidOrder(price, quantity, type, expiry)
             case OrderSide.ASK: order = AskOrder(price, quantity, type, expiry)
