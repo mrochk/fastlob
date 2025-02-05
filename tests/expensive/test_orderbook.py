@@ -5,7 +5,7 @@ from .timeit import timeit
 
 class TestOrderBook(unittest.TestCase):
     def setUp(self):
-        self.ob = lob.OrderBook('A/B')
+        self.ob = lob.OrderBook('Test')
         print()
 
     @timeit
@@ -36,6 +36,8 @@ class TestOrderBook(unittest.TestCase):
 
         self.assertEqual(self.ob.bid_side.volume(), self.ob.ask_side.volume())
 
+        print(self.ob)
+
     @timeit
     def test_place_one_million_limits(self):
         '''Placing one million orders on both sides, 
@@ -65,3 +67,5 @@ class TestOrderBook(unittest.TestCase):
         self.assertEqual(self.ob.bid_side.volume(), 
                          self.ob.ask_side.volume())
         self.assertEqual(self.ob.bid_side.volume(), N * 1000)
+
+        print(self.ob)

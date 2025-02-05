@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 from pylob import engine, OrderSide, OrderType
+from pylob.engine import ExecutionResult
 from pylob.side import AskSide, BidSide
 from pylob.limit import Limit
 from pylob.order import Order, AskOrder, BidOrder
@@ -33,18 +34,18 @@ class OrderBook:
     '''
     ask_side : AskSide
     bid_side : BidSide
-    pair     : str
+    name     : str
 
-    def __init__(self, pair : Optional[str] = None):
+    def __init__(self, name : Optional[str] = None):
         '''
         Args:
             pair (Optional[str]): A name for the order-book. Defaults to None.
         '''
-        self.pair     = pair if pair else ''
+        self.name     = name if name else ''
         self.ask_side = AskSide()
         self.bid_side = BidSide()
 
-    def process_one(self, order_params : OrderParams):
+    def process_one(self, order_params : OrderParams) -> ExecutionResult:
         '''Creates and processes the order corresponding to the corresponding
         arguments. 
 
@@ -71,9 +72,9 @@ class OrderBook:
             case OrderSide.ASK: order = AskOrder(price, quantity, type, expiry)
             case _: raise ValueError('undefined side')
 
-        self.process_order(order)
+        return self.process_order(order)
 
-    def process_order(self, order : Order):
+    def process_order(self, order : Order) -> ExecutionResult:
         '''Place or execute the given order.
 
         Args:
@@ -107,13 +108,13 @@ class OrderBook:
         # execute operation
         return operation()
 
-    def process_many(self, orders_params : Iterable[OrderParams]):
+    def process_many(self, orders_params : Iterable[OrderParams]) -> list[ExecutionResult]:
         '''Process many orders at once.
 
         Args:
             orders (Iterable[Order]): Orders to process.
         '''
-        for order in orders_params: self.process_one(order)
+        return [self.process_one(orderp) for orderp in orders_params]
 
     def is_market(self, order : Order) -> bool:
         '''Check if an order is a market order.
@@ -207,27 +208,47 @@ class OrderBook:
 
     def __repr__(self):
         '''Outputs the order-book in the following format:\n
+
         Order-book <pair>:
         - ...
-        - (Ask)Limit(price=.., size=.., vol=..)
-        -----------------------------------------
-        - (Bid)Limit(price=.., size=.., vol=..)
+        - AskLimit(price=.., size=.., vol=..)
+        -------------------------------------
+        - BidLimit(price=.., size=.., vol=..)
         - ...
+
         '''
         mkline = lambda lim: ' - ' + str(lim) + '\n'
 
         buffer = StringIO()
         
-        buffer.write(f'Order-book {self.pair}:\n')
+        buffer.write(f'\nOrder-book {self.name}:\n')
 
         length = 50
 
-        for asklim in reversed(self.ask_side.limits()):
+        ask_size = self.ask_side.size()
+        bid_size = self.bid_side.size()
+
+        ten_asks = list()
+        i = 0
+        for asklim in self.ask_side.limits():
+            if i > 10: break
+            i += 1
+            ten_asks.append(asklim)
+
+        if ask_size > 10: buffer.write(f'...({ask_size - 10} more asks)\n')
+
+        for asklim in reversed(ten_asks):
             length = buffer.write(mkline(asklim)) - 2
 
         buffer.write(' ' + ('-' * length) + '\n')
 
+        i = 0
         for bidlim in self.bid_side.limits(): 
+            if i > 10: 
+                if i < bid_size: buffer.write(f'...({bid_size - 10} more bids)\n')
+                break
+            i += 1
             buffer.write(mkline(bidlim))
+            
 
         return buffer.getvalue()
