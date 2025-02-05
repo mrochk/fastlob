@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from pylob.consts import DEFAULT_DECIMAL_PRECISION, num
 
-def todecimal(f : num) -> Decimal:
+def todecimal(f : num | str) -> Decimal:
     '''Wrapper around the Decimal constructor.
 
     Args:

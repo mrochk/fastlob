@@ -28,13 +28,13 @@ class Side(ABC):
         '''
         return self._side
 
-    def limits(self) -> list[Limit]: 
-        '''Getter for side.
+    def limits(self): 
+        '''
 
         Returns:
-            OrderSide: The "side" of the Side object.
+            _type_: _description_
         '''
-        return list(self._limits.values())
+        return self._limits.values()
 
     def size(self) -> int: 
         '''Getter for number of limits.
@@ -51,7 +51,7 @@ class Side(ABC):
             Limit: The best limit in the side, lowest if AskSide, highest for
             BidSide.
         '''
-        _, lim = self._limits.peekitem(0); return lim
+        return self._limits.peekitem(0)[1]
 
     def volume(self) -> Decimal: 
         '''Getter for volume.
@@ -59,7 +59,10 @@ class Side(ABC):
         Returns:
             Decimal: The sum of the volumes of all limits in the Side. 
         '''
-        return sum([lim.volume() for lim in self.limits()])
+        Sum = Decimal(0)
+        lim : Limit
+        for lim in self.limits(): Sum += lim.volume()
+        return Sum
 
     def prices(self) -> set: 
         '''Getter for all prices in the side.
@@ -67,7 +70,7 @@ class Side(ABC):
         Returns:
             set: A set containing every unique price level.
         '''
-        return set(self._limits.keys())
+        return self._limits.keys()
 
     def limit_exists(self, price : num) -> bool: 
         '''Check if limit is in the side.
@@ -78,7 +81,7 @@ class Side(ABC):
         Returns:
             bool: True if there is a limit at this price. 
         '''
-        return price in self.prices()
+        return price in self._limits
 
     def add_limit(self, price : num) -> None: 
         '''Add a limit to the side at a given price.
@@ -103,10 +106,9 @@ class Side(ABC):
         Raises:
             ValueError: If there is no limit for the order required price level.
         '''
-        if not self.limit_exists(order.price()): 
+        lim = self._limits.get(order.price())
+        if lim is None:
             raise ValueError(f'order price {order.price()} not in side')
-
-        lim : Limit = self.get_limit(order.price())
         lim.add_order(order)
 
     def remove_limit(self, price : num) -> None:

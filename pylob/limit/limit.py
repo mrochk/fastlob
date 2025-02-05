@@ -64,6 +64,9 @@ class Limit:
         '''
         return len(self._orderq)
 
+    def empty(self) -> bool:
+        return self.size() == 0
+
     def add_order(self, order : Order):
         '''Add (enqueue) an order to the limit.
 
@@ -78,7 +81,7 @@ class Limit:
         self._orderq.append(order)
 
         # add volume
-        self._volume = self.volume() + order.quantity()
+        self._volume += order.quantity()
 
     def order_exists(self, identifier : int) -> bool:
         '''Returns true if an order with the given id is in the limit.
@@ -105,6 +108,7 @@ class Limit:
         '''
         if not self.order_exists(identifier):
             raise ValueError(f'order with id ({identifier}) not in limit')
+
         return self._ordermap[identifier]
 
     def next_order(self) -> Order: 
@@ -116,7 +120,8 @@ class Limit:
         Returns:
             Order: The next order to be executed.
         '''
-        if self.size() == 0: raise ValueError('order queue is empty')
+        if self.empty(): raise ValueError('order queue is empty')
+
         return self._orderq[0]
 
     def pop_next_order(self) -> Order: 
@@ -128,9 +133,10 @@ class Limit:
         Returns:
             Order: The next order to be executed.
         '''
-        if self.size() == 0: raise ValueError('order queue is empty')
+        if self.empty(): raise ValueError('order queue is empty')
+
         order = self._orderq.popleft()
-        self._ordermap.pop(order.id())
+        del self._ordermap[order.id()]
         self._volume -= order.quantity()
 
         return order
@@ -155,8 +161,8 @@ class Limit:
             raise ValueError(f'order side {order.side()} does not match' + \
                     f'limit side {self.side()}')
 
-        if self.order_exists(order.id()): 
-            raise ValueError(f'order with id {order.id()} already in limit')
+        #if self.order_exists(order.id()): 
+            #raise ValueError(f'order with id {order.id()} already in limit')
 
     def limit_sanity_check(self) -> None:
         '''

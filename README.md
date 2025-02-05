@@ -1,9 +1,9 @@
 # `pylob` | Python Limit Order-book
 Fast &amp; minimalist limit order-book (LOB) implementation in pure Python.
 
-*Package currently in development.*
+*Package currently in development, not usable yet.*
 
-TODO:
+**TODO**:
 - [ ] Write benchmarks that will be used to guide development.
 - [ ] Decide for the each modules responsibilities, especially in terms for safety checking.
 - [ ] Implement the three types of orders.

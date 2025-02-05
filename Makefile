@@ -9,5 +9,8 @@ test-expensive:
 
 test: test-cheap test-expensive
 
+typecheck: 
+	@mypy pylob
+
 lines:
 	@find pylob -name "*.py" | xargs wc -l

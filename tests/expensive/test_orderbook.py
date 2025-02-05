@@ -1,27 +1,27 @@
 import unittest
 from decimal import Decimal
 import pylob as lob
+from .timeit import timeit
 
 class TestOrderBook(unittest.TestCase):
     def setUp(self):
         self.ob = lob.OrderBook('A/B')
         print()
 
-    def test_place_one_million(self):
+    @timeit
+    def test_place_one_million_orders(self):
         '''Placing one million orders on both sides.'''
         ONEMIL = int(1e6)
         for i in range(ONEMIL):
             if (i+1) % 1e5 == 0: print(f'order {i+1}')
 
             self.ob.process_one(lob.OrderParams(
-                1000.0, 
-                1234.4567, 
+                1000.0, 1234.4567, 
                 lob.OrderSide.ASK,
             ))
 
             self.ob.process_one(lob.OrderParams(
-                999.0, 
-                1234.4567, 
+                999.0, 1234.4567, 
                 lob.OrderSide.BID,
             ))
 
@@ -36,12 +36,15 @@ class TestOrderBook(unittest.TestCase):
 
         self.assertEqual(self.ob.bid_side.volume(), self.ob.ask_side.volume())
 
-    def test_place_10k_limits(self):
-        '''Placing 10k orders on both sides, at different price levels.'''
+    @timeit
+    def test_place_one_million_limits(self):
+        '''Placing one million orders on both sides, 
+        all at different price levels.
+        '''
 
-        N = int(1e4)
+        N = int(1e6)
         for i in range(N):
-            if (i+1) % 1e3 == 0: print(f'order {i+1}')
+            if (i+1) % (N//10) == 0: print(f'order {i+1}')
 
             self.ob.process_one(lob.OrderParams(
                 2*N + 1 + i, 1000, lob.OrderSide.ASK))

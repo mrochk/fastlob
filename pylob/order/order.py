@@ -43,7 +43,7 @@ class Order(ABC):
     _quantity : Decimal
     _type     : OrderType
     _side     : OrderSide
-    _expiry   : float
+    _expiry   : Optional[float]
 
     def __init__(self, price : num, quantity : num, type : OrderType,
                  expiry : Optional[float] = None):
@@ -55,11 +55,15 @@ class Order(ABC):
             expiry (float): The timestamp after which the order becomes 
             invalid, only relevant for GTD orders, otherwise can be None.
         '''
-        if price <= 0 or quantity <= 0: raise ValueError()
-
-        self._id       = uuid.uuid4().int
         self._price    = todecimal(price)
         self._quantity = todecimal(quantity)
+
+        if self._price <= 0 or self._quantity <= 0: 
+            raise ValueError(
+                f'price ({self._price}) or qty ({self._quantity}) negative'
+            )
+
+        self._id       = uuid.uuid4().int
         self._type     = type
         self._expiry   = expiry
 
