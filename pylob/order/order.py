@@ -8,6 +8,14 @@ from dataclasses import dataclass
 from pylob import todecimal
 from pylob.consts import num
 
+class OrderStatus(Enum):
+    '''The side of an order/limit, can be BID or ASK.'''
+    CREATED  = 1
+    IN_LINE  = 2
+    MATCHED  = 3
+    CANCELED = 4
+    PARTIAL  = 5
+
 class OrderSide(Enum):
     '''The side of an order/limit, can be BID or ASK.'''
     BID = False
@@ -44,6 +52,7 @@ class Order(ABC):
     _type     : OrderType
     _side     : OrderSide
     _expiry   : Optional[float]
+    _status   : OrderStatus
 
     def __init__(self, price : num, quantity : num, type : OrderType,
                  expiry : Optional[float] = None):
@@ -66,6 +75,18 @@ class Order(ABC):
         self._id       = uuid.uuid4().int
         self._type     = type
         self._expiry   = expiry
+        self._status   = OrderStatus.CREATED
+
+    def status(self) -> int:
+        '''Getter for order status.
+
+        Returns:
+            OrderStatus: The order status.
+        '''
+        return self._status
+
+    def set_status(self, status : OrderStatus):
+        self._status = status
 
     def id(self) -> int:
         '''Getter for order identifier.
@@ -144,8 +165,8 @@ class Order(ABC):
 
     def __repr__(self) -> str:
         fst, lst = str(self._id)[0], str(self._id)[-1]
-        return f'Order(id={fst}..{lst}, p={self._price}, ' + \
-            f'q={self._quantity}, t={self._type})'
+        return f'Order(id={fst}..{lst}, s={self.status()}, p={self.price()},'+\
+            f' q={self.quantity()}, t={self.type()})'
 
 @dataclass
 class BidOrder(Order):

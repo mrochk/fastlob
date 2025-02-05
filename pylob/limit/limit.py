@@ -15,6 +15,7 @@ class Limit:
     _volume   : Decimal
     _orderq   : deque[Order]
     _ordermap : dict[int, Order]
+    _done     : dict[int, Order]
 
     def __init__(self, price : num, side : OrderSide):
         '''
@@ -27,6 +28,7 @@ class Limit:
         self._volume   = Decimal(0)
         self._orderq   = deque()
         self._ordermap = dict()
+        self._done     = dict()
 
     def partial_fill(self, order_id : int, quantity : Decimal):
         self._ordermap[order_id].partial_fill(quantity)
@@ -138,6 +140,8 @@ class Limit:
         order = self._orderq.popleft()
         del self._ordermap[order.id()]
         self._volume -= order.quantity()
+
+        self._done[order.id()] = order
 
         return order
 
