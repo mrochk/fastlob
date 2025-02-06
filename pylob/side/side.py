@@ -25,6 +25,8 @@ class Side(ABC):
         assert isinstance(price, Decimal)
         return self._limits[price]
 
+    def empty(self) -> bool: return self.size() == 0
+
     def side(self) -> OrderSide: 
         '''Getter for side.
 

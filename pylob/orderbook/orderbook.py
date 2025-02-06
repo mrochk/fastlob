@@ -22,23 +22,28 @@ class OrderParams:
                  type : OrderType = OrderType.GTC, 
                  expiry : Optional[float] = None):
 
-        if not isinstance(side, OrderSide): raise TypeError()
-        if not isinstance(price, num)     : raise TypeError()
-        if not isinstance(quantity, num)  : raise TypeError()
-        if not isinstance(type, OrderType): raise TypeError()
-        if not isinstance(expiry, float)  : raise TypeError()
-
-        if price <= 0: 
-            raise ValueError(f'price ({price}) must be strictly positive')
-
-        if quantity <= 0: 
-            raise ValueError(f'quantity ({quantity}) must be strictly positive')
+        OrderParams.check_args(side, price, quantity, type, expiry)
 
         self.side     = side
         self.price    = todecimal(price)
         self.quantity = todecimal(quantity)
         self.type     = type
         self.expiry   = expiry
+
+    @staticmethod
+    def check_args(side : OrderSide, price : num, quantity : num, 
+                   type : OrderType, expiry : Optional[float]):
+        if not isinstance(side, OrderSide): raise TypeError()
+        if not isinstance(price,      num): raise TypeError()
+        if not isinstance(quantity,   num): raise TypeError()
+        if not isinstance(type, OrderType): raise TypeError()
+        if not isinstance(expiry,   Optional[float]): raise TypeError()
+
+        if price <= 0: 
+            raise ValueError(f'price ({price}) must be strictly positive')
+
+        if quantity <= 0: 
+            raise ValueError(f'quantity ({quantity}) must be strictly positive')
 
     def unwrap(self) -> tuple[Decimal, Decimal, OrderType, float]:
         return (self.price, self.quantity, self.type, self.expiry)
@@ -87,7 +92,7 @@ class OrderBook:
         return [self.process_one(orderp) for orderp in orders_params]
 
     def process_order(self, order : Order) -> EngineResult:
-        '''Place or execute the given order.
+        '''Place or execute the given order depending on its price level.
 
         Args:
             order (Order): The order to process.
@@ -96,19 +101,17 @@ class OrderBook:
             ValueError: If the order side is undefined.
 
         Returns:
-            ExecutionResult: _
+            ExecutionResult: The result of the matching engine.
         '''
         match order.side():
             case OrderSide.BID: 
                 if self.is_market(order):
                     return engine.execute(order, self.ask_side)
-                # else, is limit order
                 else: return engine.place(order, self.bid_side)
 
             case OrderSide.ASK:
                 if self.is_market(order):
                     return engine.execute(order, self.bid_side)
-                # else, is limit order
                 else: return engine.place(order, self.ask_side)
 
     def is_market(self, order : Order) -> bool:
@@ -121,27 +124,16 @@ class OrderBook:
             ValueError: If the order side is undefined.
 
         Returns:
-            bool: True if the order is a market order False otherwise.
+            bool: True if the order is a market order false otherwise.
         '''
         match order.side():
-            case OrderSide.BID: return self._is_market_bid(order)
-            case OrderSide.ASK: return self._is_market_ask(order)
-
-    def _is_market_bid(self, order : Order):
-        assert order.side() == OrderSide.BID
-
-        if self.asks_count() == 0: return False
-        lim = self.best_ask()
-
-        return order.price() >= lim.price()
-
-    def _is_market_ask(self, order : Order):
-        assert order.side() == OrderSide.ASK
-
-        if self.bids_count() == 0: return False
-        lim = self.best_bid()
-
-        return order.price() <= lim.price()
+            case OrderSide.BID: 
+                if self.ask_side.empty(): return False
+                if self.best_ask().price() <= order.price(): return True
+            case OrderSide.ASK:
+                if self.bid_side.empty(): return False
+                if self.best_bid().price() >= order.price(): return True
+        return False
 
     def best_ask(self) -> Limit: 
         '''Get the best ask limit in the book.
@@ -244,5 +236,4 @@ class OrderBook:
             i += 1
             buffer.write(mkline(bidlim))
             
-
         return buffer.getvalue()
