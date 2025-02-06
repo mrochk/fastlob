@@ -3,38 +3,54 @@ from typing import Optional, Iterable
 from dataclasses import dataclass
 from decimal import Decimal
 
-from pylob import engine, OrderSide, OrderType
+from pylob import engine, OrderSide, OrderType, todecimal
 from pylob.engine import EngineResult
 from pylob.side import AskSide, BidSide
 from pylob.limit import Limit
 from pylob.order import Order, AskOrder, BidOrder
 from pylob.consts import num
 
-@dataclass(init=True, repr=True)
+@dataclass(repr=True)
 class OrderParams:
-    price    : num
-    quantity : num
     side     : OrderSide
+    price    : Decimal
+    quantity : Decimal
     type     : OrderType = OrderType.GTC
     expiry   : Optional[float] = None
 
-    def unwrap(self) -> tuple:
-        return (
-            self.price, 
-            self.quantity,
-            self.side,
-            self.type,
-            self.expiry
-        )
+    def __init__(self, side : OrderSide, price : num, quantity : num,
+                 type : OrderType = OrderType.GTC, 
+                 expiry : Optional[float] = None):
+
+        if not isinstance(side, OrderSide): raise TypeError()
+        if not isinstance(price, num)     : raise TypeError()
+        if not isinstance(quantity, num)  : raise TypeError()
+        if not isinstance(type, OrderType): raise TypeError()
+        if not isinstance(expiry, float)  : raise TypeError()
+
+        if price <= 0: 
+            raise ValueError(f'price ({price}) must be strictly positive')
+
+        if quantity <= 0: 
+            raise ValueError(f'quantity ({quantity}) must be strictly positive')
+
+        self.side     = side
+        self.price    = todecimal(price)
+        self.quantity = todecimal(quantity)
+        self.type     = type
+        self.expiry   = expiry
+
+    def unwrap(self) -> tuple[Decimal, Decimal, OrderType, float]:
+        return (self.price, self.quantity, self.type, self.expiry)
 
 class OrderBook:
     '''
     The `OrderBook` is a collection of bid and ask limits. The OB is reponsible 
-    for safety checking as well as calling the proper matching engine functions. 
+    for calling the matching engine functions, but not safety checking. 
     '''
+    name     : str
     ask_side : AskSide
     bid_side : BidSide
-    name     : str
 
     def __init__(self, name : Optional[str] = None):
         '''
@@ -47,32 +63,28 @@ class OrderBook:
 
     def process_one(self, order_params : OrderParams) -> EngineResult:
         '''Creates and processes the order corresponding to the corresponding
-        arguments. 
+        arguments.
 
         Args:
-            price (num): The price at which the order should be sitting/be 
-            executed.
-            quantity (num): The quantity to buy/sell.
-            side (OrderSide): The side of the order.
-            type (OrderType): The type of order to create. Defaults to GTC.
-            expiry (float): The expiry timestamp of the order. Defaults to None.
+            order_params (OrderParams): Parameters of order to create.
 
-        Raises:
-            ValueError: If incorrect side value is passed.
+        Returns:
+            EngineResult: The result of processing the order params.
         '''
-
-        price, quantity, side, type, expiry = order_params.unwrap()
-
-        if price <= 0: raise ValueError(f'invalid order price ({price})')
-        if quantity <= 0: raise ValueError(f'invalid order qty ({quantity})')
-
-        order : Optional[Order] = None # create the proper order
-        match side:
-            case OrderSide.BID: order = BidOrder(price, quantity, type, expiry)
-            case OrderSide.ASK: order = AskOrder(price, quantity, type, expiry)
-            case _: raise ValueError('undefined side')
+        order : Order = None # create the proper order
+        match order_params.side:
+            case OrderSide.BID: order = BidOrder(*order_params.unwrap())
+            case OrderSide.ASK: order = AskOrder(*order_params.unwrap())
 
         return self.process_order(order)
+
+    def process_many(self, orders_params : Iterable[OrderParams]) -> list[EngineResult]:
+        '''Process many orders at once.
+
+        Args:
+            orders (Iterable[Order]): Orders to process.
+        '''
+        return [self.process_one(orderp) for orderp in orders_params]
 
     def process_order(self, order : Order) -> EngineResult:
         '''Place or execute the given order.
@@ -95,20 +107,9 @@ class OrderBook:
 
             case OrderSide.ASK:
                 if self.is_market(order):
-                    self.market_ask_order_check(order)
                     return engine.execute(order, self.bid_side)
                 # else, is limit order
                 else: return engine.place(order, self.ask_side)
-
-            case _: raise ValueError('undefined side')
-
-    def process_many(self, orders_params : Iterable[OrderParams]) -> list[EngineResult]:
-        '''Process many orders at once.
-
-        Args:
-            orders (Iterable[Order]): Orders to process.
-        '''
-        return [self.process_one(orderp) for orderp in orders_params]
 
     def is_market(self, order : Order) -> bool:
         '''Check if an order is a market order.
@@ -125,7 +126,6 @@ class OrderBook:
         match order.side():
             case OrderSide.BID: return self._is_market_bid(order)
             case OrderSide.ASK: return self._is_market_ask(order)
-            case _: raise ValueError('undefined side')
 
     def _is_market_bid(self, order : Order):
         assert order.side() == OrderSide.BID

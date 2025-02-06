@@ -7,17 +7,17 @@ class TestOrderBook(unittest.TestCase):
         self.ob = lob.OrderBook('A/B')
 
         self.orders_params = [
-            lob.OrderParams(110, 100, lob.OrderSide.ASK),
-            lob.OrderParams(110.5, 100, lob.OrderSide.ASK),
-            lob.OrderParams(111, 100, lob.OrderSide.ASK),
-            lob.OrderParams(111.5, 100, lob.OrderSide.ASK),
-            lob.OrderParams(112, 100, lob.OrderSide.ASK),
+            lob.OrderParams(price=110,   quantity=100, side=lob.OrderSide.ASK),
+            lob.OrderParams(price=110.5, quantity=100, side=lob.OrderSide.ASK),
+            lob.OrderParams(price=111,   quantity=100, side=lob.OrderSide.ASK),
+            lob.OrderParams(price=111.5, quantity=100, side=lob.OrderSide.ASK),
+            lob.OrderParams(price=112,   quantity=100, side=lob.OrderSide.ASK),
 
-            lob.OrderParams(100, 100, lob.OrderSide.BID),
-            lob.OrderParams(100.5, 100, lob.OrderSide.BID),
-            lob.OrderParams(101, 100, lob.OrderSide.BID),
-            lob.OrderParams(101.5, 100, lob.OrderSide.BID),
-            lob.OrderParams(102, 100, lob.OrderSide.BID),
+            lob.OrderParams(price=100,   quantity=100,   side=lob.OrderSide.BID),
+            lob.OrderParams(price=100.5, quantity=100,   side=lob.OrderSide.BID),
+            lob.OrderParams(price=101,   quantity=100,   side=lob.OrderSide.BID),
+            lob.OrderParams(price=101.5, quantity=100,   side=lob.OrderSide.BID),
+            lob.OrderParams(price=102,   quantity=100,   side=lob.OrderSide.BID),
         ]
 
         print()
@@ -33,7 +33,7 @@ class TestOrderBook(unittest.TestCase):
     def test_market_partial_fill(self):
         """Test a market order that partially fills an existing order."""
         self.ob.process_many(self.orders_params)
-        market_order = lob.OrderParams(110, 110, lob.OrderSide.BID)
+        market_order = lob.OrderParams(price=110, quantity=110, side=lob.OrderSide.BID)
         self.ob.process_one(market_order)
 
         self.assertEqual(self.ob.best_ask().size(), 1)
@@ -42,7 +42,7 @@ class TestOrderBook(unittest.TestCase):
     def test_market_full_fill(self):
         """Test a market order that completely fills an existing order."""
         self.ob.process_many(self.orders_params)
-        market_order = lob.OrderParams(110, 100, lob.OrderSide.BID)
+        market_order = lob.OrderParams(price=110, quantity=100, side=lob.OrderSide.BID)
         self.ob.process_one(market_order)
 
         self.assertEqual(self.ob.best_ask().price(), 110.5)
@@ -63,17 +63,17 @@ class TestOrderBook(unittest.TestCase):
     def test_invalid_order_price(self):
         """Test that an order with an invalid price raises an error."""
         with self.assertRaises(ValueError):
-            self.ob.process_one(lob.OrderParams(0, 100, lob.OrderSide.BID))
+            self.ob.process_one(lob.OrderParams(price=0, quantity=100, side=lob.OrderSide.BID))
 
     def test_invalid_order_quantity(self):
         """Test that an order with an invalid quantity raises an error."""
         with self.assertRaises(ValueError):
-            self.ob.process_one(lob.OrderParams(100, 0, lob.OrderSide.BID))
+            self.ob.process_one(lob.OrderParams(price=100, quantity=0, side=lob.OrderSide.BID))
 
     def test_best_bid_after_trade(self):
         """Ensure best bid updates correctly after a trade."""
         self.ob.process_many(self.orders_params)
-        trade_order = lob.OrderParams(102, 100, lob.OrderSide.ASK)
+        trade_order = lob.OrderParams(price=102, quantity=100, side=lob.OrderSide.ASK)
         self.ob.process_one(trade_order)
 
         self.assertEqual(self.ob.best_bid().price(), 101.5)
@@ -82,7 +82,7 @@ class TestOrderBook(unittest.TestCase):
     def test_best_ask_after_trade(self):
         """Ensure best ask updates correctly after a trade."""
         self.ob.process_many(self.orders_params)
-        trade_order = lob.OrderParams(110, 100, lob.OrderSide.BID)
+        trade_order = lob.OrderParams(price=110, quantity=100, side=lob.OrderSide.BID)
         self.ob.process_one(trade_order)
 
         self.assertEqual(self.ob.best_ask().price(), 110.5)

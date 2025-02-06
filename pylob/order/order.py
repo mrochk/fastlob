@@ -9,7 +9,7 @@ from pylob import todecimal
 from pylob.consts import num
 
 class OrderStatus(Enum):
-    '''The side of an order/limit, can be BID or ASK.'''
+    '''The status of an order.'''
     CREATED  = 1
     IN_LINE  = 2
     MATCHED  = 3
@@ -137,7 +137,7 @@ class Order(ABC):
         '''
         return self._side
 
-    def partial_fill(self, quantity : num):
+    def fill(self, quantity : num):
         '''Decrease the quantity of the order by some numerical value.
 
         Args:
@@ -146,7 +146,7 @@ class Order(ABC):
         Raises:
             ValueError: If the quantity to subtract is negative. 
             ValueError: If the order quantity is lower than the amount to 
-            subtract (would not be a partial fill in that case).
+            subtract.
         '''
         quantity = todecimal(quantity)
 
@@ -158,6 +158,12 @@ class Order(ABC):
                     'than amount to subtract ({quantity})')
 
         self._quantity -= quantity
+
+        if self.quantity() == 0: 
+            self.set_status(OrderStatus.MATCHED)
+            return
+
+        self.set_status(OrderStatus.PARTIAL)
 
     def __eq__(self, other): 
         '''Two orders are equal if they're (unique) ids are equal.'''

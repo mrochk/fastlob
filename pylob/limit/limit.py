@@ -3,7 +3,7 @@ from collections import deque
 from typing import Optional
 
 from pylob import todecimal, OrderSide
-from pylob.order import Order
+from pylob.order import Order, OrderStatus
 from pylob.consts import num
 
 class Limit:
@@ -30,8 +30,18 @@ class Limit:
         self._ordermap = dict()
         self._done     = dict()
 
+    def match_all(self):
+        for order in self._orderq:
+            order.set_status(OrderStatus.MATCHED)
+            order.fill(order.quantity())
+            self._done[order.id()] = order
+
+        self._orderq.clear()
+        self._ordermap.clear()
+        self._volume = Decimal(0)
+
     def partial_fill(self, order_id : int, quantity : Decimal):
-        self._ordermap[order_id].partial_fill(quantity)
+        self._ordermap[order_id].fill(quantity)
         self._volume -= quantity
 
     def price(self) -> Decimal: 
@@ -81,6 +91,8 @@ class Limit:
         # add order
         self._ordermap[order.id()] = order
         self._orderq.append(order)
+
+        order.set_status(OrderStatus.IN_LINE)
 
         # add volume
         self._volume += order.quantity()

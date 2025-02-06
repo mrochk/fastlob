@@ -1,1 +1,2 @@
-from .engine import place, execute, EngineResult 
+from .engine import place, execute  
+from .result import EngineResult

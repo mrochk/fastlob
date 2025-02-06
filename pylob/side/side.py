@@ -16,6 +16,11 @@ class Side(ABC):
     _limits : SortedDict[Decimal, Limit]
     _side   : OrderSide
 
+    def fill_best(self):
+        best = self.best()
+        best.match_all()
+        del self._limits[best.price()]
+
     def get_limit(self, price : Decimal) -> Limit:
         assert isinstance(price, Decimal)
         return self._limits[price]
@@ -97,6 +102,10 @@ class Side(ABC):
 
         self._limits[price] = Limit(price, self.side())
 
+    def add_limit_if_not_exists(self, price : num):
+        if not self.limit_exists(price):
+            self.add_limit(price)
+
     def add_order(self, order : Order): 
         '''Add an order to the side.
 
@@ -106,9 +115,11 @@ class Side(ABC):
         Raises:
             ValueError: If there is no limit for the order required price level.
         '''
-        lim = self._limits.get(order.price())
+        lim : Limit = self._limits.get(order.price())
+
         if lim is None:
             raise ValueError(f'order price {order.price()} not in side')
+
         lim.add_order(order)
 
     def remove_limit(self, price : num) -> None:

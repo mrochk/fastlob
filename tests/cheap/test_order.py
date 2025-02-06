@@ -37,10 +37,10 @@ class TestOrder(unittest.TestCase):
     
     def test_partial_fill(self):
         order = AskOrder(price=20, quantity=10, type=OrderType.GTC)
-        order.partial_fill(Decimal('3.5'))
+        order.fill(Decimal('3.5'))
         self.assertEqual(order.quantity(), Decimal('6.5'))
         
-        order.partial_fill(Decimal('6.5'))
+        order.fill(Decimal('6.5'))
         self.assertEqual(order.quantity(), Decimal('0'))
     
     def test_order_equality(self):
@@ -59,11 +59,11 @@ class TestOrder(unittest.TestCase):
     def test_invalid_partial_fill(self):
         order = BidOrder(price=50, quantity=5, type=OrderType.FOK)
         with self.assertRaises(ValueError):
-            order.partial_fill(Decimal('10'))  # Should not allow filling more than available
+            order.fill(Decimal('10'))  # Should not allow filling more than available
     
     def test_zero_partial_fill(self):
         order = AskOrder(price=30, quantity=5, type=OrderType.GTC)
-        order.partial_fill(Decimal('0'))
+        order.fill(Decimal('0'))
         self.assertEqual(order.quantity(), Decimal('5'))  # Should remain unchanged
     
     def test_negative_price(self):

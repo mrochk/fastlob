@@ -1,1 +1,1 @@
-from .order import OrderSide, OrderType, Order, AskOrder, BidOrder
+from .order import OrderSide, OrderType, OrderStatus, Order, AskOrder, BidOrder
