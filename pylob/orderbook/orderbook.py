@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 from pylob import engine, OrderSide, OrderType
-from pylob.engine import ExecutionResult
+from pylob.engine import EngineResult
 from pylob.side import AskSide, BidSide
 from pylob.limit import Limit
 from pylob.order import Order, AskOrder, BidOrder
@@ -45,7 +45,7 @@ class OrderBook:
         self.ask_side = AskSide()
         self.bid_side = BidSide()
 
-    def process_one(self, order_params : OrderParams) -> ExecutionResult:
+    def process_one(self, order_params : OrderParams) -> EngineResult:
         '''Creates and processes the order corresponding to the corresponding
         arguments. 
 
@@ -74,7 +74,7 @@ class OrderBook:
 
         return self.process_order(order)
 
-    def process_order(self, order : Order) -> ExecutionResult:
+    def process_order(self, order : Order) -> EngineResult:
         '''Place or execute the given order.
 
         Args:
@@ -84,31 +84,25 @@ class OrderBook:
             ValueError: If the order side is undefined.
 
         Returns:
-            _: _
+            ExecutionResult: _
         '''
-        operation = None # the operation to execute
-
         match order.side():
             case OrderSide.BID: 
                 if self.is_market(order):
-                    # sanity check market
-                    operation = lambda: engine.execute(order, self.ask_side)
+                    return engine.execute(order, self.ask_side)
                 # else, is limit order
-                else: operation = lambda: engine.place(order, self.bid_side)
+                else: return engine.place(order, self.bid_side)
 
             case OrderSide.ASK:
                 if self.is_market(order):
-                    # sanity check market
-                    operation = lambda: engine.execute(order, self.bid_side)
+                    self.market_ask_order_check(order)
+                    return engine.execute(order, self.bid_side)
                 # else, is limit order
-                else: operation = lambda: engine.place(order, self.ask_side)
+                else: return engine.place(order, self.ask_side)
 
             case _: raise ValueError('undefined side')
 
-        # execute operation
-        return operation()
-
-    def process_many(self, orders_params : Iterable[OrderParams]) -> list[ExecutionResult]:
+    def process_many(self, orders_params : Iterable[OrderParams]) -> list[EngineResult]:
         '''Process many orders at once.
 
         Args:
