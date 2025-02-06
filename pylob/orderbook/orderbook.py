@@ -1,52 +1,13 @@
 from io import StringIO
 from typing import Optional, Iterable
-from dataclasses import dataclass
 from decimal import Decimal
 
-from pylob import engine, OrderSide, OrderType, todecimal
+from pylob import engine
+from pylob.enums import OrderSide
 from pylob.engine import EngineResult
 from pylob.side import AskSide, BidSide
 from pylob.limit import Limit
-from pylob.order import Order, AskOrder, BidOrder
-from pylob.consts import num
-
-@dataclass(repr=True)
-class OrderParams:
-    side     : OrderSide
-    price    : Decimal
-    quantity : Decimal
-    type     : OrderType = OrderType.GTC
-    expiry   : Optional[float] = None
-
-    def __init__(self, side : OrderSide, price : num, quantity : num,
-                 type : OrderType = OrderType.GTC, 
-                 expiry : Optional[float] = None):
-
-        OrderParams.check_args(side, price, quantity, type, expiry)
-
-        self.side     = side
-        self.price    = todecimal(price)
-        self.quantity = todecimal(quantity)
-        self.type     = type
-        self.expiry   = expiry
-
-    @staticmethod
-    def check_args(side : OrderSide, price : num, quantity : num, 
-                   type : OrderType, expiry : Optional[float]):
-        if not isinstance(side, OrderSide): raise TypeError()
-        if not isinstance(price,      num): raise TypeError()
-        if not isinstance(quantity,   num): raise TypeError()
-        if not isinstance(type, OrderType): raise TypeError()
-        if not isinstance(expiry,   Optional[float]): raise TypeError()
-
-        if price <= 0: 
-            raise ValueError(f'price ({price}) must be strictly positive')
-
-        if quantity <= 0: 
-            raise ValueError(f'quantity ({quantity}) must be strictly positive')
-
-    def unwrap(self) -> tuple[Decimal, Decimal, OrderType, float]:
-        return (self.price, self.quantity, self.type, self.expiry)
+from pylob.order import OrderParams, Order, AskOrder, BidOrder
 
 class OrderBook:
     '''
@@ -78,8 +39,8 @@ class OrderBook:
         '''
         order : Order = None # create the proper order
         match order_params.side:
-            case OrderSide.BID: order = BidOrder(*order_params.unwrap())
-            case OrderSide.ASK: order = AskOrder(*order_params.unwrap())
+            case OrderSide.BID: order = BidOrder(order_params)
+            case OrderSide.ASK: order = AskOrder(order_params)
 
         return self.process_order(order)
 
@@ -203,37 +164,10 @@ class OrderBook:
         - ...
 
         '''
-        mkline = lambda lim: ' - ' + str(lim) + '\n'
-
         buffer = StringIO()
-        
         buffer.write(f'\nOrder-book {self.name}:\n')
-
         length = 50
-
-        ask_size = self.ask_side.size()
-        bid_size = self.bid_side.size()
-
-        ten_asks = list()
-        i = 0
-        for asklim in self.ask_side.limits():
-            if i > 10: break
-            i += 1
-            ten_asks.append(asklim)
-
-        if ask_size > 10: buffer.write(f'...({ask_size - 10} more asks)\n')
-
-        for asklim in reversed(ten_asks):
-            length = buffer.write(mkline(asklim)) - 2
-
+        buffer.write(str(self.ask_side))
         buffer.write(' ' + ('-' * length) + '\n')
-
-        i = 0
-        for bidlim in self.bid_side.limits(): 
-            if i > 10: 
-                if i < bid_size: buffer.write(f'...({bid_size - 10} more bids)\n')
-                break
-            i += 1
-            buffer.write(mkline(bidlim))
-            
+        buffer.write(str(self.bid_side))
         return buffer.getvalue()

@@ -4,36 +4,17 @@ if __name__ == '__main__':
 
     ob = pylob.OrderBook()
 
-    r = ob.process_many([
-        pylob.OrderParams(500, 30, pylob.OrderSide.BID, pylob.OrderType.GTC),
-        pylob.OrderParams(499, 30, pylob.OrderSide.BID, pylob.OrderType.GTC),
-        pylob.OrderParams(498, 30, pylob.OrderSide.BID, pylob.OrderType.GTC),
+    for i in range(20):
+        ob.process_one(pylob.OrderParams(
+            pylob.OrderSide.ASK,
+            1100+i,
+            100
+        ))
 
-        pylob.OrderParams(510, 30, pylob.OrderSide.ASK, pylob.OrderType.GTC),
-        pylob.OrderParams(511, 30, pylob.OrderSide.ASK, pylob.OrderType.GTC),
-        pylob.OrderParams(512, 30, pylob.OrderSide.ASK, pylob.OrderType.GTC),
-    ])
-
-    print(r[0])
-
-    print(ob)
-
-    result = ob.process_one(
-        pylob.OrderParams(510, 25, pylob.OrderSide.BID)
-    )
-
-    print(result)
-
-    result = ob.process_one(
-        pylob.OrderParams(510, 30, pylob.OrderSide.BID)
-    )
-
-    print(result)
-
-    result = ob.process_one(
-        pylob.OrderParams(511, 40, pylob.OrderSide.BID)
-    )
-
-    print(result)
+        ob.process_one(pylob.OrderParams(
+            pylob.OrderSide.BID,
+            999 - i,
+            100
+        ))
 
     print(ob)

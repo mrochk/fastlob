@@ -1,6 +1,7 @@
 from abc import ABC
 from decimal import Decimal
 from typing import Optional
+from collections import defaultdict
 
 class EngineResult(ABC):
     success    : bool
@@ -22,12 +23,12 @@ class PlaceResult(EngineResult):
 class ExecResult(EngineResult):
     orders_matched   : int
     limits_matched   : int
-    execution_prices : Optional[dict[Decimal, Decimal]]
+    execution_prices : Optional[defaultdict[Decimal, Decimal]]
 
     def __init__(self, success : bool, identifier : int = 0, 
                  message : str = "", orders_matched : int = 0,
                  limits_matched : int = 0, 
-                 execution_prices : Optional[dict[Decimal, Decimal]] = None):
+                 execution_prices : Optional[defaultdict] = None):
 
         super().__init__(success, identifier, message)
         self.orders_matched   = orders_matched

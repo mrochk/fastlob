@@ -1,12 +1,12 @@
+import io
 from abc import ABC
 from decimal import Decimal
 from sortedcollections import SortedDict
 
-from pylob import OrderSide
+from pylob.enums import OrderSide
 from pylob.order import Order
 from pylob.consts import num
 from pylob.limit import Limit
-from pylob import todecimal
 
 class Side(ABC):
     '''
@@ -14,138 +14,90 @@ class Side(ABC):
     a BidSide or AskSide.
     '''
     _limits : SortedDict[Decimal, Limit]
+    _orders : dict[int, Order]
     _side   : OrderSide
+    _volume : Decimal
 
-    def fill_best(self):
-        best = self.best()
-        best.match_all()
-        del self._limits[best.price()]
+    def __init__(self):
+        self._orders = dict()
+        self._volume = Decimal(0)
 
-    def get_limit(self, price : Decimal) -> Limit:
-        assert isinstance(price, Decimal)
-        return self._limits[price]
+    def size(self): return len(self._limits)
 
-    def empty(self) -> bool: return self.size() == 0
-
-    def side(self) -> OrderSide: 
-        '''Getter for side.
-
-        Returns:
-            OrderSide: The "side" of the Side object.
-        '''
+    def side(self) -> OrderSide:
         return self._side
 
-    def limits(self): 
-        '''
-
-        Returns:
-            _type_: _description_
-        '''
-        return self._limits.values()
-
-    def size(self) -> int: 
-        '''Getter for number of limits.
-
-        Returns:
-            int: The number of limits sitting in the Side.
-        '''
-        return len(self._limits.keys())
-
-    def best(self) -> Limit: 
-        '''The best limit in the side.
-
-        Returns:
-            Limit: The best limit in the side, lowest if AskSide, highest for
-            BidSide.
-        '''
-        return self._limits.peekitem(0)[1]
-
-    def volume(self) -> Decimal: 
-        '''Getter for volume.
-
-        Returns:
-            Decimal: The sum of the volumes of all limits in the Side. 
-        '''
-        Sum = Decimal(0)
-        lim : Limit
-        for lim in self.limits(): Sum += lim.volume()
-        return Sum
-
-    def prices(self) -> set: 
-        '''Getter for all prices in the side.
-
-        Returns:
-            set: A set containing every unique price level.
-        '''
-        return self._limits.keys()
-
-    def limit_exists(self, price : num) -> bool: 
-        '''Check if limit is in the side.
-
-        Args:
-            price (num): The limit price level to check.
-
-        Returns:
-            bool: True if there is a limit at this price. 
-        '''
-        return price in self._limits
-
-    def add_limit(self, price : num) -> None: 
-        '''Add a limit to the side at a given price.
-
-        Args:
-            price (num): The price at which the limit should be added.
-
-        Raises:
-            ValueError: If there is already a limit at this price level.
-        '''
-        if self.limit_exists(price): 
-            raise ValueError(f'price {price} already in side')
-
+    def add_limit(self, price : Decimal):
         self._limits[price] = Limit(price, self.side())
 
-    def add_limit_if_not_exists(self, price : num):
-        if not self.limit_exists(price):
-            self.add_limit(price)
+    def price_exists(self, price : Decimal) -> bool:
+        return price in self._limits.keys()
 
-    def add_order(self, order : Order): 
-        '''Add an order to the side.
+    def get_limit(self, price : Decimal) -> Limit:
+        return self._limits[price]
 
-        Args:
-            order (Order): The limit order to add.
+    def place_order(self, order : Order):
+        self._limits[order.price()] = order
+        self._orders[order.id()]    = order
+        self._volume               += order.quantity()
 
-        Raises:
-            ValueError: If there is no limit for the order required price level.
-        '''
-        lim : Limit = self._limits.get(order.price())
+    def get_order(self, order_id : int):
+        return self._orders[order_id]
 
-        if lim is None:
-            raise ValueError(f'order price {order.price()} not in side')
+    def remove_order(self, order_id : int):
+        order = self.get_order(order_id)
+        self._volume -= order.quantity()
+        del self._orders[order_id]
 
-        lim.add_order(order)
+        if self.get_limit(order.price()).empty():
+            del self._limits[order.price()]
 
-    def remove_limit(self, price : num) -> None:
-        '''Remove a limit sitting in the side.
+    def best(self) -> Limit:
+        return self._limits.peekitem(0)[1]
 
-        Args:
-            price (num): The price level to remove.
-
-        Raises:
-            ValueError: If there is no such limit.
-        '''
-        if not self.limit_exists(price): 
-            raise ValueError(f'price {price} not in side')
-
-        del self._limits[price]
+    def empty(self) -> bool:
+        return self.size() == 0
 
 class BidSide(Side):
     '''The bid side, where the best price level is the highest. '''
     def __init__(self):
+        super().__init__()
         self._side   = OrderSide.BID
         self._limits = SortedDict(lambda x: -x)
+
+    def __repr__(self):
+        mkline = lambda lim: ' - ' + str(lim) + '\n'
+        buffer = io.StringIO()
+        i = 0
+        for bidlim in self._limits.values(): 
+            if i > 10: 
+                if i < self.size(): 
+                    buffer.write(f'...({self.size() - 10} more bids)\n')
+                break
+            i += 1
+            buffer.write(mkline(bidlim))
+        return buffer.getvalue()
 
 class AskSide(Side):
     '''The bid side, where the best price level is the lowest. '''
     def __init__(self):
+        super().__init__()
         self._side   = OrderSide.ASK
         self._limits = SortedDict()
+
+    def __repr__(self):
+        mkline = lambda lim: ' - ' + str(lim) + '\n'
+        buffer = io.StringIO()
+        ten_asks = list()
+        i = 0
+        for asklim in self._limits.values():
+            if i > 10: break
+            i += 1
+            ten_asks.append(asklim)
+
+        if self.size() > 10: buffer.write(f'...({self.size() - 10} more asks)\n')
+
+        for asklim in reversed(ten_asks):
+            length = buffer.write(mkline(asklim)) - 2
+
+        return buffer.getvalue()

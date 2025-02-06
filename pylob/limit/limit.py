@@ -1,10 +1,8 @@
 from decimal import Decimal
 from collections import deque
-from typing import Optional
 
-from pylob import todecimal, OrderSide
-from pylob.order import Order, OrderStatus
-from pylob.consts import num
+from pylob.enums import OrderSide, OrderStatus
+from pylob.order import Order
 
 class Limit:
     '''
@@ -16,17 +14,21 @@ class Limit:
     _orderqueue : deque[Order] 
     _ordermap   : dict[int, Order]
 
-    def __init__(self, price : num, side : OrderSide):
+    def __init__(self, price : Decimal, side : OrderSide):
         '''
         Args:
             price (num): The price at which the limit will sit.
             side (OrderSide): The side of the limit.
         '''
-        self._price      = todecimal(price)
+        self._price      = price
         self._side       = side
         self._volume     = Decimal(0)
         self._orderqueue = deque()
         self._ordermap   = dict()
+
+    def partial_fill_next(self, quantity : Decimal):
+        self.next_order().fill(quantity)
+        self._volume -= quantity
 
     def price(self) -> Decimal: 
         '''Getter for limit price.

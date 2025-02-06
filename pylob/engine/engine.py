@@ -1,7 +1,9 @@
 from decimal import Decimal
+from collections import defaultdict
 
 from pylob.side import Side
-from pylob.order import Order, OrderStatus
+from pylob.order import Order
+from pylob.consts import ZERO
 
 from .result import PlaceResult, ExecResult 
 
@@ -12,25 +14,12 @@ def place(order : Order, side : Side) -> PlaceResult:
         order (Order): The order to place.
         side (Side): The side at which the order should be placed.
     '''
-    success, message = True, "" 
+    price = order.price()
 
-    try:
-        side.add_limit_if_not_exists(order.price())
-        side.add_order(order)
+    if not side.price_exists(price): side.add_limit(price)
+    side.get_limit(price).add_order(order)
 
-    except ValueError as e:
-        success = False
-        message = str(e)
-
-    return PlaceResult(
-        success=success,
-        identifier=order.id() if success else 0,
-        message=message,
-    )
-
-def add_dict(dictionary : dict, key : Decimal, value : Decimal):
-    if value in dictionary: dictionary[key] += value
-    else: dictionary[key] = value
+    return PlaceResult(success=True, identifier=order.id())
 
 def execute(order : Order, side : Side) -> ExecResult:
     '''Execute a market order.
@@ -40,12 +29,14 @@ def execute(order : Order, side : Side) -> ExecResult:
         side (Side): The side at which the order should be executed.
     '''
     if order.quantity() > side.volume():
-        message = f'order quantity bigger than side volume '+ \
-                  f'({order.quantity()} > {side.volume()})'
-        return ExecResult(success=False, message=message)
+        return ExecResult(
+            success=False, 
+            message=f'order quantity bigger than side volume '+ \
+                f'({order.quantity()} > {side.volume()})'
+        )
 
-    execution_prices = dict()
     limits_matched = orders_matched = 0
+    execprices = defaultdict(lambda: ZERO)
     
     while order.quantity() > 0:
         lim = side.best()
@@ -54,7 +45,7 @@ def execute(order : Order, side : Side) -> ExecResult:
 
         limits_matched += 1
         orders_matched += lim.size()
-        execution_prices[lim.price()] = lim.volume()
+        execprices[lim.price()] = lim.volume()
 
         order.fill(lim.volume())
         side.fill_best()
@@ -65,7 +56,7 @@ def execute(order : Order, side : Side) -> ExecResult:
         if order.quantity() < lim_order.quantity(): break
 
         orders_matched += 1
-        add_dict(execution_prices, lim_order.price(), lim_order.quantity())
+        execprices[lim_order.price()] += lim_order.quantity()
 
         lim_order.fill(order.quantity())
         order.fill(lim_order.quantity())
@@ -73,9 +64,9 @@ def execute(order : Order, side : Side) -> ExecResult:
         lim_order = lim.pop_next_order()
 
     if order.quantity() > 0:
-        add_dict(execution_prices, lim.price(), order.quantity())
+        execprices[lim_order.price()] += order.quantity()
 
-        side.best().partial_fill(lim_order.id(), order.quantity())
+        side.best().partial_fill_next(order.quantity())
         order.fill(order.quantity())
 
     return ExecResult(
@@ -83,5 +74,5 @@ def execute(order : Order, side : Side) -> ExecResult:
         identifier=order.id(),
         orders_matched=orders_matched,
         limits_matched=limits_matched,
-        execution_prices=execution_prices,
+        execution_prices=execprices,
     )

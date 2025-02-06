@@ -1,3 +1,4 @@
+from .orderbook import OrderBook
+from .order import OrderParams
+from .enums import *
 from .utils import todecimal
-from .order import OrderSide, OrderType
-from .orderbook import OrderBook, OrderParams
