@@ -4,6 +4,6 @@ from typing import Union
 
 num = Union[Number | Decimal]  # helper typing constant
 
-ZERO: Decimal = Decimal('0')
+zero = lambda: Decimal('0')
 
 DEFAULT_DECIMAL_PRECISION: int = 2

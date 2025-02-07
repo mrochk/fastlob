@@ -1,13 +1,11 @@
 run:
 	@python3 main.py
 
-test-cheap:
-	@python3 -m unittest tests/cheap/*.py
+test: 
+	@python3 -m unittest tests/*.py
 
-test-expensive:
-	@python3 -m unittest tests/expensive/*.py
-
-test: test-cheap test-expensive
+benchmark:
+	@echo 'not implemented'
 
 typecheck: 
 	@mypy pylob
