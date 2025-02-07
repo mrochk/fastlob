@@ -22,6 +22,9 @@ class Side(ABC):
         self._orders = dict()
         self._volume = zero()
 
+    def volume(self) -> Decimal:
+        return self._volume
+
     def size(self) -> int:
         '''Get number of limits in the side.
 
@@ -90,7 +93,7 @@ class Side(ABC):
         Args:
             order (Order): The order to place.
         '''
-        self._limits[order.price()] = order
+        self._limits[order.price()].add_order(order)
         self._orders[order.id()] = order
         self._volume += order.quantity()
 
@@ -113,11 +116,17 @@ class Side(ABC):
         '''
         order = self.get_order(order_id)
         self._volume -= order.quantity()
+
         del self._orders[order_id]
 
         if self.get_limit(order.price()).empty():
             del self._limits[order.price()]
 
+    def fill_best(self) -> None:
+        lim = self.best()
+        self._volume -= lim.volume()
+        # lim.fill_all()
+        self._limits.pop(lim.price())
 
 class BidSide(Side):
     '''The bid side, where the best price level is the highest.'''

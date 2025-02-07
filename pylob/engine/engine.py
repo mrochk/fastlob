@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from pylob.side import Side
 from pylob.order import Order
-from pylob.consts import ZERO
+from pylob.consts import zero
 from .result import PlaceResult, ExecResult
 
 
@@ -18,7 +18,8 @@ def place(order: Order, side: Side) -> PlaceResult:
 
     if not side.price_exists(price):
         side.add_limit(price)
-    side.get_limit(price).add_order(order)
+
+    side.place_order(order)
 
     return PlaceResult(success=True, identifier=order.id())
 
@@ -38,7 +39,7 @@ def execute(order: Order, side: Side) -> ExecResult:
         )
 
     limits_matched = orders_matched = 0
-    execprices = defaultdict(lambda: ZERO)
+    execprices = defaultdict(zero)
 
     while order.quantity() > 0:
         lim = side.best()
