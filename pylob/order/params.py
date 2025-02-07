@@ -37,7 +37,7 @@ class OrderParams:
             raise TypeError()
         if not isinstance(type, OrderType):
             raise TypeError()
-        if not isinstance(expiry, Optional[float]):
+        if expiry and not isinstance(expiry, float):
             raise TypeError()
 
         if price <= 0:
@@ -47,5 +47,5 @@ class OrderParams:
             raise ValueError(
                 f'quantity ({quantity}) must be strictly positive')
 
-    def unwrap(self) -> tuple[Decimal, Decimal, OrderType, float]:
+    def unwrap(self) -> tuple[Decimal, Decimal, OrderType, Optional[float]]:
         return self.price, self.quantity, self.type, self.expiry

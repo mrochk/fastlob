@@ -10,7 +10,7 @@ class EngineResult(ABC):
     message: str
 
     def __init__(self, success: bool, identifier: int = 0, message: str = ""):
-        self.identifier = identifier if success else None
+        self.identifier = identifier
         self.success = success
         self.message = message
 

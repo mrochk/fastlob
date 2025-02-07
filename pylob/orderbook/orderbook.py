@@ -37,7 +37,7 @@ class OrderBook:
         Returns:
             EngineResult: The result of processing the order params.
         '''
-        order: Order = None  # create the proper order
+        order: Order # create the proper order
         match order_params.side:
             case OrderSide.BID: order = BidOrder(order_params)
             case OrderSide.ASK: order = AskOrder(order_params)

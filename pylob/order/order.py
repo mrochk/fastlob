@@ -32,7 +32,7 @@ class Order(ABC):
         self._id = uuid.uuid4().int
         self._status = OrderStatus.CREATED
 
-    def status(self) -> int:
+    def status(self) -> OrderStatus:
         '''Getter for order status.
 
         Returns:
