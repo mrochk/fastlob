@@ -25,8 +25,8 @@ class TestOrderBook(unittest.TestCase):
     def test_order_placement(self):
         """Test that orders are correctly placed in the book."""
         self.ob.process_many(self.orders_params)
-        self.assertEqual(self.ob.bids_count(), 5)
-        self.assertEqual(self.ob.asks_count(), 5)
+        self.assertEqual(self.ob.nbids(), 5)
+        self.assertEqual(self.ob.nasks(), 5)
         self.assertEqual(self.ob.best_bid().price(), 102)
         self.assertEqual(self.ob.best_ask().price(), 110)
 
@@ -77,7 +77,7 @@ class TestOrderBook(unittest.TestCase):
         self.ob.process_one(trade_order)
 
         self.assertEqual(self.ob.best_bid().price(), 101.5)
-        self.assertEqual(self.ob.bids_count(), 4)
+        self.assertEqual(self.ob.nbids(), 4)
 
     def test_best_ask_after_trade(self):
         """Ensure best ask updates correctly after a trade."""
@@ -86,6 +86,6 @@ class TestOrderBook(unittest.TestCase):
         self.ob.process_one(trade_order)
 
         self.assertEqual(self.ob.best_ask().price(), 110.5)
-        self.assertEqual(self.ob.asks_count(), 4)
+        self.assertEqual(self.ob.nasks(), 4)
 
     

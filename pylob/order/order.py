@@ -8,28 +8,29 @@ from dataclasses import dataclass
 from pylob.enums import OrderSide, OrderType, OrderStatus
 from .params import OrderParams
 
+
 @dataclass
 class Order(ABC):
     '''
     Base abstract class for orders in the order-book. 
     Extended by `BidOrder` and `AskOrder`.
     '''
-    _id       : int
-    _price    : Decimal
-    _quantity : Decimal
-    _type     : OrderType
-    _side     : OrderSide
-    _expiry   : Optional[float]
-    _status   : OrderStatus
+    _id: int
+    _price: Decimal
+    _quantity: Decimal
+    _type: OrderType
+    _side: OrderSide
+    _expiry: Optional[float]
+    _status: OrderStatus
 
-    def __init__(self, params : OrderParams):
-        self._price    = params.price
+    def __init__(self, params: OrderParams):
+        self._price = params.price
         self._quantity = params.quantity
-        self._type     = params.type
-        self._expiry   = params.expiry
+        self._type = params.type
+        self._expiry = params.expiry
 
-        self._id       = uuid.uuid4().int
-        self._status   = OrderStatus.CREATED
+        self._id = uuid.uuid4().int
+        self._status = OrderStatus.CREATED
 
     def status(self) -> int:
         '''Getter for order status.
@@ -39,7 +40,7 @@ class Order(ABC):
         '''
         return self._status
 
-    def set_status(self, status : OrderStatus):
+    def set_status(self, status: OrderStatus):
         self._status = status
 
     def id(self) -> int:
@@ -91,7 +92,7 @@ class Order(ABC):
         '''
         return self._side
 
-    def fill(self, quantity : Decimal):
+    def fill(self, quantity: Decimal):
         '''Decrease the quantity of the order by some numerical value.
 
         Args:
@@ -99,38 +100,42 @@ class Order(ABC):
         '''
         self._quantity -= quantity
 
-        if self.quantity() == 0: 
+        if self.quantity() == 0:
             self.set_status(OrderStatus.FILLED)
             return
 
         self.set_status(OrderStatus.PARTIAL)
 
-    def __eq__(self, other): 
+    def __eq__(self, other):
         '''Two orders are equal if they're (unique) ids are equal.'''
         return self.id() == other.id()
 
     def __repr__(self) -> str:
         fst, lst = str(self._id)[0], str(self._id)[-1]
-        return f'Order(id={fst}..{lst}, s={self.status()}, p={self.price()},'+\
+        return f'Order(id={fst}..{lst}, s={self.status()}, p={self.price()},' +\
             f' q={self.quantity()}, t={self.type()})'
+
 
 @dataclass
 class BidOrder(Order):
     '''
     A bid (buy) order.
     '''
-    def __init__(self, params : OrderParams):
+
+    def __init__(self, params: OrderParams):
         super().__init__(params)
         self._side = OrderSide.BID
 
     def __repr__(self) -> str: return 'Bid' + super().__repr__()
+
 
 @dataclass
 class AskOrder(Order):
     '''
     An ask (sell) order.
     '''
-    def __init__(self, params : OrderParams):
+
+    def __init__(self, params: OrderParams):
         super().__init__(params)
         self._side = OrderSide.ASK
 

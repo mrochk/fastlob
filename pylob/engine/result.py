@@ -3,16 +3,17 @@ from decimal import Decimal
 from typing import Optional
 from collections import defaultdict
 
-class EngineResult(ABC):
-    success    : bool
-    identifier : int
-    message    : str
 
-    def __init__(self, success : bool, identifier : int = 0, 
-                 message : str = ""):
-        self.identifier = identifier if success else None 
-        self.success    = success
-        self.message    = message
+class EngineResult(ABC):
+    success: bool
+    identifier: int
+    message: str
+
+    def __init__(self, success: bool, identifier: int = 0, message: str = ""):
+        self.identifier = identifier if success else None
+        self.success = success
+        self.message = message
+
 
 class PlaceResult(EngineResult):
     def __repr__(self):
@@ -20,19 +21,20 @@ class PlaceResult(EngineResult):
             f'PlaceResult(\n  success={self.success}\n  ' + \
             f'identifier={self.identifier}\n  message=\"{self.message}\"\n)'
 
-class ExecResult(EngineResult):
-    orders_matched   : int
-    limits_matched   : int
-    execution_prices : Optional[defaultdict[Decimal, Decimal]]
 
-    def __init__(self, success : bool, identifier : int = 0, 
-                 message : str = "", orders_matched : int = 0,
-                 limits_matched : int = 0, 
-                 execution_prices : Optional[defaultdict] = None):
+class ExecResult(EngineResult):
+    orders_matched: int
+    limits_matched: int
+    execution_prices: Optional[defaultdict[Decimal, Decimal]]
+
+    def __init__(self, success: bool, identifier: int = 0,
+                 message: str = "", orders_matched: int = 0,
+                 limits_matched: int = 0,
+                 execution_prices: Optional[defaultdict] = None):
 
         super().__init__(success, identifier, message)
-        self.orders_matched   = orders_matched
-        self.limits_matched   = limits_matched
+        self.orders_matched = orders_matched
+        self.limits_matched = limits_matched
         self.execution_prices = execution_prices
 
     def __repr__(self):

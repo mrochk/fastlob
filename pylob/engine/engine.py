@@ -4,10 +4,10 @@ from collections import defaultdict
 from pylob.side import Side
 from pylob.order import Order
 from pylob.consts import ZERO
+from .result import PlaceResult, ExecResult
 
-from .result import PlaceResult, ExecResult 
 
-def place(order : Order, side : Side) -> PlaceResult:
+def place(order: Order, side: Side) -> PlaceResult:
     '''Place a limit order.
 
     Args:
@@ -16,12 +16,14 @@ def place(order : Order, side : Side) -> PlaceResult:
     '''
     price = order.price()
 
-    if not side.price_exists(price): side.add_limit(price)
+    if not side.price_exists(price):
+        side.add_limit(price)
     side.get_limit(price).add_order(order)
 
     return PlaceResult(success=True, identifier=order.id())
 
-def execute(order : Order, side : Side) -> ExecResult:
+
+def execute(order: Order, side: Side) -> ExecResult:
     '''Execute a market order.
 
     Args:
@@ -30,18 +32,19 @@ def execute(order : Order, side : Side) -> ExecResult:
     '''
     if order.quantity() > side.volume():
         return ExecResult(
-            success=False, 
-            message=f'order quantity bigger than side volume '+ \
-                f'({order.quantity()} > {side.volume()})'
+            success=False,
+            message=f'order quantity bigger than side volume ' +
+            f'({order.quantity()} > {side.volume()})'
         )
 
     limits_matched = orders_matched = 0
     execprices = defaultdict(lambda: ZERO)
-    
+
     while order.quantity() > 0:
         lim = side.best()
 
-        if order.quantity() < lim.volume(): break
+        if order.quantity() < lim.volume():
+            break
 
         limits_matched += 1
         orders_matched += lim.size()
@@ -53,7 +56,8 @@ def execute(order : Order, side : Side) -> ExecResult:
     while order.quantity() > 0:
         lim_order = side.best().next_order()
 
-        if order.quantity() < lim_order.quantity(): break
+        if order.quantity() < lim_order.quantity():
+            break
 
         orders_matched += 1
         execprices[lim_order.price()] += lim_order.quantity()

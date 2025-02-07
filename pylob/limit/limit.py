@@ -4,33 +4,34 @@ from collections import deque
 from pylob.enums import OrderSide, OrderStatus
 from pylob.order import Order
 
+
 class Limit:
     '''
     A limit is a collection of limit orders sitting at a certain price.
     '''
-    _price      : Decimal
-    _side       : OrderSide
-    _volume     : Decimal
-    _orderqueue : deque[Order] 
-    _ordermap   : dict[int, Order]
+    _price: Decimal
+    _side: OrderSide
+    _volume: Decimal
+    _orderqueue: deque[Order]
+    _ordermap: dict[int, Order]
 
-    def __init__(self, price : Decimal, side : OrderSide):
+    def __init__(self, price: Decimal, side: OrderSide):
         '''
         Args:
             price (num): The price at which the limit will sit.
             side (OrderSide): The side of the limit.
         '''
-        self._price      = price
-        self._side       = side
-        self._volume     = Decimal(0)
+        self._price = price
+        self._side = side
+        self._volume = Decimal(0)
         self._orderqueue = deque()
-        self._ordermap   = dict()
+        self._ordermap = dict()
 
-    def partial_fill_next(self, quantity : Decimal):
+    def partial_fill_next(self, quantity: Decimal):
         self.next_order().fill(quantity)
         self._volume -= quantity
 
-    def price(self) -> Decimal: 
+    def price(self) -> Decimal:
         '''Getter for limit price.
 
         Returns:
@@ -38,7 +39,7 @@ class Limit:
         '''
         return self._price
 
-    def volume(self) -> Decimal: 
+    def volume(self) -> Decimal:
         '''Getter for limit volume (sum of orders quantity).
 
         Returns:
@@ -46,7 +47,7 @@ class Limit:
         '''
         return self._volume
 
-    def side(self) -> OrderSide: 
+    def side(self) -> OrderSide:
         '''Getter for limit side (Bid or Ask).
 
         Returns:
@@ -70,7 +71,7 @@ class Limit:
         '''
         return self.size() == 0
 
-    def add_order(self, order : Order):
+    def add_order(self, order: Order):
         '''Add (enqueue) an order to the limit.
 
         Args:
@@ -81,7 +82,7 @@ class Limit:
         self._volume += order.quantity()
         order.set_status(OrderStatus.IN_LINE)
 
-    def order_exists(self, identifier : int) -> bool:
+    def order_exists(self, identifier: int) -> bool:
         '''Returns true if an order with the given id is in the limit.
 
         Args:
@@ -92,7 +93,7 @@ class Limit:
         '''
         return identifier in self._ordermap
 
-    def get_order(self, identifier : int) -> Order:
+    def get_order(self, identifier: int) -> Order:
         '''Returns the order with the corresponding id.
 
         Args:
@@ -103,7 +104,7 @@ class Limit:
         '''
         return self._ordermap[identifier]
 
-    def next_order(self) -> Order: 
+    def next_order(self) -> Order:
         '''Returns the next order to be matched by an incoming market order.
 
         Returns:
@@ -111,7 +112,7 @@ class Limit:
         '''
         return self._orderqueue[0]
 
-    def pop_next_order(self) -> Order: 
+    def pop_next_order(self) -> Order:
         '''Delete from the queue and return the next order to be executed.
 
         Returns:

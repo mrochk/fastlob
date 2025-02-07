@@ -6,7 +6,6 @@ from pylob import engine
 from pylob.enums import OrderSide
 from pylob.engine import EngineResult
 from pylob.side import AskSide, BidSide
-from pylob.limit import Limit
 from pylob.order import OrderParams, Order, AskOrder, BidOrder
 
 class OrderBook:
@@ -58,9 +57,6 @@ class OrderBook:
         Args:
             order (Order): The order to process.
 
-        Raises:
-            ValueError: If the order side is undefined.
-
         Returns:
             ExecutionResult: The result of the matching engine.
         '''
@@ -81,38 +77,37 @@ class OrderBook:
         Args:
             order (Order): The order to check.
 
-        Raises:
-            ValueError: If the order side is undefined.
-
         Returns:
             bool: True if the order is a market order false otherwise.
         '''
         match order.side():
             case OrderSide.BID: 
                 if self.ask_side.empty(): return False
-                if self.best_ask().price() <= order.price(): return True
+                if self.best_ask() <= order.price(): return True
+
             case OrderSide.ASK:
                 if self.bid_side.empty(): return False
-                if self.best_bid().price() >= order.price(): return True
+                if self.best_bid() >= order.price(): return True
+
         return False
 
-    def best_ask(self) -> Limit: 
-        '''Get the best ask limit in the book.
+    def best_ask(self) -> Decimal: 
+        '''Get the best ask price in the book.
 
         Returns:
-            Limit: The best ask limit.
+            Decimal: The best ask price.
         '''
-        return self.ask_side.best()
+        return self.ask_side.best().price()
 
-    def best_bid(self) -> Limit: 
-        '''Get the best bid limit in the book.
+    def best_bid(self) -> Decimal: 
+        '''Get the best bid price in the book.
 
         Returns:
-            Limit: The best bid limit.
+            Decimal: The best bid price.
         '''
-        return self.bid_side.best()
+        return self.bid_side.best().price()
 
-    def bids_count(self) -> int:
+    def nbids(self) -> int:
         '''Get the number of bids limits in the book.
 
         Returns:
@@ -120,7 +115,7 @@ class OrderBook:
         '''
         return self.bid_side.size()
 
-    def asks_count(self) -> int:
+    def nasks(self) -> int:
         '''Get the number of asks limits in the book.
 
         Returns:
@@ -128,13 +123,13 @@ class OrderBook:
         '''
         return self.ask_side.size()
 
-    def prices_count(self) -> int:   
+    def nprices(self) -> int:   
         '''Get the total number of limits (price levels) in the book.
 
         Returns:
             int: Number of limits.
         '''
-        return self.asks_count() + self.bids_count()
+        return self.nasks() + self.nbids()
  
     def midprice(self) -> Decimal:
         '''Get the order-book mid-price.
@@ -164,9 +159,9 @@ class OrderBook:
         - ...
 
         '''
+        length = 48
         buffer = StringIO()
         buffer.write(f'\nOrder-book {self.name}:\n')
-        length = 50
         buffer.write(str(self.ask_side))
         buffer.write(' ' + ('-' * length) + '\n')
         buffer.write(str(self.bid_side))

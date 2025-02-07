@@ -1,8 +1,9 @@
 from decimal import Decimal
 
-from pylob.consts import DEFAULT_DECIMAL_PRECISION, num
+from pylob.consts import num, DEFAULT_DECIMAL_PRECISION
 
-def todecimal(f : num | str) -> Decimal:
+
+def todecimal(f: num | str) -> Decimal:
     '''Wrapper around the Decimal constructor.
 
     Args:
@@ -13,4 +14,4 @@ def todecimal(f : num | str) -> Decimal:
     '''
     dec = Decimal.from_float(f) if isinstance(f, float) else Decimal(f)
     exp = Decimal(f'0.{"0"*DEFAULT_DECIMAL_PRECISION}')
-    return dec.quantize(exp) 
+    return dec.quantize(exp)
