@@ -6,6 +6,7 @@ from pylob.side import BidSide, AskSide
 from pylob.limit import Limit
 from pylob.order import OrderParams
 
+
 class TestBidSide(unittest.TestCase):
     def setUp(self):
         self.side = BidSide()
@@ -33,6 +34,7 @@ class TestBidSide(unittest.TestCase):
         self.side.add_limit(Decimal("100"))
         self.side.add_limit(Decimal("101"))
         self.assertEqual(self.side.best().price(), Decimal("101"))
+
 
 class TestAskSide(unittest.TestCase):
     def setUp(self):

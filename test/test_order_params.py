@@ -2,7 +2,8 @@ import unittest
 from decimal import Decimal
 from pylob.enums import OrderSide, OrderType
 from pylob.utils import todecimal
-from pylob.order import OrderParams  
+from pylob.order import OrderParams
+
 
 class TestOrderParams(unittest.TestCase):
     def test_order_params_creation(self):
@@ -14,7 +15,8 @@ class TestOrderParams(unittest.TestCase):
         self.assertIsNone(order.expiry)
 
     def test_order_params_with_optional_expiry(self):
-        order = OrderParams(OrderSide.ASK, 50.25, 5, OrderType.FOK, 1650000000.0)
+        order = OrderParams(OrderSide.ASK, 50.25, 5,
+                            OrderType.FOK, 1650000000.0)
         self.assertEqual(order.side, OrderSide.ASK)
         self.assertEqual(order.price, todecimal(50.25))
         self.assertEqual(order.quantity, todecimal(5))
@@ -47,4 +49,5 @@ class TestOrderParams(unittest.TestCase):
 
     def test_order_params_unwrap(self):
         order = OrderParams(OrderSide.BID, 99.99, 20, OrderType.GTC, None)
-        self.assertEqual(order.unwrap(), (Decimal("99.99"), Decimal("20"), OrderType.GTC, None))
+        self.assertEqual(order.unwrap(), (Decimal("99.99"),
+                         Decimal("20"), OrderType.GTC, None))

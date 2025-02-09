@@ -1,13 +1,16 @@
 import unittest
 from decimal import Decimal
 from pylob.enums import OrderSide, OrderType, OrderStatus
-from pylob.order import OrderParams  
+from pylob.order import OrderParams
 from pylob.order import Order, BidOrder, AskOrder
+
 
 class TestOrder(unittest.TestCase):
     def setUp(self):
-        self.params_bid = OrderParams(OrderSide.BID, 100, 10, OrderType.GTC, None)
-        self.params_ask = OrderParams(OrderSide.ASK, 150, 5, OrderType.GTD, 1700000000.0)
+        self.params_bid = OrderParams(
+            OrderSide.BID, 100, 10, OrderType.GTC, None)
+        self.params_ask = OrderParams(
+            OrderSide.ASK, 150, 5, OrderType.GTD, 1700000000.0)
         self.bid_order = BidOrder(self.params_bid)
         self.ask_order = AskOrder(self.params_ask)
 
@@ -31,7 +34,8 @@ class TestOrder(unittest.TestCase):
 
     def test_order_equality(self):
         another_bid = BidOrder(self.params_bid)
-        self.assertNotEqual(self.bid_order, another_bid)  # IDs should be unique
+        # IDs should be unique
+        self.assertNotEqual(self.bid_order, another_bid)
 
     def test_order_representation(self):
         self.assertTrue(repr(self.bid_order).startswith("BidOrder"))

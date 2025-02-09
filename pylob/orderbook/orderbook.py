@@ -37,7 +37,7 @@ class OrderBook:
         Returns:
             EngineResult: The result of processing the order params.
         '''
-        order: Order # create the proper order
+        order: Order  # create the proper order
         match order_params.side:
             case OrderSide.BID: order = BidOrder(order_params)
             case OrderSide.ASK: order = AskOrder(order_params)
@@ -172,4 +172,6 @@ class OrderBook:
         buffer.write(str(self.ask_side))
         buffer.write(' ' + ('-' * length) + '\n')
         buffer.write(str(self.bid_side))
+        buffer.write(f'\n    Spread = {self.spread()}')
+        buffer.write(f', Mid-price = {self.midprice()}')
         return buffer.getvalue()

@@ -122,6 +122,7 @@ class Side(ABC):
         if self.get_limit(order.price()).empty():
             del self._limits[order.price()]
 
+
 class BidSide(Side):
     '''The bid side, where the best price level is the highest.'''
 

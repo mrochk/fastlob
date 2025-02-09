@@ -8,6 +8,7 @@ from pylob.order import OrderParams
 from pylob.engine import PlaceResult, ExecResult
 from pylob.engine import place, execute
 
+
 class TestEngine(unittest.TestCase):
     def setUp(self):
         self.bid_side = BidSide()
@@ -33,24 +34,25 @@ class TestEngine(unittest.TestCase):
         bid_order_params = OrderParams(OrderSide.BID, 100, 10, OrderType.GTC)
         bid_order = BidOrder(bid_order_params)
         place(bid_order, self.bid_side)
-        
+
         ask_order_params = OrderParams(OrderSide.ASK, 100, 10, OrderType.GTC)
         ask_order = AskOrder(ask_order_params)
-        
+
         result = execute(ask_order, self.bid_side)
         self.assertTrue(result.success)
         self.assertEqual(result.orders_matched, 1)
         self.assertEqual(result.limits_matched, 1)
-        self.assertEqual(result.execution_prices[Decimal("100")], Decimal("10"))
+        self.assertEqual(
+            result.execution_prices[Decimal("100")], Decimal("10"))
 
     def test_execute_order_partial_fill(self):
         bid_order_params = OrderParams(OrderSide.BID, 100, 10, OrderType.GTC)
         bid_order = BidOrder(bid_order_params)
         place(bid_order, self.bid_side)
-        
+
         ask_order_params = OrderParams(OrderSide.ASK, 100, 5, OrderType.GTC)
         ask_order = AskOrder(ask_order_params)
-        
+
         result = execute(ask_order, self.bid_side)
 
         self.assertTrue(result.success)

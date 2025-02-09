@@ -2,8 +2,9 @@ import unittest
 from decimal import Decimal
 from pylob.enums import OrderSide, OrderStatus
 from pylob.order import BidOrder, AskOrder
-from pylob.limit import Limit  
+from pylob.limit import Limit
 from pylob.order import OrderParams
+
 
 class TestLimit(unittest.TestCase):
     def setUp(self):
@@ -32,7 +33,8 @@ class TestLimit(unittest.TestCase):
 
     def test_get_order(self):
         self.limit_bid.add_order(self.order1)
-        self.assertEqual(self.limit_bid.get_order(self.order1.id()), self.order1)
+        self.assertEqual(self.limit_bid.get_order(
+            self.order1.id()), self.order1)
 
     def test_next_order(self):
         self.limit_bid.add_order(self.order1)
@@ -61,4 +63,3 @@ class TestLimit(unittest.TestCase):
     def test_repr(self):
         self.assertTrue(repr(self.limit_bid).startswith("BIDLimit"))
         self.assertTrue(repr(self.limit_ask).startswith("ASKLimit"))
-
