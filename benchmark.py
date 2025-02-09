@@ -7,7 +7,7 @@ from pylob import (
     OrderSide,
 )
 
- 
+
 def benchmark(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -45,12 +45,15 @@ def benchmark2():
     QTY = 1000
 
     ob = OrderBook()
-    bids = [OrderParams(OrderSide.BID, PRICE_BID - i, QTY) for i in range(100_000)]
-    asks = [OrderParams(OrderSide.ASK, PRICE_ASK + i, QTY) for i in range(100_000)]
+    bids = [OrderParams(OrderSide.BID, PRICE_BID - i, QTY)
+            for i in range(100_000)]
+    asks = [OrderParams(OrderSide.ASK, PRICE_ASK + i, QTY)
+            for i in range(100_000)]
 
     @benchmark
     def Benchmark2(): ob.process_many(asks + bids)
     Benchmark2()
+
 
 benchmarks = [
     benchmark1,
@@ -58,4 +61,5 @@ benchmarks = [
 ]
 
 if __name__ == '__main__':
-    for b in benchmarks: b()
+    for benchmark in benchmarks:
+        benchmark()
