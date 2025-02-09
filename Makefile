@@ -2,10 +2,10 @@ run:
 	@python3 main.py
 
 test: 
-	@python3 -m unittest tests/*.py
+	@python3 -m unittest test/*.py
 
 benchmark:
-	@echo 'not implemented'
+	@python3 benchmark.py
 
 typecheck: 
 	@mypy pylob
