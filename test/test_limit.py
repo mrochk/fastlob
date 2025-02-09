@@ -36,11 +36,11 @@ class TestLimit(unittest.TestCase):
 
     def test_next_order(self):
         self.limit_bid.add_order(self.order1)
-        self.assertEqual(self.limit_bid.next_order(), self.order1)
+        self.assertEqual(self.limit_bid.get_next_order(), self.order1)
 
     def test_pop_next_order(self):
         self.limit_bid.add_order(self.order1)
-        order = self.limit_bid.pop_next_order()
+        order = self.limit_bid.delete_next_order()
         self.assertEqual(order, self.order1)
         self.assertTrue(self.limit_bid.empty())
 

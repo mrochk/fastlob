@@ -122,12 +122,6 @@ class Side(ABC):
         if self.get_limit(order.price()).empty():
             del self._limits[order.price()]
 
-    def fill_best(self) -> None:
-        lim = self.best()
-        self._volume -= lim.volume()
-        # lim.fill_all()
-        self._limits.pop(lim.price())
-
 class BidSide(Side):
     '''The bid side, where the best price level is the highest.'''
 

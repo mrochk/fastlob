@@ -30,7 +30,7 @@ class ExecResult(EngineResult):
     def __init__(self, success: bool, identifier: int = 0,
                  message: str = "", orders_matched: int = 0,
                  limits_matched: int = 0,
-                 execution_prices: Optional[defaultdict] = None):
+                 execution_prices: Optional[defaultdict] = defaultdict(Decimal)):
 
         super().__init__(success, identifier, message)
         self.orders_matched = orders_matched

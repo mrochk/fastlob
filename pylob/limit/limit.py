@@ -28,7 +28,7 @@ class Limit:
         self._ordermap = dict()
 
     def partial_fill_next(self, quantity: Decimal):
-        self.next_order().fill(quantity)
+        self.get_next_order().fill(quantity)
         self._volume -= quantity
 
     def price(self) -> Decimal:
@@ -104,7 +104,7 @@ class Limit:
         '''
         return self._ordermap[identifier]
 
-    def next_order(self) -> Order:
+    def get_next_order(self) -> Order:
         '''Returns the next order to be matched by an incoming market order.
 
         Returns:
@@ -112,16 +112,12 @@ class Limit:
         '''
         return self._orderqueue[0]
 
-    def pop_next_order(self) -> Order:
-        '''Delete from the queue and return the next order to be executed.
-
-        Returns:
-            Order: The next order to be executed.
+    def delete_next_order(self) -> None:
+        '''Delete from the queue the next order to be executed.
         '''
         order = self._orderqueue.popleft()
         self._volume -= order.quantity()
         del self._ordermap[order.id()]
-        return order
 
     def __repr__(self) -> str:
         p, s, v = self.price(), self.size(), self.volume()

@@ -93,12 +93,13 @@ class Order(ABC):
         return self._side
 
     def fill(self, quantity: Decimal):
-        '''Decrease the quantity of the order by some numerical value.
+        '''Decrease the quantity of the order by some numerical value. If
+        `quantity` is greater than the order qty, we set it to 0.
 
         Args:
             quantity (num): The amount to subtract to the order quantity.
         '''
-        self._quantity -= quantity
+        self._quantity -= min(quantity, self._quantity)
 
         if self.quantity() == 0:
             self.set_status(OrderStatus.FILLED)

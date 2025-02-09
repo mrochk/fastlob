@@ -1,9 +1,5 @@
-from decimal import Decimal
-from collections import defaultdict
-
 from pylob.side import Side
 from pylob.order import Order
-from pylob.consts import zero
 from .result import PlaceResult, ExecResult
 
 
@@ -31,53 +27,60 @@ def execute(order: Order, side: Side) -> ExecResult:
         order (Order): The order to execute.
         side (Side): The side at which the order should be executed.
     '''
+    result = ExecResult(success=False)
+
     if order.quantity() > side.volume():
-        return ExecResult(
-            success=False,
-            message=f'order quantity bigger than side volume ' +
+        result.message = f'order quantity bigger than side volume ' + \
             f'({order.quantity()} > {side.volume()})'
-        )
+        return result
 
-    limits_matched = orders_matched = 0
-    execprices = defaultdict(zero)
+    _fill_whole_limits(side, order, result)
+    _fill_whole_orders(side, order, result)
+    _fill_partial_order(side, order, result)
 
+    result.success = True
+    result.identifier = order.id()
+    return result
+
+
+def _fill_whole_limits(side: Side, order: Order, result: ExecResult):
     while order.quantity() > 0:
         lim = side.best()
 
         if order.quantity() < lim.volume():
             break
 
-        limits_matched += 1
-        orders_matched += lim.size()
-        execprices[lim.price()] = lim.volume()
+        result.limits_matched += 1
+        result.orders_matched += lim.size()
+        result.execution_prices[lim.price()] = lim.volume()
 
         order.fill(lim.volume())
-        side.fill_best()
+        side._volume -= lim.volume()
+        side._limits.pop(lim.price())
+
+
+def _fill_whole_orders(side: Side, order: Order, result: ExecResult):
+    lim = side.best()
 
     while order.quantity() > 0:
-        lim_order = side.best().next_order()
+        next_order = lim.get_next_order()
 
-        if order.quantity() < lim_order.quantity():
-            break
+        if order.quantity() < next_order.quantity():
+            return
 
-        orders_matched += 1
-        execprices[lim_order.price()] += lim_order.quantity()
+        result.orders_matched += 1
+        result.execution_prices[next_order.price()] += next_order.quantity()
 
-        lim_order.fill(order.quantity())
-        order.fill(lim_order.quantity())
+        order.fill(next_order.quantity())
+        side._volume -= next_order.quantity()
+        lim.delete_next_order()
 
-        lim_order = lim.pop_next_order()
 
+def _fill_partial_order(side: Side, order: Order, result: ExecResult):
+    lim_order = side.best().get_next_order()
     if order.quantity() > 0:
-        execprices[lim_order.price()] += order.quantity()
+        result.execution_prices[lim_order.price()] += order.quantity()
 
         side.best().partial_fill_next(order.quantity())
+        side._volume -= order.quantity()
         order.fill(order.quantity())
-
-    return ExecResult(
-        success=True,
-        identifier=order.id(),
-        orders_matched=orders_matched,
-        limits_matched=limits_matched,
-        execution_prices=execprices,
-    )
