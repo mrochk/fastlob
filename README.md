@@ -1,7 +1,7 @@
 # `pylob` | Python Limit Order-book
 Fast &amp; minimalist limit order-book (LOB) implementation in pure Python.
 
-<img src="ss.png" width=500 style='border: 5px solid grey; border-radius: 7px;'>
+<img src="ss.png" width=510 style='border: 5px solid grey; border-radius: 7px;'>
 
 *Package currently in development, not usable yet.*
 
