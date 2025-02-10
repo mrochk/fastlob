@@ -1,4 +1,4 @@
-# `pylob` | Python Limit-Order-book
+# `pylob` | Python Limit-Order-Book
 Fast &amp; minimalist limit-order-book (LOB) implementation in pure Python.
 
 <img src="ss.png" width=510>
