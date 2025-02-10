@@ -1,6 +1,8 @@
-from io import StringIO
+import io
+import os
 from typing import Optional, Iterable
 from decimal import Decimal
+from termcolor import colored, cprint
 
 from pylob import engine
 from pylob.enums import OrderSide
@@ -155,7 +157,7 @@ class OrderBook:
         '''
         return self.best_ask() - self.best_bid()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         '''Outputs the order-book in the following format:\n
 
         Order-book <pair>:
@@ -167,11 +169,21 @@ class OrderBook:
 
         '''
         length = 48
-        buffer = StringIO()
-        buffer.write(f'\nOrder-book {self.name}:\n')
-        buffer.write(str(self.ask_side))
+        buffer = io.StringIO()
+        buffer.write(' '*(length//2 - 9) + f'Order-book {self.name}\n')
+        buffer.write(colored(str(self.ask_side), 'red'))
         buffer.write(' ' + ('-' * length) + '\n')
-        buffer.write(str(self.bid_side))
-        buffer.write(f'\n    Spread = {self.spread()}')
-        buffer.write(f', Mid-price = {self.midprice()}')
+        buffer.write(colored(str(self.bid_side), 'green'))
+
+        if self.ask_side.empty() or self.bid_side.empty():
+            return buffer.getvalue()
+
+        buffer.write(colored(f'\n    Spread = {self.spread()}', color='blue'))
+        buffer.write(colored(f', Mid-price = {self.midprice()}', color='blue'))
         return buffer.getvalue()
+
+    def display(self) -> None:
+        '''Clear terminal and display order-book.
+        '''
+        os.system('cls' if os.name == 'nt' else 'clear')
+        print('\n', self, '\n')

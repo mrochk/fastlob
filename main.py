@@ -1,23 +1,23 @@
 import time
 from numpy import random
+import matplotlib.pyplot as plt
 
 import pylob
 
 if __name__ == '__main__':
-    ob = pylob.OrderBook()
+    ob = pylob.OrderBook('BTC/USDT')
+    prices_over_time = list()
 
-    for t in range(1000):
-        n_asks = random.poisson(lam=100)
+    for t in range(10000000):
+        n_asks = random.poisson(lam=5)
         ask_prices = [pylob.todecimal(random.normal(1500, 100))
                       for _ in range(n_asks)]
         ask_qtys = [pylob.todecimal(random.normal(10, 1))
                     for _ in range(n_asks)]
 
-        n_bids = random.poisson(lam=100)
-        bid_prices = [pylob.todecimal(random.normal(1000, 100))
-                      for _ in range(n_bids)]
-        bid_qtys = [pylob.todecimal(random.normal(10, 1))
-                    for _ in range(n_bids)]
+        n_bids = random.poisson(lam=5)
+        bid_prices = pylob.todecimal(random.normal(1500, 100, size=n_bids))
+        bid_qtys = pylob.todecimal(random.normal(10, 1, size=n_bids))
 
         ask_orders = [pylob.OrderParams(
             pylob.OrderSide.ASK, p, q) for p, q in zip(ask_prices, ask_qtys)]
@@ -28,5 +28,13 @@ if __name__ == '__main__':
         random.shuffle(orders)
         ob.process_many(orders)
 
-        print(ob)
+        nprices = ob.nprices()
+        prices_over_time.append(nprices)
+
+        ob.display()
         time.sleep(0.1)
+
+        if ob.spread() < 2: exit(0)
+
+    plt.plot(prices_over_time)
+    plt.savefig('fig')

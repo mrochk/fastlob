@@ -1,11 +1,9 @@
 from time import perf_counter
 from functools import wraps
+import random
+import cProfile
 
-from pylob import (
-    OrderBook,
-    OrderParams,
-    OrderSide,
-)
+from pylob import OrderBook, OrderParams, OrderSide
 
 
 def benchmark(func):
@@ -20,46 +18,4 @@ def benchmark(func):
         return result
     return wrapper
 
-
-def benchmark1():
-    '''Place 100_000 orders at the same limit, on both sides.
-    '''
-    PRICE_BID = 1000
-    PRICE_ASK = 2000
-    QTY = 1000
-
-    ob = OrderBook()
-    bids = [OrderParams(OrderSide.BID, PRICE_BID, QTY) for _ in range(100_000)]
-    asks = [OrderParams(OrderSide.ASK, PRICE_ASK, QTY) for _ in range(100_000)]
-
-    @benchmark
-    def Benchmark1(): ob.process_many(asks + bids)
-    Benchmark1()
-
-
-def benchmark2():
-    '''Place 100_000 orders at different limits, on both sides.
-    '''
-    PRICE_BID = 200_000
-    PRICE_ASK = 300_000
-    QTY = 1000
-
-    ob = OrderBook()
-    bids = [OrderParams(OrderSide.BID, PRICE_BID - i, QTY)
-            for i in range(100_000)]
-    asks = [OrderParams(OrderSide.ASK, PRICE_ASK + i, QTY)
-            for i in range(100_000)]
-
-    @benchmark
-    def Benchmark2(): ob.process_many(asks + bids)
-    Benchmark2()
-
-
-benchmarks = [
-    benchmark1,
-    benchmark2,
-]
-
-if __name__ == '__main__':
-    for benchmark in benchmarks:
-        benchmark()
+if __name__ == '__main__': raise NotImplemented

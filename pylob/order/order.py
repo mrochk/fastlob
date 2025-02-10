@@ -1,6 +1,5 @@
-import uuid
-from abc import ABC
-from enum import Enum
+import abc
+import secrets
 from typing import Optional
 from decimal import Decimal
 from dataclasses import dataclass
@@ -10,12 +9,12 @@ from .params import OrderParams
 
 
 @dataclass
-class Order(ABC):
+class Order(abc.ABC):
     '''
     Base abstract class for orders in the order-book. 
     Extended by `BidOrder` and `AskOrder`.
     '''
-    _id: int
+    _id: str
     _price: Decimal
     _quantity: Decimal
     _type: OrderType
@@ -23,13 +22,13 @@ class Order(ABC):
     _expiry: Optional[float]
     _status: OrderStatus
 
-    def __init__(self, params: OrderParams):
+    def __init__(self, params: OrderParams, id_size: int = 8):
         self._price = params.price
         self._quantity = params.quantity
         self._type = params.type
         self._expiry = params.expiry
 
-        self._id = uuid.uuid4().int
+        self._id = secrets.token_urlsafe(nbytes=id_size)
         self._status = OrderStatus.CREATED
 
     def status(self) -> OrderStatus:
@@ -43,11 +42,11 @@ class Order(ABC):
     def set_status(self, status: OrderStatus):
         self._status = status
 
-    def id(self) -> int:
+    def id(self) -> str:
         '''Getter for order identifier.
 
         Returns:
-            int: The unique order identifier.
+            str: The unique order identifier.
         '''
         return self._id
 
@@ -112,8 +111,7 @@ class Order(ABC):
         return self.id() == other.id()
 
     def __repr__(self) -> str:
-        fst, lst = str(self._id)[0], str(self._id)[-1]
-        return f'Order(id={fst}..{lst}, s={self.status()}, p={self.price()},' +\
+        return f'Order(id={self.id()}, s={self.status()}, p={self.price()},' +\
             f' q={self.quantity()}, t={self.type()})'
 
 

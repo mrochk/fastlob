@@ -42,8 +42,11 @@ def execute(order: Order, side: Side) -> ExecResult:
     result.identifier = order.id()
     return result
 
+    
 
 def _fill_whole_limits(side: Side, order: Order, result: ExecResult):
+    '''While the order to execute is larger than entire limits.
+    '''
     while order.quantity() > 0:
         lim = side.best()
 
@@ -60,9 +63,10 @@ def _fill_whole_limits(side: Side, order: Order, result: ExecResult):
 
 
 def _fill_whole_orders(side: Side, order: Order, result: ExecResult):
-    lim = side.best()
-
+    '''While the order to execute is larger than whole orders.
+    '''
     while order.quantity() > 0:
+        lim = side.best()
         next_order = lim.get_next_order()
 
         if order.quantity() < next_order.quantity():
@@ -77,8 +81,10 @@ def _fill_whole_orders(side: Side, order: Order, result: ExecResult):
 
 
 def _fill_partial_order(side: Side, order: Order, result: ExecResult):
-    lim_order = side.best().get_next_order()
+    '''Partially fill the last order left with our order.
+    '''
     if order.quantity() > 0:
+        lim_order = side.best().get_next_order()
         result.execution_prices[lim_order.price()] += order.quantity()
 
         side.best().partial_fill_next(order.quantity())
