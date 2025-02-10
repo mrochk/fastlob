@@ -13,7 +13,7 @@ class TestOrderBook(unittest.TestCase):
         order_params = OrderParams(
             OrderSide.BID, Decimal("100.5"), 10, OrderType.GTC)
         result = self.order_book.process_one(order_params)
-        self.assertTrue(result.success)
+        self.assertTrue(result._success)
         self.assertEqual(self.order_book.best_bid(), Decimal("100.5"))
         self.assertEqual(self.order_book.nbids(), 1)
 
@@ -21,7 +21,7 @@ class TestOrderBook(unittest.TestCase):
         order_params = OrderParams(
             OrderSide.ASK, Decimal("101.0"), 5, OrderType.GTC)
         result = self.order_book.process_one(order_params)
-        self.assertTrue(result.success)
+        self.assertTrue(result._success)
         self.assertEqual(self.order_book.best_ask(), Decimal("101.0"))
         self.assertEqual(self.order_book.nasks(), 1)
 
@@ -34,7 +34,7 @@ class TestOrderBook(unittest.TestCase):
         self.order_book.process_one(bid_params)
         result = self.order_book.process_one(ask_params)
 
-        self.assertTrue(result.success)
+        self.assertTrue(result._success)
         self.assertEqual(result.orders_matched, 1)
         self.assertEqual(result.limits_matched, 1)
         self.assertEqual(self.order_book.nprices(), 0)

@@ -39,7 +39,7 @@ class TestEngine(unittest.TestCase):
         ask_order = AskOrder(ask_order_params)
 
         result = execute(ask_order, self.bid_side)
-        self.assertTrue(result.success)
+        self.assertTrue(result._success)
         self.assertEqual(result.orders_matched, 1)
         self.assertEqual(result.limits_matched, 1)
         self.assertEqual(
@@ -55,7 +55,7 @@ class TestEngine(unittest.TestCase):
 
         result = execute(ask_order, self.bid_side)
 
-        self.assertTrue(result.success)
+        self.assertTrue(result._success)
         self.assertEqual(result.orders_matched, 0)
         self.assertEqual(result.limits_matched, 0)
         self.assertEqual(result.execution_prices[Decimal("100")], Decimal("5"))
@@ -65,5 +65,5 @@ class TestEngine(unittest.TestCase):
         ask_order_params = OrderParams(OrderSide.ASK, 100, 10, OrderType.GTC)
         ask_order = AskOrder(ask_order_params)
         result = execute(ask_order, self.bid_side)
-        self.assertFalse(result.success)
-        self.assertIn("order quantity bigger than side volume", result.message)
+        self.assertFalse(result._success)
+        self.assertIn("order quantity bigger than side volume", result._message)

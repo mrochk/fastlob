@@ -6,9 +6,9 @@ from termcolor import colored, cprint
 
 from pylob import engine
 from pylob.enums import OrderSide
-from pylob.engine import EngineResult
 from pylob.side import AskSide, BidSide
 from pylob.order import OrderParams, Order, AskOrder, BidOrder
+from .result import ExecutionResult, LimitResult, MarketResult 
 
 
 class OrderBook:
@@ -29,7 +29,7 @@ class OrderBook:
         self.ask_side = AskSide()
         self.bid_side = BidSide()
 
-    def process_one(self, order_params: OrderParams) -> EngineResult:
+    def process_one(self, order_params: OrderParams) -> ExecutionResult:
         '''Creates and processes the order corresponding to the corresponding
         arguments.
 
@@ -46,7 +46,7 @@ class OrderBook:
 
         return self.process_order(order)
 
-    def process_many(self, orders_params: Iterable[OrderParams]) -> list[EngineResult]:
+    def process_many(self, orders_params: Iterable[OrderParams]) -> list[ExecutionResult]:
         '''Process many orders at once.
 
         Args:
@@ -54,7 +54,7 @@ class OrderBook:
         '''
         return [self.process_one(orderp) for orderp in orders_params]
 
-    def process_order(self, order: Order) -> EngineResult:
+    def process_order(self, order: Order) -> ExecutionResult:
         '''Place or execute the given order depending on its price level.
 
         Args:
@@ -68,13 +68,15 @@ class OrderBook:
                 if self.is_market(order):
                     return engine.execute(order, self.ask_side)
                 else:
-                    return engine.place(order, self.bid_side)
+                    self.bid_side.place(order)
+                    return LimitResult(True, order.id())
 
             case OrderSide.ASK:
                 if self.is_market(order):
                     return engine.execute(order, self.bid_side)
                 else:
-                    return engine.place(order, self.ask_side)
+                    self.ask_side.place(order)
+                    return LimitResult(True, order.id())
 
     def is_market(self, order: Order) -> bool:
         '''Check if an order is a market order.

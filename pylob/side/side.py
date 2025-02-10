@@ -87,12 +87,15 @@ class Side(ABC):
         '''
         return self._limits[price]
 
-    def place_order(self, order: Order) -> None:
+    def place(self, order: Order) -> None:
         '''Place an order in the side at its corresponding limit.
 
         Args:
             order (Order): The order to place.
         '''
+        if not self.price_exists(order.price()):
+            self.add_limit(order.price())
+
         self._limits[order.price()].add_order(order)
         self._orders[order.id()] = order
         self._volume += order.quantity()

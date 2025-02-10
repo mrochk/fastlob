@@ -1,36 +1,22 @@
+'''The engine module is solely responsible for executing market orders.
+'''
+
 from pylob.side import Side
 from pylob.order import Order
-from .result import PlaceResult, ExecResult
+from pylob.orderbook.result import MarketResult
 
 
-def place(order: Order, side: Side) -> PlaceResult:
-    '''Place a limit order.
-
-    Args:
-        order (Order): The order to place.
-        side (Side): The side at which the order should be placed.
-    '''
-    price = order.price()
-
-    if not side.price_exists(price):
-        side.add_limit(price)
-
-    side.place_order(order)
-
-    return PlaceResult(success=True, identifier=order.id())
-
-
-def execute(order: Order, side: Side) -> ExecResult:
+def execute(order: Order, side: Side) -> MarketResult:
     '''Execute a market order.
 
     Args:
         order (Order): The order to execute.
         side (Side): The side at which the order should be executed.
     '''
-    result = ExecResult(success=False)
+    result = MarketResult(success=False)
 
     if order.quantity() > side.volume():
-        result.message = f'order quantity bigger than side volume ' + \
+        result._message = f'order quantity bigger than side volume ' + \
             f'({order.quantity()} > {side.volume()})'
         return result
 
@@ -38,13 +24,12 @@ def execute(order: Order, side: Side) -> ExecResult:
     _fill_whole_orders(side, order, result)
     _fill_partial_order(side, order, result)
 
-    result.success = True
-    result.identifier = order.id()
+    result._success = True
+    result._identifier = order.id()
     return result
 
-    
 
-def _fill_whole_limits(side: Side, order: Order, result: ExecResult):
+def _fill_whole_limits(side: Side, order: Order, result: MarketResult):
     '''While the order to execute is larger than entire limits.
     '''
     while order.quantity() > 0:
@@ -62,7 +47,7 @@ def _fill_whole_limits(side: Side, order: Order, result: ExecResult):
         side._limits.pop(lim.price())
 
 
-def _fill_whole_orders(side: Side, order: Order, result: ExecResult):
+def _fill_whole_orders(side: Side, order: Order, result: MarketResult):
     '''While the order to execute is larger than whole orders.
     '''
     while order.quantity() > 0:
@@ -80,7 +65,7 @@ def _fill_whole_orders(side: Side, order: Order, result: ExecResult):
         lim.delete_next_order()
 
 
-def _fill_partial_order(side: Side, order: Order, result: ExecResult):
+def _fill_partial_order(side: Side, order: Order, result: MarketResult):
     '''Partially fill the last order left with our order.
     '''
     if order.quantity() > 0:

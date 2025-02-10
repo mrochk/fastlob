@@ -19,14 +19,14 @@ class TestBidSide(unittest.TestCase):
         order_params = OrderParams(OrderSide.BID, 100.5, 10, OrderType.GTC)
         order = BidOrder(order_params)
         self.side.add_limit(order.price())
-        self.side.place_order(order)
+        self.side.place(order)
         self.assertEqual(self.side.get_order(order.id()), order)
 
     def test_remove_order(self):
         order_params = OrderParams(OrderSide.BID, 100.5, 10, OrderType.GTC)
         order = BidOrder(order_params)
         self.side.add_limit(order.price())
-        self.side.place_order(order)
+        self.side.place(order)
         self.side.remove_order(order.id())
         self.assertFalse(order.id() in self.side._orders)
 
@@ -48,14 +48,14 @@ class TestAskSide(unittest.TestCase):
         order_params = OrderParams(OrderSide.ASK, 200.5, 15, OrderType.GTC)
         order = AskOrder(order_params)
         self.side.add_limit(order.price())
-        self.side.place_order(order)
+        self.side.place(order)
         self.assertEqual(self.side.get_order(order.id()), order)
 
     def test_remove_order(self):
         order_params = OrderParams(OrderSide.ASK, 200.5, 15, OrderType.GTC)
         order = AskOrder(order_params)
         self.side.add_limit(order.price())
-        self.side.place_order(order)
+        self.side.place(order)
         self.side.remove_order(order.id())
         self.assertFalse(order.id() in self.side._orders)
 

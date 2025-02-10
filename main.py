@@ -26,15 +26,10 @@ if __name__ == '__main__':
         orders = (ask_orders + bid_orders)
 
         random.shuffle(orders)
-        ob.process_many(orders)
+        results = ob.process_many(orders)
 
         nprices = ob.nprices()
         prices_over_time.append(nprices)
 
         ob.display()
         time.sleep(0.1)
-
-        if ob.spread() < 2: exit(0)
-
-    plt.plot(prices_over_time)
-    plt.savefig('fig')
