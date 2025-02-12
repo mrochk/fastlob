@@ -156,9 +156,11 @@ class AskSide(Side):
         if self.size() > 10: buffer.write(f"...({self.size() - 10} more asks)\n")
 
         count = 0
-        for asklim in reversed(self._limits.values()):
+        l = list()
+        for asklim in self._limits.values():
             if count >= 10: break
-            buffer.write(f" - {asklim}\n")
+            l.append(f" - {asklim}\n")
             count += 1
 
+        buffer.writelines(reversed(l))
         return buffer.getvalue()

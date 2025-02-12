@@ -47,10 +47,9 @@ def simulation(n):
 
         orderbook.process_many(orders)
 
-        print(orderbook)
+        orderbook.display()
         time.sleep(1)
 
-
 if __name__ == "__main__":
-    # cProfile.run('simulation(10)', sort='time')
+    #cProfile.run('simulation(1000)', sort='time')
     simulation(100)
