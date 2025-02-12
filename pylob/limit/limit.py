@@ -33,6 +33,7 @@ class Limit:
         order = self.get_next_order()
         assert order.quantity() > quantity
 
+        order.set_status(OrderStatus.PARTIAL)
         order.fill(quantity)
         self._volume -= quantity
 
@@ -134,7 +135,7 @@ class Limit:
         self._valid_orders -= 1
 
     def prune_canceled_orders(self):
-        while not self.empty() and self.get_next_order().canceled():
+        while not self.empty() and self._orderqueue[0].canceled():
             self.delete_next_order()
 
     def __repr__(self) -> str:

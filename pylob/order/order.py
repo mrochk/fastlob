@@ -12,6 +12,7 @@ from .params import OrderParams
 class Order(abc.ABC):
     '''
     Base abstract class for orders in the order-book. 
+
     Extended by `BidOrder` and `AskOrder`.
     '''
     _id: str
