@@ -1,9 +1,10 @@
+from numbers import Number
 from decimal import Decimal
 from dataclasses import dataclass
 from typing import Optional
 
 from pylob.enums import OrderSide, OrderType
-from pylob.utils import num, todecimal
+from pylob.utils import todecimal
 from pylob.consts import MIN_VALUE, MAX_VALUE
 
 
@@ -20,7 +21,7 @@ class OrderParams:
     type: OrderType = OrderType.GTC
     expiry: Optional[float] = None
 
-    def __init__(self, side: OrderSide, price: num, quantity: num,
+    def __init__(self, side: OrderSide, price: Number, quantity: Number,
                  type: OrderType = OrderType.GTC,
                  expiry: Optional[float] = None):
 
@@ -33,7 +34,7 @@ class OrderParams:
         self.expiry = expiry
 
     @staticmethod
-    def check_args(side: OrderSide, price: num, quantity: num,
+    def check_args(side: OrderSide, price: Number, quantity: Number,
                    type: OrderType, expiry: Optional[float]):
         '''Check of args correctness. This method is very important, since we
         do not check for this after the OrderParams object is created for 
@@ -41,9 +42,9 @@ class OrderParams:
         '''
         if not isinstance(side, OrderSide):
             raise TypeError()
-        if not isinstance(price, num):
+        if not isinstance(price, Number):
             raise TypeError()
-        if not isinstance(quantity, num):
+        if not isinstance(quantity, Number):
             raise TypeError()
         if not isinstance(type, OrderType):
             raise TypeError()
