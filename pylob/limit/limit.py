@@ -1,8 +1,9 @@
 from decimal import Decimal
 from collections import deque
 
-from pylob.enums import OrderSide, OrderStatus
 from pylob.order import Order
+from pylob.enums import OrderSide, OrderStatus
+from pylob.consts import zero
 
 
 class Limit:
@@ -23,17 +24,11 @@ class Limit:
         '''
         self._price = price
         self._side = side
-        self._volume = Decimal(0)
-        self._orderqueue = deque()
+        self._volume = zero()
         self._valid_orders = 0
+        self._orderqueue = deque()
 
-    def partial_fill_next(self, quantity: Decimal):
-        order = self.get_next_order()
-        assert order.quantity() > quantity
-
-        order.set_status(OrderStatus.PARTIAL)
-        order.fill(quantity)
-        self._volume -= quantity
+## GETTERS #####################################################################
 
     def price(self) -> Decimal:
         '''Getter for limit price.
@@ -43,14 +38,6 @@ class Limit:
         '''
         return self._price
 
-    def volume(self) -> Decimal:
-        '''Getter for limit volume (sum of orders quantity).
-
-        Returns:
-            Decimal: The volume of the limit.
-        '''
-        return self._volume
-
     def side(self) -> OrderSide:
         '''Getter for limit side (Bid or Ask).
 
@@ -58,6 +45,14 @@ class Limit:
             OrderSide: The side of the limit.
         '''
         return self._side
+
+    def volume(self) -> Decimal:
+        '''Getter for limit volume (sum of orders quantity).
+
+        Returns:
+            Decimal: The volume of the limit.
+        '''
+        return self._volume
 
     def valid_orders(self) -> int:
         '''Getter for limit size (number of orders).
@@ -75,41 +70,63 @@ class Limit:
         '''
         return self.volume() == 0 or self.valid_orders() == 0
 
-    def add_order(self, order: Order):
-        '''Add (enqueue) an order to the limit.
+################################################################################
+
+    def enqueue(self, order: Order):
+        '''Add (enqueue) an order in limit.
 
         Args:
             order (Order): The order to add.
         '''
         self._orderqueue.append(order)
-        self._volume += order.quantity()
-        self._valid_orders += 1
         order.set_status(OrderStatus.PENDING)
 
-    def get_next_order(self) -> Order:
+        self._volume += order.quantity()
+        self._valid_orders += 1
+
+    def next_order(self) -> Order:
         '''Returns the next order to be matched by an incoming market order.
 
         Returns:
             Order: The next order to be executed.
         '''
-        self.prune_canceled_orders()
         return self._orderqueue[0]
 
+    def fill_next(self, quantity: Decimal):
+        '''**Partially** fill the next order in the queue. Filling it entirely
+        would lead to problems, to only use in last stage of execution 
+        (`_partial_fill_order`).
+
+        Args:
+            quantity (Decimal): The quantity to fill the order with.
+        '''
+        order = self.next_order()
+        order.fill(quantity)
+
+        self._volume -= quantity
+
     def pop_next_order(self) -> None:
-        '''Pop from the queue the next order to be executed.
+        '''Pop from the queue the next order to be executed. Does not return
+        it, only removes it.
         '''
         order = self._orderqueue.popleft()
-        self._volume -= order.quantity()
+
         self._valid_orders -= 1
+        self._volume -= order.quantity()
 
     def cancel_order(self, order: Order):
-        order.set_status(OrderStatus.CANCELED)
+        '''Cancel an order.
+
+        Args:
+            order (Order): The order to cancel.
+        '''
         self._volume -= order.quantity()
         self._valid_orders -= 1
 
+        order.set_status(OrderStatus.CANCELED)
+
     def prune_canceled_orders(self):
-        while not self.empty() and self._orderqueue[0].canceled():
-            self.pop_next_order()
+        while not self.empty() and self._orderqueue[0].canceled(): self.pop_next_order()
 
     def __repr__(self) -> str:
         p, s, v = self.price(), self.valid_orders(), self.volume()

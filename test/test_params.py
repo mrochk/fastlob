@@ -15,6 +15,7 @@ valid_order_side = st.sampled_from(OrderSide)
 valid_order_type = st.sampled_from(OrderType)
 valid_expiry = st.one_of(st.none(), st.floats(min_value=0, allow_nan=False, allow_infinity=False))
 
+
 class TestOrderParams(unittest.TestCase):
     @given(valid_order_side, valid_price, valid_quantity, valid_order_type, valid_expiry)
     def test_order_params_valid(self, side, price, quantity, type, expiry):

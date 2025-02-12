@@ -50,7 +50,7 @@ def simulation(n):
         print(orderbook)
         time.sleep(1)
 
-if __name__ == '__main__':
-    #cProfile.run('simulation(10)', sort='time')
+
+if __name__ == "__main__":
+    # cProfile.run('simulation(10)', sort='time')
     simulation(100)
-    

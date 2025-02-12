@@ -14,8 +14,11 @@ def benchmark(func):
         time_end = perf_counter()
         time_duration = time_end - time_start
         name = func.__name__
-        print(f'{name} took {time_duration:.3f} seconds to complete')
+        print(f"{name} took {time_duration:.3f} seconds to complete")
         return result
+
     return wrapper
 
-if __name__ == '__main__': raise NotImplemented
+
+if __name__ == "__main__":
+    raise NotImplemented

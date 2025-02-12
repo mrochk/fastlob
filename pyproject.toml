@@ -15,7 +15,5 @@ dependencies = [
     "sortedcollections==2.1.0",
 ]
 
-
-
 [project.urls]
 "Homepage" = "https://github.com/mrochk/pylob"
