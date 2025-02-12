@@ -12,7 +12,7 @@ from pylob.order import Order, BidOrder, AskOrder
 # Strategies for generating valid values
 valid_price = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
 valid_quantity = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
-valid_fill = st.decimals(min_value=MIN_VALUE*2, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
+valid_fill = st.decimals(min_value=Decimal('0.02'), max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
 valid_order_side = st.sampled_from(OrderSide)
 valid_order_type = st.sampled_from(OrderType)
 valid_expiry = st.one_of(st.none(), st.floats(min_value=0, allow_nan=False, allow_infinity=False))
@@ -37,7 +37,7 @@ class TestOrder(unittest.TestCase):
         partial_fill = todecimal(quantity / 2)
         order.fill(partial_fill)
         self.assertEqual(order.status(), OrderStatus.PARTIAL)
-        self.assertEqual(order.quantity(), todecimal(quantity - partial_fill))
+        self.assertEqual(order.quantity(), todecimal(quantity) - partial_fill)
         
         order.fill(quantity)
         self.assertEqual(order.status(), OrderStatus.FILLED)

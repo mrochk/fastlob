@@ -23,18 +23,23 @@ class OrderType(Enum):
     specified date (UTC seconds timestamp), unless it has already been 
     fulfilled or cancelled. There is a security threshold of one minute: 
     If the order needs to expire in 30 seconds the correct expiration value is: 
-    now + 1 minute + 30 seconds
+    now + 1 minute + 30 seconds.
     '''
 
 
 class OrderStatus(Enum):
     '''The status of an order.'''
-    CREATED = 1
-    IN_LINE = 2
-    FILLED = 3
-    CANCELED = 4
-    PARTIAL = 5
+    CREATED = 1, 
+    '''Order created but not in a limit queue yet, or executed.'''
+    PENDING = 2,
+    '''Order in line to be filled but not modified in any ways yet.'''
+    PARTIAL = 3,
+    '''Order partially filled.'''
+    FILLED = 4,
+    '''Order entirely filled, removed from the limit.'''
+    CANCELED = 5,
+    '''Order canceled, can not be fully or partially fileld anymore.'''
 
     @staticmethod
     def valid_states() -> set:
-        return {OrderStatus.CREATED, OrderStatus.IN_LINE, OrderStatus.PARTIAL}
+        return {OrderStatus.CREATED, OrderStatus.PENDING, OrderStatus.PARTIAL}

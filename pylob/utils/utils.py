@@ -9,10 +9,10 @@ def todecimal(n: Number | str | Iterable[Number | str]) -> Decimal:
     '''Wrapper around the Decimal constructor.
 
     Args:
-        f (num): The numerical value to convert to Decimal object.
+        f (num): The value or iterable to convert to Decimal object.
 
     Returns:
-        Decimal: The converted Decimal
+        Decimal: The converted Decimal.
     '''
     if not isinstance(n, Number | str | Iterable):
         raise TypeError()

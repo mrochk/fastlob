@@ -87,7 +87,7 @@ class Limit:
         self._orderqueue.append(order)
         self._volume += order.quantity()
         self._valid_orders += 1
-        order.set_status(OrderStatus.IN_LINE)
+        order.set_status(OrderStatus.PENDING)
 
     def order_exists(self, order_id: str) -> bool:
         '''Returns true if an order with the given id is in the limit.
@@ -123,14 +123,13 @@ class Limit:
     def delete_next_order(self) -> None:
         '''Pop from the queue the next order to be executed.
         '''
-        self.prune_canceled_orders()
         order = self._orderqueue.popleft()
         self._volume -= order.quantity()
         del self._ordermap[order.id()]
         self._valid_orders -= 1
 
     def cancel_order(self, order: Order):
-        self.order.set_status(OrderStatus.CANCELED)
+        order.set_status(OrderStatus.CANCELED)
         self._volume -= order.quantity()
         self._valid_orders -= 1
 
