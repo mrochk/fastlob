@@ -27,7 +27,7 @@ class TestBidSide(unittest.TestCase):
         order = BidOrder(order_params)
         self.side.add_limit(order.price())
         self.side.place(order)
-        self.side.remove_order(order.id())
+        self.side.cancel_order(order.id())
         self.assertFalse(order.id() in self.side._orders)
 
     def test_best_limit(self):
@@ -56,7 +56,7 @@ class TestAskSide(unittest.TestCase):
         order = AskOrder(order_params)
         self.side.add_limit(order.price())
         self.side.place(order)
-        self.side.remove_order(order.id())
+        self.side.cancel_order(order.id())
         self.assertFalse(order.id() in self.side._orders)
 
     def test_best_limit(self):

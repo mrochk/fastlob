@@ -9,11 +9,12 @@ class Limit:
     '''
     A limit is a collection of limit orders sitting at a certain price.
     '''
+    _valid_orders: int
     _price: Decimal
     _side: OrderSide
     _volume: Decimal
     _orderqueue: deque[Order]
-    _ordermap: dict[int, Order]
+    _ordermap: dict[str, Order]
 
     def __init__(self, price: Decimal, side: OrderSide):
         '''
@@ -26,9 +27,13 @@ class Limit:
         self._volume = Decimal(0)
         self._orderqueue = deque()
         self._ordermap = dict()
+        self._valid_orders = 0
 
     def partial_fill_next(self, quantity: Decimal):
-        self.get_next_order().fill(quantity)
+        order = self.get_next_order()
+        assert order.quantity() > quantity
+
+        order.fill(quantity)
         self._volume -= quantity
 
     def price(self) -> Decimal:
@@ -55,21 +60,21 @@ class Limit:
         '''
         return self._side
 
-    def size(self) -> int:
+    def valid_orders(self) -> int:
         '''Getter for limit size (number of orders).
 
         Returns:
             int: The size of the limit.
         '''
-        return len(self._orderqueue)
+        return self._valid_orders
 
     def empty(self) -> bool:
-        '''Check if limit contains 0 orders.
+        '''Check if limit is empty.
 
         Returns:
             bool: True if limit is empty.
         '''
-        return self.size() == 0
+        return self.volume() == 0 or self.valid_orders() == 0
 
     def add_order(self, order: Order):
         '''Add (enqueue) an order to the limit.
@@ -80,29 +85,30 @@ class Limit:
         self._ordermap[order.id()] = order
         self._orderqueue.append(order)
         self._volume += order.quantity()
+        self._valid_orders += 1
         order.set_status(OrderStatus.IN_LINE)
 
-    def order_exists(self, identifier: int) -> bool:
+    def order_exists(self, order_id: str) -> bool:
         '''Returns true if an order with the given id is in the limit.
 
         Args:
-            identifier (int): The id of the order to look for.
+            order_id (str): The id of the order to look for.
 
         Returns:
             bool: True if order is present in limit false otherwise.
         '''
-        return identifier in self._ordermap
+        return order_id in self._ordermap.keys()
 
-    def get_order(self, identifier: int) -> Order:
+    def get_order(self, order_id: str) -> Order:
         '''Returns the order with the corresponding id.
 
         Args:
-            identifier (int): The id of the order.
+            order_id (str): The id of the order.
 
         Returns:
             Order: The order having such identifier.
         '''
-        return self._ordermap[identifier]
+        return self._ordermap[order_id]
 
     def get_next_order(self) -> Order:
         '''Returns the next order to be matched by an incoming market order.
@@ -113,12 +119,22 @@ class Limit:
         return self._orderqueue[0]
 
     def delete_next_order(self) -> None:
-        '''Delete from the queue the next order to be executed.
+        '''Pop from the queue the next order to be executed.
         '''
         order = self._orderqueue.popleft()
         self._volume -= order.quantity()
         del self._ordermap[order.id()]
+        self._valid_orders -= 1
+
+    def cancel_order(self, order: Order):
+        self._volume -= order.quantity()
+        self._ordermap[order.id()].set_status(OrderStatus.CANCELED)
+        self._valid_orders -= 1
+
+    def prune_canceled_orders(self):
+        while not self.empty() and self.get_next_order().canceled():
+            self.delete_next_order()
 
     def __repr__(self) -> str:
-        p, s, v = self.price(), self.size(), self.volume()
-        return f'{self.side().name}Limit(price={p}, size={s}, volume={v})'
+        p, s, v = self.price(), self.valid_orders(), self.volume()
+        return f'{self.side().name}Limit(price={p}, orders={s}, volume={v})'

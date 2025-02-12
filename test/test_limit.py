@@ -22,7 +22,7 @@ class TestLimit(unittest.TestCase):
     def test_add_order(self):
         self.limit_bid.add_order(self.order1)
         self.assertEqual(self.limit_bid.volume(), Decimal(10))
-        self.assertEqual(self.limit_bid.size(), 1)
+        self.assertEqual(self.limit_bid.valid_orders(), 1)
         self.assertFalse(self.limit_bid.empty())
         self.assertEqual(self.order1.status(), OrderStatus.IN_LINE)
 

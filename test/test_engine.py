@@ -1,11 +1,9 @@
 import unittest
 from decimal import Decimal
-from collections import defaultdict
-from pylob.enums import OrderSide, OrderType
+
+from pylob import OrderSide, OrderType, OrderParams
 from pylob.order import BidOrder, AskOrder
 from pylob.side import BidSide, AskSide
-from pylob.order import OrderParams
-from pylob.engine import PlaceResult, ExecResult
 from pylob.engine import place, execute
 
 

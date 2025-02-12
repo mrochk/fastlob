@@ -3,8 +3,9 @@ from numpy import random
 import matplotlib.pyplot as plt
 
 import pylob
+from pylob import OrderBook, OrderParams, OrderSide
 
-if __name__ == '__main__':
+def sim():
     ob = pylob.OrderBook('BTC/USDT')
     prices_over_time = list()
 
@@ -33,3 +34,25 @@ if __name__ == '__main__':
 
         ob.display()
         time.sleep(0.1)
+
+if __name__ == '__main__':
+    ob = OrderBook()
+
+    r1 = ob.process_one(OrderParams(OrderSide.BID, 4111, 345))
+    r2 = ob.process_one(OrderParams(OrderSide.BID, 4111, 98))
+
+    assert r1.success()
+    assert r2.success()
+
+    id1 = r1.order_id()
+
+
+    print(ob)
+
+    print(ob.get_order_status(id1))
+    print(r1)
+
+    ob.cancel_order(id1)
+
+    print(ob)
+    print(ob.get_order_status(id1))

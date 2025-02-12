@@ -2,13 +2,13 @@ import io
 import os
 from typing import Optional, Iterable
 from decimal import Decimal
-from termcolor import colored, cprint
+from termcolor import colored
 
 from pylob import engine
-from pylob.enums import OrderSide
+from pylob.enums import OrderSide, OrderStatus
 from pylob.side import AskSide, BidSide
 from pylob.order import OrderParams, Order, AskOrder, BidOrder
-from .result import ExecutionResult, LimitResult, MarketResult 
+from .result import ExecutionResult, LimitResult, CancelResult
 
 
 class OrderBook:
@@ -19,15 +19,17 @@ class OrderBook:
     name: str
     ask_side: AskSide
     bid_side: BidSide
+    orders: dict[str, Order]
 
     def __init__(self, name: Optional[str] = None):
         '''
         Args:
-            pair (Optional[str]): A name for the order-book. Defaults to None.
+            name (Optional[str]): A name for the order-book. Defaults to None.
         '''
         self.name = name if name else ''
         self.ask_side = AskSide()
         self.bid_side = BidSide()
+        self.orders = dict()
 
     def process_one(self, order_params: OrderParams) -> ExecutionResult:
         '''Creates and processes the order corresponding to the corresponding
@@ -66,16 +68,24 @@ class OrderBook:
         match order.side():
             case OrderSide.BID:
                 if self.is_market(order):
-                    return engine.execute(order, self.ask_side)
+                    result = engine.execute(order, self.ask_side)
+                    if result.success():
+                        self.orders[order.id()] = order
+                    return result
                 else:
                     self.bid_side.place(order)
+                    self.orders[order.id()] = order
                     return LimitResult(True, order.id())
 
             case OrderSide.ASK:
                 if self.is_market(order):
-                    return engine.execute(order, self.bid_side)
+                    result = engine.execute(order, self.bid_side)
+                    if result.success():
+                        self.orders[order.id()] = order
+                    return result
                 else:
                     self.ask_side.place(order)
+                    self.orders[order.id()] = order
                     return LimitResult(True, order.id())
 
     def is_market(self, order: Order) -> bool:
@@ -158,6 +168,31 @@ class OrderBook:
             Decimal: best_ask - best_bid
         '''
         return self.best_ask() - self.best_bid()
+
+    def get_order_status(self, order_id: str) -> Optional[OrderStatus]:
+        if order_id in self.orders.keys():
+            return self.orders[order_id].status()
+        return None
+
+    def cancel_order(self, order_id: str) -> CancelResult:
+        if order_id not in self.orders.keys():
+            return CancelResult(False, 'order not in orderbook')
+
+        order = self.orders[order_id]
+
+        if not order.valid():
+            return CancelResult(
+                False,
+                f'order can not be canceled (order_status={order.status()})',
+            )
+
+        match order.side():
+            case OrderSide.BID: self.bid_side.cancel_order(order)
+            case OrderSide.ASK: self.ask_side.cancel_order(order)
+
+        assert self.orders[order_id].canceled()
+
+        return CancelResult(True, 'order canceled properly')
 
     def __repr__(self) -> str:
         '''Outputs the order-book in the following format:\n

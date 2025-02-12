@@ -34,3 +34,7 @@ class OrderStatus(Enum):
     FILLED = 3
     CANCELED = 4
     PARTIAL = 5
+
+    @staticmethod
+    def valid_states() -> set:
+        return {OrderStatus.CREATED, OrderStatus.IN_LINE, OrderStatus.PARTIAL}

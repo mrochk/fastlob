@@ -106,6 +106,12 @@ class Order(abc.ABC):
 
         self.set_status(OrderStatus.PARTIAL)
 
+    def valid(self) -> bool:
+        return self.status() in OrderStatus.valid_states()
+
+    def canceled(self) -> bool:
+        return self.status() == OrderStatus.CANCELED
+
     def __eq__(self, other):
         '''Two orders are equal if they're (unique) ids are equal.'''
         return self.id() == other.id()

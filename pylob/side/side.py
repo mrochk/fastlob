@@ -14,12 +14,10 @@ class Side(ABC):
     is the bid side, or the ask side.
     '''
     _limits: SortedDict[Decimal, Limit]
-    _orders: dict[int, Order]
     _side: OrderSide
     _volume: Decimal
 
     def __init__(self):
-        self._orders = dict()
         self._volume = zero()
 
     def volume(self) -> Decimal:
@@ -97,34 +95,21 @@ class Side(ABC):
             self.add_limit(order.price())
 
         self._limits[order.price()].add_order(order)
-        self._orders[order.id()] = order
         self._volume += order.quantity()
 
-    def get_order(self, order_id: int) -> Order:
-        '''Get an order by its identifier.
+    def cancel_order(self, order: Order) -> None:
+        '''Cancel an order by its identifier.
 
         Args:
-            order_id (int): The order identifier.
-
-        Returns:
-            Order: The order having such identifier.
+            order (Order): The order to cancel.
         '''
-        return self._orders[order_id]
+        lim = self.get_limit(order.price())
+        lim.cancel_order(order)
 
-    def remove_order(self, order_id: int) -> None:
-        '''Remove an order by its identifier.
+        if lim.empty():
+            del self._limits[lim.price()]
 
-        Args:
-            order_id (int): The order identifier.
-        '''
-        order = self.get_order(order_id)
         self._volume -= order.quantity()
-
-        del self._orders[order_id]
-
-        if self.get_limit(order.price()).empty():
-            del self._limits[order.price()]
-
 
 class BidSide(Side):
     '''The bid side, where the best price level is the highest.'''

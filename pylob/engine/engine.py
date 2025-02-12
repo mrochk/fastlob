@@ -39,7 +39,7 @@ def _fill_whole_limits(side: Side, order: Order, result: MarketResult):
             break
 
         result.limits_matched += 1
-        result.orders_matched += lim.size()
+        result.orders_matched += lim.valid_orders()
         result.execution_prices[lim.price()] = lim.volume()
 
         order.fill(lim.volume())
