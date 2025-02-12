@@ -4,6 +4,7 @@ from typing import Optional
 
 from pylob.enums import OrderSide, OrderType
 from pylob.utils import num, todecimal
+from pylob.consts import MAX_VALUE
 
 
 @dataclass(repr=True)
@@ -46,6 +47,12 @@ class OrderParams:
         if quantity <= 0:
             raise ValueError(
                 f'quantity ({quantity}) must be strictly positive')
+
+        if price > MAX_VALUE:
+            raise ValueError(f'price ({price}) is too large')
+
+        if quantity > MAX_VALUE:
+            raise ValueError(f'quantity ({quantity}) is too large')
 
     def unwrap(self) -> tuple[Decimal, Decimal, OrderType, Optional[float]]:
         return self.price, self.quantity, self.type, self.expiry

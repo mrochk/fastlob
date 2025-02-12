@@ -116,19 +116,21 @@ class Limit:
         Returns:
             Order: The next order to be executed.
         '''
+        self.prune_canceled_orders()
         return self._orderqueue[0]
 
     def delete_next_order(self) -> None:
         '''Pop from the queue the next order to be executed.
         '''
+        self.prune_canceled_orders()
         order = self._orderqueue.popleft()
         self._volume -= order.quantity()
         del self._ordermap[order.id()]
         self._valid_orders -= 1
 
     def cancel_order(self, order: Order):
+        self.order.set_status(OrderStatus.CANCELED)
         self._volume -= order.quantity()
-        self._ordermap[order.id()].set_status(OrderStatus.CANCELED)
         self._valid_orders -= 1
 
     def prune_canceled_orders(self):

@@ -2,7 +2,7 @@ run:
 	@python3 main.py
 
 test: 
-	@python3 -m unittest test/*.py
+	@python -m unittest discover test
 
 benchmark:
 	@python3 benchmark.py
@@ -12,3 +12,6 @@ typecheck:
 
 lines:
 	@find pylob -name "*.py" | xargs wc -l
+
+
+.PHONY: test typecheck lines

@@ -6,6 +6,7 @@ Fast &amp; minimalist limit-order-book (LOB) implementation in pure Python.
 *Package currently in development, not usable yet.*
 
 **TODO**:
+- [ ] rewrite all test using property based testing
 - [x] `uuid` is slow, find a better alternative
 - [ ] implement the three types of orders
 - [ ] write proper benchmarks that will be used to guide development

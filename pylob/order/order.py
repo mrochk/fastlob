@@ -40,6 +40,11 @@ class Order(abc.ABC):
         return self._status
 
     def set_status(self, status: OrderStatus):
+        '''Set the order status.
+
+        Args:
+            status (OrderStatus): The status to set.
+        '''
         self._status = status
 
     def id(self) -> str:
@@ -107,9 +112,19 @@ class Order(abc.ABC):
         self.set_status(OrderStatus.PARTIAL)
 
     def valid(self) -> bool:
+        '''True if order is valid (can be matched).
+
+        Returns:
+            bool: True if order is valid false otherwise.
+        '''
         return self.status() in OrderStatus.valid_states()
 
     def canceled(self) -> bool:
+        '''True if the order has been canceled.
+
+        Returns:
+            bool: True if the order has been canceled, false otherwise. 
+        '''
         return self.status() == OrderStatus.CANCELED
 
     def __eq__(self, other):
