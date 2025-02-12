@@ -5,6 +5,7 @@ from decimal import Decimal
 from dataclasses import dataclass
 
 from pylob.enums import OrderSide, OrderType, OrderStatus
+from pylob.consts import ORDERS_ID_SIZE
 from .params import OrderParams
 
 
@@ -23,14 +24,14 @@ class Order(abc.ABC):
     _expiry: Optional[float]
     _status: OrderStatus
 
-    def __init__(self, params: OrderParams, id_size: int = 8):
+    def __init__(self, params: OrderParams):
         self._price = params.price
         self._quantity = params.quantity
         self._type = params.type
         self._expiry = params.expiry
 
-        self._id = secrets.token_urlsafe(nbytes=id_size)
         self._status = OrderStatus.CREATED
+        self._id = secrets.token_urlsafe(nbytes=ORDERS_ID_SIZE)
 
     def status(self) -> OrderStatus:
         '''Getter for order status.

@@ -41,26 +41,7 @@ class TestLimit(unittest.TestCase):
         limit.add_order(order)
         self.assertEqual(limit.volume(), order.quantity())
         self.assertEqual(limit.valid_orders(), 1)
-        self.assertTrue(limit.order_exists(order.id()))
-        self.assertEqual(limit.get_order(order.id()), order)
         self.assertEqual(limit.get_next_order(), order)
-
-    @given(valid_price, valid_side, valid_order_qty, random_uuid)
-    def test_order_exists(self, price, side, qty, ruuid):
-        price = todecimal(price)
-        order = self.create_order(price, side, qty)
-        limit = Limit(price, side)
-        limit.add_order(order)
-        self.assertTrue(limit.order_exists(order.id()))
-        self.assertFalse(limit.order_exists(ruuid))
-
-    @given(valid_price, valid_side, valid_order_qty)
-    def test_get_order(self, price, side, qty):
-        order = self.create_order(price, side, qty)
-        limit = Limit(price, side)
-        limit.add_order(order)
-        retrieved_order = limit.get_order(order.id())
-        self.assertEqual(retrieved_order, order)
 
     @given(valid_price, valid_side, valid_order_qty)
     def test_get_next_order(self, price, side, qty):
@@ -80,7 +61,7 @@ class TestLimit(unittest.TestCase):
         limit = Limit(price, side)
         limit.add_order(order1)
         limit.add_order(order2)
-        limit.delete_next_order()
+        limit.pop_next_order()
         self.assertEqual(limit.get_next_order(), order2)
         self.assertEqual(limit.volume(), order2.quantity())
         self.assertEqual(limit.valid_orders(), 1)
@@ -119,5 +100,5 @@ class TestLimit(unittest.TestCase):
         order = self.create_order(price, side, qty)
         limit.add_order(order)
         self.assertFalse(limit.empty())
-        limit.delete_next_order()
+        limit.pop_next_order()
         self.assertTrue(limit.empty())

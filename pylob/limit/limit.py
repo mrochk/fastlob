@@ -14,7 +14,6 @@ class Limit:
     _side: OrderSide
     _volume: Decimal
     _orderqueue: deque[Order]
-    _ordermap: dict[str, Order]
 
     def __init__(self, price: Decimal, side: OrderSide):
         '''
@@ -26,7 +25,6 @@ class Limit:
         self._side = side
         self._volume = Decimal(0)
         self._orderqueue = deque()
-        self._ordermap = dict()
         self._valid_orders = 0
 
     def partial_fill_next(self, quantity: Decimal):
@@ -83,33 +81,10 @@ class Limit:
         Args:
             order (Order): The order to add.
         '''
-        self._ordermap[order.id()] = order
         self._orderqueue.append(order)
         self._volume += order.quantity()
         self._valid_orders += 1
         order.set_status(OrderStatus.PENDING)
-
-    def order_exists(self, order_id: str) -> bool:
-        '''Returns true if an order with the given id is in the limit.
-
-        Args:
-            order_id (str): The id of the order to look for.
-
-        Returns:
-            bool: True if order is present in limit false otherwise.
-        '''
-        return order_id in self._ordermap.keys()
-
-    def get_order(self, order_id: str) -> Order:
-        '''Returns the order with the corresponding id.
-
-        Args:
-            order_id (str): The id of the order.
-
-        Returns:
-            Order: The order having such identifier.
-        '''
-        return self._ordermap[order_id]
 
     def get_next_order(self) -> Order:
         '''Returns the next order to be matched by an incoming market order.
@@ -120,12 +95,11 @@ class Limit:
         self.prune_canceled_orders()
         return self._orderqueue[0]
 
-    def delete_next_order(self) -> None:
+    def pop_next_order(self) -> None:
         '''Pop from the queue the next order to be executed.
         '''
         order = self._orderqueue.popleft()
         self._volume -= order.quantity()
-        del self._ordermap[order.id()]
         self._valid_orders -= 1
 
     def cancel_order(self, order: Order):
@@ -135,7 +109,7 @@ class Limit:
 
     def prune_canceled_orders(self):
         while not self.empty() and self._orderqueue[0].canceled():
-            self.delete_next_order()
+            self.pop_next_order()
 
     def __repr__(self) -> str:
         p, s, v = self.price(), self.valid_orders(), self.volume()

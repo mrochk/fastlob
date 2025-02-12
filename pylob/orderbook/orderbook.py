@@ -10,6 +10,7 @@ from pylob.side import AskSide, BidSide
 from pylob.order import OrderParams, Order, AskOrder, BidOrder
 from .result import ExecutionResult, LimitResult, CancelResult
 
+def _make_message(msg: str): return f'<orderbook>: {msg}'
 
 class OrderBook:
     '''
@@ -41,7 +42,6 @@ class OrderBook:
         Returns:
             EngineResult: The result of processing the order params.
         '''
-        order: Order  # create the proper order
         match order_params.side:
             case OrderSide.BID: order = BidOrder(order_params)
             case OrderSide.ASK: order = AskOrder(order_params)
@@ -65,28 +65,36 @@ class OrderBook:
         Returns:
             ExecutionResult: The result of the matching engine.
         '''
+        result = None
+
         match order.side():
             case OrderSide.BID:
                 if self.is_market(order):
                     result = engine.execute(order, self.ask_side)
-                    if result.success():
-                        self.orders[order.id()] = order
-                    return result
+                    if order.status() == OrderStatus.PARTIAL:
+                        self.bid_side.place(order)
                 else:
                     self.bid_side.place(order)
-                    self.orders[order.id()] = order
-                    return LimitResult(True, order.id())
+                    result = LimitResult(True, order.id())
 
             case OrderSide.ASK:
                 if self.is_market(order):
                     result = engine.execute(order, self.bid_side)
-                    if result.success():
-                        self.orders[order.id()] = order
-                    return result
+                    if order.status() == OrderStatus.PARTIAL:
+                        self.ask_side.place(order)
                 else:
                     self.ask_side.place(order)
-                    self.orders[order.id()] = order
-                    return LimitResult(True, order.id())
+                    result = LimitResult(True, order.id())
+
+        if result.success():
+            self.orders[order.id()] = order
+
+        if order.status() == OrderStatus.PARTIAL:
+            msg = f'order partially filled by engine, {order.quantity()} ' \
+                f'placed at {order.price()}'
+            result.add_message(_make_message(msg))
+
+        return result
 
     def is_market(self, order: Order) -> bool:
         '''Check if an order is a market order.
@@ -128,7 +136,7 @@ class OrderBook:
         '''
         return self.bid_side.best().price()
 
-    def nbids(self) -> int:
+    def n_bids(self) -> int:
         '''Get the number of bids limits in the book.
 
         Returns:
@@ -136,7 +144,7 @@ class OrderBook:
         '''
         return self.bid_side.size()
 
-    def nasks(self) -> int:
+    def n_asks(self) -> int:
         '''Get the number of asks limits in the book.
 
         Returns:
@@ -144,13 +152,13 @@ class OrderBook:
         '''
         return self.ask_side.size()
 
-    def nprices(self) -> int:
+    def n_prices(self) -> int:
         '''Get the total number of limits (price levels) in the book.
 
         Returns:
             int: Number of limits.
         '''
-        return self.nasks() + self.nbids()
+        return self.n_asks() + self.n_bids()
 
     def midprice(self) -> Decimal:
         '''Get the order-book mid-price.
@@ -170,29 +178,23 @@ class OrderBook:
         return self.best_ask() - self.best_bid()
 
     def get_order_status(self, order_id: str) -> Optional[OrderStatus]:
-        if order_id in self.orders.keys():
-            return self.orders[order_id].status()
-        return None
-
+        try: self.orders[order_id].status()
+        except KeyError as e: return None
+        
     def cancel_order(self, order_id: str) -> CancelResult:
-        if order_id not in self.orders.keys():
+        try: order = self.orders[order_id]
+        except KeyError:
             return CancelResult(False, 'order not in orderbook')
 
-        order = self.orders[order_id]
-
         if not order.valid():
-            return CancelResult(
-                False,
-                f'order can not be canceled (order_status={order.status()})',
-            )
+            return CancelResult(False,
+                f'order can not be canceled (status={order.status()})')
 
         match order.side():
             case OrderSide.BID: self.bid_side.cancel_order(order)
             case OrderSide.ASK: self.ask_side.cancel_order(order)
 
-        assert self.orders[order_id].canceled()
-
-        return CancelResult(True, 'order canceled properly')
+        return CancelResult(True, f'order {order.id()} canceled properly')
 
     def __repr__(self) -> str:
         '''Outputs the order-book in the following format:\n

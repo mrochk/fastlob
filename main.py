@@ -1,39 +1,56 @@
 import time
-from numpy import random
 import matplotlib.pyplot as plt
+from scipy.stats import genpareto, norm, poisson
+from random import shuffle
+import cProfile
 
 import pylob
 from pylob import OrderBook, OrderParams, OrderSide
 
-def sim():
-    ob = pylob.OrderBook('BTC/USDT')
-    prices_over_time = list()
+def simulation(n):
+    orderbook = OrderBook()
 
-    for t in range(10000000):
-        n_asks = random.poisson(lam=5)
-        ask_prices = [pylob.todecimal(random.normal(1500, 100))
-                      for _ in range(n_asks)]
-        ask_qtys = [pylob.todecimal(random.normal(10, 1))
-                    for _ in range(n_asks)]
+    for t in range(n):
 
-        n_bids = random.poisson(lam=5)
-        bid_prices = pylob.todecimal(random.normal(1500, 100, size=n_bids))
-        bid_qtys = pylob.todecimal(random.normal(10, 1, size=n_bids))
+        # LIMIT ORDERS
+        n_asks = poisson.rvs(100)
+        n_bids = poisson.rvs(100)
 
-        ask_orders = [pylob.OrderParams(
-            pylob.OrderSide.ASK, p, q) for p, q in zip(ask_prices, ask_qtys)]
-        bid_orders = [pylob.OrderParams(
-            pylob.OrderSide.BID, p, q) for p, q in zip(bid_prices, bid_qtys)]
-        orders = (ask_orders + bid_orders)
+        ask_prices = genpareto.rvs(-0.1, loc=1000, scale=10, size=n_asks)
+        bid_prices = -genpareto.rvs(-0.1, loc=1000, scale=10, size=n_bids) + 2000
 
-        random.shuffle(orders)
-        results = ob.process_many(orders)
+        ask_quantities = norm.rvs(loc=100, scale=10, size=n_asks)
+        bid_quantities = norm.rvs(loc=100, scale=10, size=n_bids)
 
-        nprices = ob.nprices()
-        prices_over_time.append(nprices)
+        asks = [OrderParams(OrderSide.ASK, p, q) for (p, q) in zip(ask_prices, ask_quantities)]
+        bids = [OrderParams(OrderSide.BID, p, q) for (p, q) in zip(bid_prices, bid_quantities)]
 
-        ob.display()
-        time.sleep(0.1)
+        limits = asks.copy() + bids.copy()
+
+        # MARKET ORDERS
+        n_asks = poisson.rvs(10)
+        n_bids = poisson.rvs(10)
+
+        ask_prices = norm.rvs(loc=1000, scale=10, size=n_asks)
+        bid_prices = norm.rvs(loc=1000, scale=10, size=n_bids)
+
+        ask_quantities = norm.rvs(loc=100, scale=10, size=n_asks)
+        bid_quantities = norm.rvs(loc=100, scale=10, size=n_bids)
+
+        asks = [OrderParams(OrderSide.ASK, p, q) for (p, q) in zip(ask_prices, ask_quantities)]
+        bids = [OrderParams(OrderSide.BID, p, q) for (p, q) in zip(bid_prices, bid_quantities)]
+
+        markets = asks + bids
+
+        orders = limits + markets
+        shuffle(orders)
+
+        orderbook.process_many(orders)
+
+        print(orderbook)
+        time.sleep(1)
 
 if __name__ == '__main__':
-    sim()
+    #cProfile.run('simulation(10)', sort='time')
+    simulation(100)
+    
