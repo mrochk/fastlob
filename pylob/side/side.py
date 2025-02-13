@@ -61,7 +61,9 @@ class Side(ABC):
         """
         return self._limits.peekitem(0)[1]
 
-    def price_exists(self, price: Decimal) -> bool:
+################################################################################
+
+    def _price_exists(self, price: Decimal) -> bool:
         """Check there is a limit at a certain price.
 
         Args:
@@ -72,7 +74,7 @@ class Side(ABC):
         """
         return price in self._limits.keys()
 
-    def get_limit(self, price: Decimal) -> Limit:
+    def _get_limit(self, price: Decimal) -> Limit:
         """Get the limit sitting at a certain price.
 
         Args:
@@ -83,15 +85,16 @@ class Side(ABC):
         """
         return self._limits[price]
 
-    ################################################################################
-
-    def new_price(self, price: Decimal) -> None:
+    def _new_price(self, price: Decimal) -> None:
         """Add a limit to the side.
 
         Args:
             price (Decimal): The price at which a limit should be created.
         """
         self._limits[price] = Limit(price, self.side())
+
+    def _new_price_if_not_exist(self, price: Decimal) -> None:
+        if not self._price_exists(price): self._new_price(price)
 
     def place(self, order: Order) -> None:
         """Place an order in the side at its corresponding limit.
@@ -101,9 +104,9 @@ class Side(ABC):
         """
         price = order.price()
 
-        if not self.price_exists(price): self.new_price(price)
+        self._new_price_if_not_exist(price)
 
-        self._limits[price].enqueue(order)
+        self._get_limit(price).enqueue(order)
         self._volume += order.quantity()
 
     def cancel_order(self, order: Order) -> None:
@@ -112,7 +115,7 @@ class Side(ABC):
         Args:
             order (Order): The order to cancel.
         """
-        lim = self.get_limit(order.price())
+        lim = self._get_limit(order.price())
         lim.cancel_order(order)
 
         self._volume -= order.quantity()
