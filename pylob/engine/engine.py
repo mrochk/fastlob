@@ -1,4 +1,4 @@
-"""The engine module is only responsible for executing market orders."""
+'''The engine module is only responsible for executing market orders.'''
 
 from decimal import Decimal
 
@@ -8,12 +8,12 @@ from pylob.order import Order
 from pylob.orderbook.result import MarketResult
 
 def execute(order: Order, side: Side) -> MarketResult:
-    """Execute a market order.
+    '''Execute a market order.
 
     Args:
         order (Order): The order to execute.
         side (Side): The side at which the order should be matched.
-    """
+    '''
     result = MarketResult(success=False)
 
     out_of_price = _fill_whole_limits(side, order, result)
@@ -27,7 +27,7 @@ def execute(order: Order, side: Side) -> MarketResult:
     return _result_okay(result, order.id())
 
 def _fill_whole_limits(side: Side, order: Order, result: MarketResult) -> bool:
-    """While the order to execute is larger than entire limits."""
+    '''While the order to execute is larger than entire limits.'''
     while order.quantity() > 0 and not side.empty():
         lim = side.best()
 
@@ -47,7 +47,7 @@ def _fill_whole_limits(side: Side, order: Order, result: MarketResult) -> bool:
         side._limits.pop(lim.price())
 
 def _fill_whole_orders(side: Side, order: Order, result: MarketResult) -> bool:
-    """While the order to execute is larger than whole orders."""
+    '''While the order to execute is larger than whole orders.'''
     lim = side.best()
     current_price = lim.price()
 
@@ -68,7 +68,7 @@ def _fill_whole_orders(side: Side, order: Order, result: MarketResult) -> bool:
         lim.pop_next_order()
 
 def _fill_partial_order(side: Side, order: Order, result: MarketResult):
-    """Partially fill the last order left with what's left of our order."""
+    '''Partially fill the last order left with what's left of our order.'''
     lim = side.best()
     lim_order = lim.next_order()
     if order.status() == OrderStatus.PARTIAL:

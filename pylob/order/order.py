@@ -10,11 +10,11 @@ from .params import OrderParams
 
 @dataclass
 class Order(abc.ABC):
-    """
+    '''
     Base abstract class for orders in the order-book.
 
     Extended by `BidOrder` and `AskOrder`.
-    """
+    '''
 
     _id: str
     _side: OrderSide
@@ -36,101 +36,101 @@ class Order(abc.ABC):
     ## GETTERS #####################################################################
 
     def id(self) -> str:
-        """Getter for order identifier.
+        '''Getter for order identifier.
 
         Returns:
             str: The unique order identifier.
-        """
+        '''
         return self._id
 
     def side(self) -> OrderSide:
-        """Getter for the order side.
+        '''Getter for the order side.
 
         Returns:
             OrderSide: The side of the order.
-        """
+        '''
         return self._side
 
     def price(self) -> Decimal:
-        """Getter for order price.
+        '''Getter for order price.
 
         Returns:
             Decimal: The price at which the order should be matched.
-        """
+        '''
         return self._price
 
     def quantity(self) -> Decimal:
-        """Getter for order quantity.
+        '''Getter for order quantity.
 
         Returns:
             Decimal: The quantity of asset the order carries.
-        """
+        '''
         return self._quantity
 
     def type(self) -> OrderType:
-        """Getter for order type
+        '''Getter for order type
 
         Returns:
             OrderType: The type of the order.
-        """
+        '''
         return self._type
 
     def expiry(self) -> Optional[float]:
-        """Getter for the expiration date of the order. Only relevant in the
+        '''Getter for the expiration date of the order. Only relevant in the
         case of a GTD order, otherwise may be set to `None`.
 
         Returns:
             Optional[float]: The expiration timestamp of the order.
-        """
+        '''
         return self._expiry
 
     def status(self) -> OrderStatus:
-        """Getter for order status.
+        '''Getter for order status.
 
         Returns:
             OrderStatus: The order status.
-        """
+        '''
         return self._status
 
     def set_status(self, status: OrderStatus):
-        """Set the order status.
+        '''Set the order status.
 
         Args:
             status (OrderStatus): The status to set.
-        """
+        '''
         self._status = status
 
     ################################################################################
 
     def fill(self, quantity: Decimal):
-        """Decrease the quantity of the order by some numerical value. If
+        '''Decrease the quantity of the order by some numerical value. If
         `quantity` is greater than the order qty, we set it to 0.
 
         Args:
             quantity (num): The amount to subtract to the order quantity.
-        """
+        '''
         self._quantity -= min(quantity, self._quantity)
         if self.quantity() == 0: self.set_status(OrderStatus.FILLED); return
         self.set_status(OrderStatus.PARTIAL)
 
     def valid(self) -> bool:
-        """True if order is valid (can be matched).
+        '''True if order is valid (can be matched).
 
         Returns:
             bool: True if order is valid false otherwise.
-        """
+        '''
         return self.status() in OrderStatus.valid_states()
 
     def canceled(self) -> bool:
-        """True if the order has been canceled.
+        '''True if the order has been canceled.
 
         Returns:
             bool: True if the order has been canceled, false otherwise.
-        """
+        '''
         return self.status() == OrderStatus.CANCELED
 
     def __eq__(self, other):
-        """Two orders are equal if they're (unique) ids are equal."""
+        '''Two orders are equal if they're (unique) ids are equal.'''
         return self.id() == other.id()
 
     def __repr__(self) -> str:
@@ -138,9 +138,9 @@ class Order(abc.ABC):
 
 @dataclass
 class BidOrder(Order):
-    """
+    '''
     A bid (buy) order.
-    """
+    '''
 
     def __init__(self, params: OrderParams):
         super().__init__(params)
@@ -150,9 +150,9 @@ class BidOrder(Order):
 
 @dataclass
 class AskOrder(Order):
-    """
+    '''
     An ask (sell) order.
-    """
+    '''
 
     def __init__(self, params: OrderParams):
         super().__init__(params)

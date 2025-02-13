@@ -14,18 +14,15 @@ valid_side = st.sampled_from(OrderSide)
 valid_order_qty = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
 random_uuid = st.sampled_from([secrets.token_urlsafe(8) for _ in range(1000)])
 
-
 class TestLimit(unittest.TestCase):
-    def setUp(self):
-        pass
+    def setUp(self): pass
 
-    @given(valid_price, valid_side)
-    def test_init(self, price, side):
+    @given(valid_price)
+    def test_init(self, price):
         price = todecimal(price)
-        limit = Limit(price, side)
+        limit = Limit(price)
 
         self.assertEqual(limit.price(), price)
-        self.assertEqual(limit.side(), side)
         self.assertEqual(limit.volume(), Decimal(0))
         self.assertEqual(limit.valid_orders(), 0)
 
@@ -38,7 +35,7 @@ class TestLimit(unittest.TestCase):
     def test_add_order(self, price, side, qty):
         price = todecimal(price)
         order = self.create_order(price, side, qty)
-        limit = Limit(price, side)
+        limit = Limit(price)
         limit.enqueue(order)
         self.assertEqual(limit.volume(), order.quantity())
         self.assertEqual(limit.valid_orders(), 1)
@@ -49,7 +46,7 @@ class TestLimit(unittest.TestCase):
         price = todecimal(price)
         order1 = self.create_order(price, side, qty)
         order2 = self.create_order(price, side, qty)
-        limit = Limit(price, side)
+        limit = Limit(price)
         limit.enqueue(order1)
         limit.enqueue(order2)
         self.assertEqual(limit.next_order(), order1)
@@ -59,7 +56,7 @@ class TestLimit(unittest.TestCase):
         price = todecimal(price)
         order1 = self.create_order(price, side, qty1)
         order2 = self.create_order(price, side, qty2)
-        limit = Limit(price, side)
+        limit = Limit(price)
         limit.enqueue(order1)
         limit.enqueue(order2)
         limit.pop_next_order()
@@ -71,7 +68,7 @@ class TestLimit(unittest.TestCase):
     def test_cancel_order(self, price, side, qty):
         price = todecimal(price)
         order = self.create_order(price, side, qty)
-        limit = Limit(price, side)
+        limit = Limit(price)
         limit.enqueue(order)
         limit.cancel_order(order)
         self.assertEqual(order.status(), OrderStatus.CANCELED)
@@ -84,7 +81,7 @@ class TestLimit(unittest.TestCase):
         price = todecimal(price)
         order1 = self.create_order(price, side, qty1)
         order2 = self.create_order(price, side, qty2)
-        limit = Limit(price, side)
+        limit = Limit(price)
         limit.enqueue(order1)
         limit.enqueue(order2)
         order1.set_status(OrderStatus.CANCELED)
@@ -96,7 +93,7 @@ class TestLimit(unittest.TestCase):
     @given(valid_price, valid_side, valid_order_qty)
     def test_empty(self, price, side, qty):
         price = todecimal(price)
-        limit = Limit(price, side)
+        limit = Limit(price)
         self.assertTrue(limit.empty())
         order = self.create_order(price, side, qty)
         limit.enqueue(order)

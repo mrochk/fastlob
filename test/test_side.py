@@ -86,8 +86,6 @@ class TestSide(unittest.TestCase):
         self.assertFalse(side._price_exists(order1.price()))
         self.assertFalse(side._price_exists(order2.price()))
 
-        with self.assertRaises(KeyError):
-            side._get_limit(order1.price())
+        with self.assertRaises(KeyError): side._get_limit(order1.price())
 
-        with self.assertRaises(KeyError):
-            side._get_limit(order2.price())
+        with self.assertRaises(KeyError): side._get_limit(order2.price())

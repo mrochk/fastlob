@@ -2,33 +2,29 @@ from decimal import Decimal
 from collections import deque
 
 from pylob.order import Order
-from pylob.enums import OrderSide, OrderStatus
+from pylob.enums import OrderStatus
 from pylob.consts import zero
-
 
 class Limit:
     '''
     A limit is a collection of limit orders sitting at a certain price.
     '''
-    _valid_orders: int
     _price: Decimal
-    _side: OrderSide
     _volume: Decimal
+    _valid_orders: int
     _orderqueue: deque[Order]
 
-    def __init__(self, price: Decimal, side: OrderSide):
+    def __init__(self, price: Decimal):
         '''
         Args:
             price (num): The price at which the limit will sit.
-            side (OrderSide): The side of the limit.
         '''
         self._price = price
-        self._side = side
         self._volume = zero()
         self._valid_orders = 0
         self._orderqueue = deque()
 
-## GETTERS #####################################################################
+    ## GETTERS #########################################################################################################
 
     def price(self) -> Decimal:
         '''Getter for limit price.
@@ -37,14 +33,6 @@ class Limit:
             Decimal: The price at which the limit is sitting.
         '''
         return self._price
-
-    def side(self) -> OrderSide:
-        '''Getter for limit side (Bid or Ask).
-
-        Returns:
-            OrderSide: The side of the limit.
-        '''
-        return self._side
 
     def volume(self) -> Decimal:
         '''Getter for limit volume (sum of orders quantity).
@@ -70,7 +58,7 @@ class Limit:
         '''
         return self.volume() == 0 or self.valid_orders() == 0
 
-################################################################################
+    ####################################################################################################################
 
     def enqueue(self, order: Order):
         '''Add (enqueue) an order in limit.
@@ -93,9 +81,8 @@ class Limit:
         return self._orderqueue[0]
 
     def fill_next(self, quantity: Decimal):
-        '''**Partially** fill the next order in the queue. Filling it entirely
-        would lead to problems, to only use in last stage of execution 
-        (`_partial_fill_order`).
+        '''**Partially** fill the next order in the queue. Filling it entirely would lead to problems, to only use in 
+        last stage of order execution (i.e: `_partial_fill_order`).
 
         Args:
             quantity (Decimal): The quantity to fill the order with.
@@ -106,9 +93,7 @@ class Limit:
         self._volume -= quantity
 
     def pop_next_order(self) -> None:
-        '''Pop from the queue the next order to be executed. Does not return
-        it, only removes it.
-        '''
+        '''Pop from the queue the next order to be executed. Does not return it, only removes it.'''
         order = self._orderqueue.popleft()
 
         self._valid_orders -= 1
@@ -126,8 +111,9 @@ class Limit:
         order.set_status(OrderStatus.CANCELED)
 
     def prune_canceled_orders(self):
-        while not self.empty() and self._orderqueue[0].canceled(): self.pop_next_order()
+        '''Pop the next order whil it is a canceled one.'''
+        while not self.empty() and self._orderqueue[0].canceled(): 
+            self.pop_next_order()
 
     def __repr__(self) -> str:
-        p, s, v = self.price(), self.valid_orders(), self.volume()
-        return f'{self.side().name}Limit(price={p}, orders={s}, volume={v})'
+        return f'Limit(price={self.price()}, orders={self.valid_orders()}, volume={self.volume()})'
