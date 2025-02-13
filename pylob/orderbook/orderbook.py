@@ -11,15 +11,13 @@ from pylob.order import OrderParams, Order, AskOrder, BidOrder
 from .result import ExecutionResult, LimitResult, CancelResult
 
 class OrderBook:
-    '''
-    The `OrderBook` is a collection of bid and ask limits. It is reponsible for
-    calling the matching engine functions and safety checking.
-    '''
+    '''The `OrderBook` is a collection of bid and ask limits. It is reponsible for calling the matching engine, placing
+    limit orders, and safety checking.'''
 
     name: str
     ask_side: AskSide
     bid_side: BidSide
-    orders: dict[str, Order]
+    id2order: dict[str, Order]
 
     def __init__(self, name: Optional[str] = None):
         '''
@@ -29,7 +27,7 @@ class OrderBook:
         self.name = name if name else ""
         self.ask_side = AskSide()
         self.bid_side = BidSide()
-        self.orders = dict()
+        self.id2order = dict()
 
     ## GETTERS #####################################################################
 
@@ -90,8 +88,10 @@ class OrderBook:
         '''
         return self.best_ask() - self.best_bid()
 
-    def get_order_status(self, order_id: str) -> Optional[OrderStatus]:
-        try: self.orders[order_id].status()
+    def get_order_status_qty(self, order_id: str) -> Optional[tuple[OrderStatus, Decimal]]:
+        try: 
+            order = self.id2order[order_id]
+            return (order.status(), order.quantity())
         except KeyError: return None
 
     ################################################################################
@@ -101,10 +101,10 @@ class OrderBook:
         arguments.
 
         Args:
-            order_params (OrderParams): Parameters of order to create.
+            order_params (OrderParams): Parameters of order to create and process.
 
         Returns:
-            EngineResult: The result of processing the order params.
+            ExecutionResult: The result of processing the order params.
         '''
         match order_params.side:
             case OrderSide.BID: order = BidOrder(order_params)
@@ -115,19 +115,24 @@ class OrderBook:
         '''Process many orders at once.
 
         Args:
-            orders_params (Iterable[OrderParams]): Orders to process.
+            orders_params (Iterable[OrderParams]): Orders to create and process.
         '''
-        return [self.process_one(orderp) for orderp in orders_params]
+        return [self.process_one(params) for params in orders_params]
+
+    def cancel_order(self, order_id: str) -> CancelResult:
+        try: order = self.id2order[order_id]
+        except KeyError: return CancelResult(False, "order not in orderbook")
+
+        if not order.valid(): return CancelResult(False, f"order can not be canceled (status={order.status()})")
+
+        match order.side():
+            case OrderSide.BID: self.bid_side.cancel_order(order)
+            case OrderSide.ASK: self.ask_side.cancel_order(order)
+
+        return CancelResult(True, f"order {order.id()} canceled properly")
 
     def _process_order(self, order: Order) -> ExecutionResult:
-        '''Place or execute the given order depending on its price level.
-
-        Args:
-            order (Order): The order to process.
-
-        Returns:
-            ExecutionResult: The result of the matching engine.
-        '''
+        '''**Place or execute** the given order depending on its price level.'''
         result = None
 
         match order.side():
@@ -147,7 +152,7 @@ class OrderBook:
                     self.ask_side.place(order)
                     result = LimitResult(True, order.id())
 
-        if result.success(): self.orders[order.id()] = order
+        if result.success(): self.id2order[order.id()] = order
 
         if order.status() == OrderStatus.PARTIAL:
             msg = f"<orderbook>: order partially filled by engine, {order.quantity()} " f"placed at {order.price()}"
@@ -156,14 +161,7 @@ class OrderBook:
         return result
 
     def _is_market(self, order: Order) -> bool:
-        '''Check if an order is a market order.
-
-        Args:
-            order (Order): The order to check.
-
-        Returns:
-            bool: True if the order is a market order false otherwise.
-        '''
+        '''Check if an order is a market order.'''
         match order.side():
             case OrderSide.BID:
                 if self.ask_side.empty(): return False
@@ -174,18 +172,6 @@ class OrderBook:
                 if self.best_bid() >= order.price(): return True
 
         return False
-
-    def cancel_order(self, order_id: str) -> CancelResult:
-        try: order = self.orders[order_id]
-        except KeyError: return CancelResult(False, "order not in orderbook")
-
-        if not order.valid(): return CancelResult(False, f"order can not be canceled (status={order.status()})")
-
-        match order.side():
-            case OrderSide.BID: self.bid_side.cancel_order(order)
-            case OrderSide.ASK: self.ask_side.cancel_order(order)
-
-        return CancelResult(True, f"order {order.id()} canceled properly")
 
     def __repr__(self) -> str:
         '''Outputs the order-book in the following format:\n
@@ -212,5 +198,5 @@ class OrderBook:
         return buffer.getvalue()
 
     def display(self) -> None:
-        '''Clear terminal and display order-book.'''
+        '''Clear terminal & display order-book.'''
         os.system("cls" if os.name == "nt" else "clear"); print("\n", self, "\n")
