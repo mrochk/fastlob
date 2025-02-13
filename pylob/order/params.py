@@ -31,14 +31,14 @@ class OrderParams:
         self.expiry = expiry
 
     @staticmethod
-    def check_args(side: OrderSide, price: Number, quantity: Number, type: OrderType, expiry: Optional[float]):
+    def check_args(side: OrderSide, price: Number, quantity: Number, ordertype: OrderType, expiry: Optional[float]):
         '''Check for args correctness. This method is very important, since we do not check for this after the 
         OrderParams object is created.'''
-        if not isinstance(side, OrderSide): raise TypeError()
-        if not isinstance(price, Number): raise TypeError()
-        if not isinstance(quantity, Number): raise TypeError()
-        if not isinstance(type, OrderType): raise TypeError()
-        if expiry and not isinstance(expiry, float): raise TypeError()
+        if not isinstance(side, OrderSide): raise TypeError(f'side should of type OrderSide but is {type(side)}')
+        if not isinstance(price, Number): raise TypeError(f'price should be of type Number but is {type(price)}')
+        if not isinstance(quantity, Number): raise TypeError(f'quantity should be of type Number but is {type(quantity)}')
+        if not isinstance(ordertype, OrderType): raise TypeError(f'ordertype should be of type OrderType but is {type(ordertype)}')
+        if expiry and not isinstance(expiry, float): raise TypeError(f'expiry should be of type float but is {type(expiry)}')
 
         if price < MIN_VALUE: raise ValueError(f"price ({price}) must be greater than 0.01")
 
