@@ -40,13 +40,16 @@ class OrderParams:
         if not isinstance(ordertype, OrderType): raise TypeError(f'ordertype should be of type OrderType but is {type(ordertype)}')
         if expiry and not isinstance(expiry, float): raise TypeError(f'expiry should be of type float but is {type(expiry)}')
 
-        if price < MIN_VALUE: raise ValueError(f"price ({price}) must be greater than 0.01")
+        price_decimal = todecimal(price)
+        quantity_decimal = todecimal(quantity)
 
-        if quantity < MIN_VALUE: raise ValueError(f"quantity ({quantity}) must be greater than 0.01")
+        if price_decimal < MIN_VALUE: raise ValueError(f"price ({price}) must be greater than 0.01")
 
-        if price > MAX_VALUE: raise ValueError(f"price ({price}) is too large")
+        if quantity_decimal < MIN_VALUE: raise ValueError(f"quantity ({quantity}) must be greater than 0.01")
 
-        if quantity > MAX_VALUE: raise ValueError(f"quantity ({quantity}) is too large")
+        if price_decimal > MAX_VALUE: raise ValueError(f"price ({price}) is too large")
+
+        if quantity_decimal > MAX_VALUE: raise ValueError(f"quantity ({quantity}) is too large")
 
     def unwrap(self) -> tuple[Decimal, Decimal, OrderType, Optional[float]]:
         return self.price, self.quantity, self.type, self.expiry

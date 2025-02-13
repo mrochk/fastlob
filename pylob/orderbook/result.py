@@ -38,7 +38,7 @@ class MarketResult(OrderExecutionResult):
     limits_matched: int
     execution_prices: Optional[defaultdict[Decimal, Decimal]]
 
-    def __init__(self, success: bool, order_id: int = 0, messages: list[str] = [], orders_matched: int = 0,
+    def __init__(self, success: bool, order_id: str = '', messages: list[str] = [], orders_matched: int = 0,
         limits_matched: int = 0, execution_prices: Optional[defaultdict] = defaultdict(Decimal)):
 
         super().__init__(success, order_id, messages)

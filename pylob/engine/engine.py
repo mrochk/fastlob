@@ -41,6 +41,8 @@ def _fill_whole_limits(side: Side, order: Order, result: MarketResult) -> bool:
         side._volume -= lim.volume()
         side._limits.pop(lim.price())
 
+    return False
+
 def _fill_whole_orders(side: Side, order: Order, result: MarketResult) -> bool:
     '''While the order to execute is larger than whole orders, fill them.'''
     lim = side.best()

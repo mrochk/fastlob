@@ -113,6 +113,7 @@ class OrderBook:
         match order_params.side:
             case OrderSide.BID: order = BidOrder(order_params)
             case OrderSide.ASK: order = AskOrder(order_params)
+
         return self._process_order(order)
 
     def process_many(self, orders_params: Iterable[OrderParams]) -> list[ExecutionResult]:
@@ -124,20 +125,30 @@ class OrderBook:
         return [self.process_one(params) for params in orders_params]
 
     def cancel_order(self, order_id: str) -> CancelResult:
-        try: order = self.id2order[order_id]
-        except KeyError: return CancelResult(False, "order not in orderbook")
+        result = CancelResult(False)
 
-        if not order.valid(): return CancelResult(False, f"order can not be canceled (status={order.status()})")
+        try: order = self.id2order[order_id]
+        except KeyError: 
+            result.add_message(f'<orderbook> order not in orderbook')
+            return result
+
+        if not order.valid(): 
+            result.add_message(f'order can not be canceled (status={order.status()})')
+            return result
 
         match order.side():
             case OrderSide.BID: self.bid_side.cancel_order(order)
             case OrderSide.ASK: self.ask_side.cancel_order(order)
 
-        return CancelResult(True, f"order {order.id()} canceled properly")
+        result._success = True
+        result.add_message(f'order {order.id()} canceled properly')
+
+        return result
 
     def _process_order(self, order: Order) -> ExecutionResult:
         '''**Place or execute** the given order depending on its price level.'''
-        result = None
+
+        result : ExecutionResult
 
         match order.side():
             case OrderSide.BID:
