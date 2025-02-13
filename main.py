@@ -37,6 +37,9 @@ def simulation(n):
         ask_quantities = norm.rvs(loc=100, scale=10, size=n_asks)
         bid_quantities = norm.rvs(loc=100, scale=10, size=n_bids)
 
+        #ask_quantities = [100] * n_asks
+        #bid_quantities = [100] * n_bids
+
         asks = [OrderParams(OrderSide.ASK, p, q) for (p, q) in zip(ask_prices, ask_quantities)]
         bids = [OrderParams(OrderSide.BID, p, q) for (p, q) in zip(bid_prices, bid_quantities)]
 
@@ -45,10 +48,21 @@ def simulation(n):
         orders = limits + markets
         shuffle(orders)
 
-        orderbook.process_many(orders)
+        r = orderbook.process_many(orders)
 
         orderbook.display()
-        time.sleep(1)
+
+        if orderbook.spread() < 0: 
+
+            print(orderbook.ask_side.best(), orderbook.ask_side.best().next_order())
+            print(orderbook.bid_side.best(), orderbook.bid_side.best().next_order())
+
+            for re in r:
+                print(re)
+            
+            
+            exit(0)
+        time.sleep(0.1)
 
 if __name__ == "__main__":
     #cProfile.run('simulation(1000)', sort='time')
