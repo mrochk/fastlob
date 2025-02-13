@@ -1,16 +1,16 @@
 import time
-import matplotlib.pyplot as plt
+import cProfile
 from scipy.stats import genpareto, norm, poisson
 from random import shuffle
-import cProfile
 
 import pylob
 from pylob import OrderBook, OrderParams, OrderSide
 
 def simulation(n):
-    orderbook = OrderBook()
+    orderbook = OrderBook('Simulation')
 
     for t in range(n):
+        start = time.perf_counter()
 
         # LIMIT ORDERS
         n_asks = poisson.rvs(100)
@@ -50,19 +50,14 @@ def simulation(n):
 
         r = orderbook.process_many(orders)
 
-        orderbook.display()
+        end = time.perf_counter()
+        duration = end - start
 
-        if orderbook.spread() < 0: 
+        print(orderbook, flush=True)
+        print(f'    t = {round(orderbook.clock(), 1)}s')
+        print()
 
-            print(orderbook.ask_side.best(), orderbook.ask_side.best().next_order())
-            print(orderbook.bid_side.best(), orderbook.bid_side.best().next_order())
-
-            for re in r:
-                print(re)
-            
-            
-            exit(0)
-        time.sleep(0.1)
+        time.sleep(0.5 - duration)
 
 if __name__ == "__main__":
     #cProfile.run('simulation(1000)', sort='time')

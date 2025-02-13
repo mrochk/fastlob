@@ -118,7 +118,7 @@ class BidSide(Side):
         for bidlim in self._limits.values():
             if count >= 10:
                 if count < self.size():
-                    buffer.write(f"...({self.size() - 10} more bids)\n")
+                    buffer.write(f"   ...({self.size() - 10} more bids)\n")
                 break
             buffer.write(f" - {bidlim}\n")
             count += 1
@@ -136,7 +136,7 @@ class AskSide(Side):
     def __repr__(self):
         buffer = io.StringIO()
 
-        if self.size() > 10: buffer.write(f"...({self.size() - 10} more asks)\n")
+        if self.size() > 10: buffer.write(f"   ...({self.size() - 10} more asks)\n")
 
         count = 0
         l = list()

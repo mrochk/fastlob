@@ -1,1 +1,1 @@
-- [ ] Limits do not need to have a side attribute
+- [x] Limits do not need to have a side attribute

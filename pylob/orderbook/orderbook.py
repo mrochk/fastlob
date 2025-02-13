@@ -1,5 +1,6 @@
 import io
 import os
+import time
 from typing import Optional, Iterable
 from decimal import Decimal
 from termcolor import colored
@@ -28,8 +29,11 @@ class OrderBook:
         self.ask_side = AskSide()
         self.bid_side = BidSide()
         self.id2order = dict()
+        self.start = time.time()
 
     ## GETTERS #####################################################################
+
+    def clock(self) -> float: return time.time() - self.start
 
     def best_ask(self) -> Decimal:
         '''Get the best ask price in the book.
@@ -183,9 +187,9 @@ class OrderBook:
         - BidLimit(price=.., size=.., vol=..)
         - ...
         '''
-        length = 48
+        length = 46
         buffer = io.StringIO()
-        buffer.write(" " * (length // 2 - 9) + f"ORDER-BOOK {self.name}\n")
+        buffer.write(f"   ORDER-BOOK \"{self.name}\"\n\n")
         buffer.write(colored(str(self.ask_side), "red"))
         buffer.write(" " + ("-" * length) + "\n")
         buffer.write(colored(str(self.bid_side), "green"))
