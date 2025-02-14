@@ -44,9 +44,9 @@ class OrderParams:
         price_decimal = todecimal(price)
         quantity_decimal = todecimal(quantity)
 
-        if price_decimal < MIN_VALUE: raise ValueError(f"price ({price}) must be greater than 0.01")
+        if price_decimal < MIN_VALUE: raise ValueError(f"price ({price}) must be greater than {MIN_VALUE}")
 
-        if quantity_decimal < MIN_VALUE: raise ValueError(f"quantity ({quantity}) must be greater than 0.01")
+        if quantity_decimal < MIN_VALUE: raise ValueError(f"quantity ({quantity}) must be greater than {MIN_VALUE}")
 
         if price_decimal > MAX_VALUE: raise ValueError(f"price ({price}) is too large")
 

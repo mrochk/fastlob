@@ -1,9 +1,7 @@
-from typing import Iterable
 from decimal import Decimal
 from numbers import Number
 
 from pylob.consts import DECIMAL_PRECISION
-
 
 def todecimal(n: Number | str) -> Decimal:
     '''Wrapper around the Decimal constructor.'''
