@@ -92,7 +92,7 @@ class TestLimitOrders(unittest.TestCase):
 
         for _ in range(1, n+1):
 
-            pbid = 1999.99
+            pbid = 1999
             qbid = random.randint(1, int(10e9))
             opbid = OrderParams(OrderSide.BID, pbid, qbid)
 
