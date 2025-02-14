@@ -31,7 +31,8 @@ class OrderParams:
         self.expiry = expiry
 
     @staticmethod
-    def check_args(side: OrderSide, price: Number, quantity: Number, ordertype: OrderType, expiry: Optional[float]):
+    def check_args(side: OrderSide, price: Number, quantity: Number, ordertype: OrderType, 
+                   expiry: Optional[float]) -> None:
         '''Check for args correctness. This method is very important, since we do not check for this after the 
         OrderParams object is created.'''
         if not isinstance(side, OrderSide): raise TypeError(f'side should of type OrderSide but is {type(side)}')

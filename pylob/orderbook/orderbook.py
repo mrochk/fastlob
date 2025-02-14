@@ -19,6 +19,7 @@ class OrderBook:
     ask_side: AskSide
     bid_side: BidSide
     id2order: dict[str, Order]
+    start: float
 
     def __init__(self, name: Optional[str] = None):
         '''
@@ -31,7 +32,11 @@ class OrderBook:
         self.id2order = dict()
         self.start = time.time()
 
-    ## GETTERS #####################################################################
+    def reset(self) -> None:
+        self.ask_side = AskSide()
+        self.bid_side = BidSide()
+        self.id2order = dict()
+        self.start = time.time()
 
     def clock(self) -> float: return time.time() - self.start
 
@@ -97,8 +102,6 @@ class OrderBook:
             order = self.id2order[order_id]
             return (order.status(), order.quantity())
         except KeyError: return None
-
-    ################################################################################
 
     def process_one(self, order_params: OrderParams) -> ExecutionResult:
         '''Creates and processes the order corresponding to the corresponding

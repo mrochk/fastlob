@@ -16,8 +16,10 @@ def simulation(n):
         n_asks = poisson.rvs(100)
         n_bids = poisson.rvs(100)
 
-        ask_prices = genpareto.rvs(-0.1, loc=1000, scale=10, size=n_asks)
-        bid_prices = -genpareto.rvs(-0.1, loc=1000, scale=10, size=n_bids) + 2000
+        loc = 1000
+
+        ask_prices = genpareto.rvs(-0.1, loc=loc, scale=10, size=n_asks)
+        bid_prices = -genpareto.rvs(-0.1, loc=loc, scale=10, size=n_bids) + 2*loc
 
         ask_quantities = norm.rvs(loc=100, scale=10, size=n_asks)
         bid_quantities = norm.rvs(loc=100, scale=10, size=n_bids)
