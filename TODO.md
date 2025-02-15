@@ -1,3 +1,5 @@
 - [x] Limits do not need to have a side attribute
 - [ ] testing for market orders placing if not filled 
 - [ ] testing for order cancellation 
+- [ ] ob result and order params may be moved to separate packages
+- [ ] multi-threading

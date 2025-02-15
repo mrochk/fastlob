@@ -4,7 +4,7 @@ run:
 	@python3 main.py
 
 test: 
-	@python -m unittest discover test
+	@python -m unittest discover test -vvv
 
 benchmark:
 	@python3 benchmark.py

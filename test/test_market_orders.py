@@ -1,23 +1,39 @@
 import unittest
-import random
+from hypothesis import given, strategies as st
 
-from pylob import OrderBook, OrderSide, OrderParams
+from pylob import OrderBook, OrderSide, OrderParams, todecimal
 from pylob.enums import OrderStatus
 from pylob.orderbook.result import MarketResult
+from pylob.consts import MIN_VALUE, MAX_VALUE
+
+askprice = st.decimals(min_value=MIN_VALUE + 12, max_value=MAX_VALUE-10, allow_infinity=False, allow_nan=False)
+valid_qty = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_infinity=False, allow_nan=False)
+
+def get_bidprice(askprice): return askprice - 1
 
 class TestLimitOrders(unittest.TestCase):
-    def setUp(self): 
+    def setUp(self, askprice=1000): 
         self.ob = OrderBook('TestMarketOrders')
 
-        self.ob.process_one(OrderParams(OrderSide.BID, 1400, 200))
-        self.ob.process_one(OrderParams(OrderSide.BID, 1300, 200))
-        self.ob.process_one(OrderParams(OrderSide.BID, 1400, 200))
-        self.ob.process_one(OrderParams(OrderSide.BID, 1300, 200))
+        bidprice = get_bidprice(askprice)
 
-        self.ob.process_one(OrderParams(OrderSide.ASK, 1500, 200))
-        self.ob.process_one(OrderParams(OrderSide.ASK, 1600, 200))
-        self.ob.process_one(OrderParams(OrderSide.ASK, 1500, 200))
-        self.ob.process_one(OrderParams(OrderSide.ASK, 1600, 200))
+        self.ob.process_one(OrderParams(OrderSide.BID, bidprice, 200))
+        self.ob.process_one(OrderParams(OrderSide.BID, bidprice - 10, 200))
+        self.ob.process_one(OrderParams(OrderSide.BID, bidprice, 200))
+        self.ob.process_one(OrderParams(OrderSide.BID, bidprice - 10, 200))
+
+        self.ob.process_one(OrderParams(OrderSide.ASK, askprice, 200))
+        self.ob.process_one(OrderParams(OrderSide.ASK, askprice + 10, 200))
+        self.ob.process_one(OrderParams(OrderSide.ASK, askprice, 200))
+        self.ob.process_one(OrderParams(OrderSide.ASK, askprice+10, 200))
+
+        ''' Orderbook:
+        - askprice + 10 | 400 | 2
+        - askprice | 400 | 2
+        ----------------------------
+        - bidprice | 400 | 2
+        - bidprice - 10 | 400 | 2
+        '''
 
     '''
     - market order partially fills one
@@ -34,9 +50,26 @@ class TestLimitOrders(unittest.TestCase):
 
     # ask side
 
-    def test_ask_1(self):
-        order = OrderParams(OrderSide.ASK, 1400, 100)
+    @given(askprice)
+    def test_ask_1(self, askprice):
+        '''Market ask order partially fills best bid limit order.'''
+
+        askprice = todecimal(askprice)
+        bidprice = get_bidprice(askprice)
+        self.setUp(askprice)
+
+        order = OrderParams(OrderSide.ASK, bidprice, 100)
         result : MarketResult = self.ob.process_one(order)
+
+        ''' 
+        Expected:
+
+        - askprice + 10 | 400 | 2
+        - askprice | 400 | 2
+        ----------------------------
+        - bidprice | *300* | 2
+        - bidprice - 10 | 400 | 2
+        '''
         
         self.assertTrue(result.success())
         self.assertEqual(result.orders_filled, 0)
@@ -45,10 +78,28 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._bid_side.best().volume(), 300)
         self.assertEqual(self.ob._bid_side.best().valid_orders(), 2)
         self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
+        self.assertEqual(self.ob.best_bid(), bidprice)
 
-    def test_ask_2(self):
-        order = OrderParams(OrderSide.ASK, 1400, 200)
+    @given(askprice)
+    def test_ask_2(self, askprice):
+        '''Market ask order fully fills best bid limit order.'''
+
+        askprice = todecimal(askprice)
+        bidprice = get_bidprice(askprice)
+        self.setUp(askprice)
+
+        order = OrderParams(OrderSide.ASK, bidprice, 200)
         result : MarketResult = self.ob.process_one(order)
+
+        ''' 
+        Expected:
+
+        - askprice + 10 | 400 | 2
+        - askprice | 400 | 2
+        ----------------------------
+        - bidprice | *200* | *1*
+        - bidprice - 10 | 400 | 2
+        '''
         
         self.assertTrue(result.success())
         self.assertEqual(result.orders_filled, 1)
@@ -57,10 +108,28 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._bid_side.best().volume(), 200)
         self.assertEqual(self.ob._bid_side.best().valid_orders(), 1)
         self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
+        self.assertEqual(self.ob.best_bid(), bidprice)
 
-    def test_ask_3(self):
-        order = OrderParams(OrderSide.ASK, 1400, 300)
+    @given(askprice)
+    def test_ask_3(self, askprice):
+        '''Market ask order fully fills best bid limit order and partially fills second.'''
+
+        askprice = todecimal(askprice)
+        bidprice = get_bidprice(askprice)
+        self.setUp(askprice)
+
+        order = OrderParams(OrderSide.ASK, bidprice, 300)
         result : MarketResult = self.ob.process_one(order)
+
+        ''' 
+        Expected:
+
+        - askprice + 10 | 400 | 2
+        - askprice | 400 | 2
+        ----------------------------
+        - bidprice | *100* | *1*
+        - bidprice - 10 | 400 | 2
+        '''
         
         self.assertTrue(result.success())
         self.assertEqual(result.orders_filled, 1)
@@ -69,10 +138,28 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._bid_side.best().volume(), 100)
         self.assertEqual(self.ob._bid_side.best().valid_orders(), 1)
         self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
+        self.assertEqual(self.ob.best_bid(), bidprice)
 
-    def test_ask_4(self):
-        order = OrderParams(OrderSide.ASK, 1400, 400)
+    @given(askprice)
+    def test_ask_4(self, askprice):
+        '''Market ask order fully fills best bid limit.'''
+
+        askprice = todecimal(askprice)
+        bidprice = get_bidprice(askprice)
+        self.setUp(askprice)
+
+        order = OrderParams(OrderSide.ASK, bidprice, 400)
         result : MarketResult = self.ob.process_one(order)
+
+        ''' 
+        Expected:
+
+        - askprice + 10 | 400 | 2
+        - askprice | 400 | 2
+        ----------------------------
+        - *
+        - bidprice - 10 | 400 | 2
+        '''
         
         self.assertTrue(result.success())
         self.assertEqual(result.orders_filled, 2)
@@ -80,12 +167,29 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._bid_side.volume(), 400)
         self.assertEqual(self.ob._bid_side.best().volume(), 400)
         self.assertEqual(self.ob._bid_side.best().valid_orders(), 2)
-        self.assertEqual(self.ob._bid_side.best().price(), 1300)
+        self.assertEqual(self.ob._bid_side.best().price(), bidprice - 10)
         self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
 
-    def test_ask_5(self):
-        order = OrderParams(OrderSide.ASK, 1300, 500)
+    @given(askprice)
+    def test_ask_5(self, askprice):
+        '''Market ask order fully fills best bid limit and partially fills second limit best order.'''
+
+        askprice = todecimal(askprice)
+        bidprice = get_bidprice(askprice)
+        self.setUp(askprice)
+
+        order = OrderParams(OrderSide.ASK, bidprice - 10, 500)
         result : MarketResult = self.ob.process_one(order)
+
+        ''' 
+        Expected:
+
+        - askprice + 10 | 400 | 2
+        - askprice | 400 | 2
+        ----------------------------
+        - *
+        - bidprice - 10 | *300* | 2
+        '''
         
         self.assertTrue(result.success())
         self.assertEqual(result.orders_filled, 2)
@@ -93,12 +197,28 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._bid_side.volume(), 300)
         self.assertEqual(self.ob._bid_side.best().volume(), 300)
         self.assertEqual(self.ob._bid_side.best().valid_orders(), 2)
-        self.assertEqual(self.ob._bid_side.best().price(), 1300)
+        self.assertEqual(self.ob._bid_side.best().price(), bidprice - 10)
         self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
 
-    def test_ask_6(self):
-        order = OrderParams(OrderSide.ASK, 1300, 600)
+    @given(askprice)
+    def test_ask_6(self, askprice):
+        '''Market ask order fully fills best bid limit and fully fills second limit best order.'''
+        askprice = todecimal(askprice)
+        bidprice = get_bidprice(askprice)
+        self.setUp(askprice)
+
+        order = OrderParams(OrderSide.ASK, bidprice - 10, 600)
         result : MarketResult = self.ob.process_one(order)
+
+        ''' 
+        Expected:
+
+        - askprice + 10 | 400 | 2
+        - askprice | 400 | 2
+        ----------------------------
+        - *
+        - bidprice - 10 | *200* | *1*
+        '''
         
         self.assertTrue(result.success())
         self.assertEqual(result.orders_filled, 3)
@@ -106,25 +226,60 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._bid_side.volume(), 200)
         self.assertEqual(self.ob._bid_side.best().volume(), 200)
         self.assertEqual(self.ob._bid_side.best().valid_orders(), 1)
-        self.assertEqual(self.ob._bid_side.best().price(), 1300)
+        self.assertEqual(self.ob._bid_side.best().price(), bidprice - 10)
         self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
 
-    def test_ask_7(self):
-        order = OrderParams(OrderSide.ASK, 1300, 800)
+    @given(askprice)
+    def test_ask_7(self, askprice):
+        '''Market ask order fully fills bid side.'''
+        askprice = todecimal(askprice)
+        bidprice = get_bidprice(askprice)
+        self.setUp(askprice)
+
+        order = OrderParams(OrderSide.ASK, bidprice - 10, 800)
         result : MarketResult = self.ob.process_one(order)
+
+        ''' 
+        Expected:
+
+        - askprice + 10 | 400 | 2
+        - askprice | 400 | 2
+        ----------------------------
+        - *
+        - *
+        '''
         
         self.assertTrue(result.success())
         self.assertEqual(result.orders_filled, 4)
         self.assertEqual(result.limits_filled, 2)
+
+        self.assertTrue(self.ob._bid_side.empty())
         self.assertEqual(self.ob._bid_side.volume(), 0)
         self.assertEqual(self.ob._bid_side.size(), 0)
+
         self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
 
     # bid side
 
-    def test_bid_1(self):
-        order = OrderParams(OrderSide.BID, 1500, 100)
+    @given(askprice)
+    def test_bid_1(self, askprice):
+        '''Market bid order partially fills best ask limit order.'''
+
+        askprice = todecimal(askprice)
+        self.setUp(askprice)
+
+        order = OrderParams(OrderSide.BID, askprice, 100)
         result : MarketResult = self.ob.process_one(order)
+
+        ''' 
+        Expected:
+
+        - askprice + 10 | 400 | 2
+        - askprice | *300* | 2
+        ----------------------------
+        - bidprice | 400 | 2
+        - bidprice - 10 | 400 | 2
+        '''
         
         self.assertTrue(result.success())
         self.assertEqual(result.orders_filled, 0)
@@ -133,10 +288,27 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._ask_side.best().volume(), 300)
         self.assertEqual(self.ob._ask_side.best().valid_orders(), 2)
         self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
+        self.assertEqual(self.ob.best_ask(), askprice)
 
-    def test_bid_2(self):
-        order = OrderParams(OrderSide.BID, 1500, 200)
+    @given(askprice)
+    def test_bid_2(self, askprice):
+        '''Market bid order fully fills best ask limit order.'''
+
+        askprice = todecimal(askprice)
+        self.setUp(askprice)
+
+        order = OrderParams(OrderSide.BID, askprice, 200)
         result : MarketResult = self.ob.process_one(order)
+
+        ''' 
+        Expected:
+
+        - askprice + 10 | 400 | 2
+        - askprice | *200* | *1*
+        ----------------------------
+        - bidprice | 400 | 2
+        - bidprice - 10 | 400 | 2
+        '''
         
         self.assertTrue(result.success())
         self.assertEqual(result.orders_filled, 1)
@@ -145,10 +317,27 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._ask_side.best().volume(), 200)
         self.assertEqual(self.ob._ask_side.best().valid_orders(), 1)
         self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
+        self.assertEqual(self.ob.best_ask(), askprice)
 
-    def test_bid_3(self):
-        order = OrderParams(OrderSide.BID, 1500, 300)
+    @given(askprice)
+    def test_bid_3(self, askprice):
+        '''Market bid order fully fills best ask limit order and partially fills second.'''
+
+        askprice = todecimal(askprice)
+        self.setUp(askprice)
+
+        order = OrderParams(OrderSide.BID, askprice, 300)
         result : MarketResult = self.ob.process_one(order)
+
+        ''' 
+        Expected:
+
+        - askprice + 10 | 400 | 2
+        - askprice | *100* | *1*
+        ----------------------------
+        - bidprice | 400 | 2
+        - bidprice - 10 | 400 | 2
+        '''
         
         self.assertTrue(result.success())
         self.assertEqual(result.orders_filled, 1)
@@ -157,10 +346,27 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._ask_side.best().volume(), 100)
         self.assertEqual(self.ob._ask_side.best().valid_orders(), 1)
         self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
+        self.assertEqual(self.ob.best_ask(), askprice)
 
-    def test_bid_4(self):
-        order = OrderParams(OrderSide.BID, 1500, 400)
+    @given(askprice)
+    def test_bid_4(self, askprice):
+        '''Market bid order fully fills best ask limit.'''
+
+        askprice = todecimal(askprice)
+        self.setUp(askprice)
+
+        order = OrderParams(OrderSide.BID, askprice, 400)
         result : MarketResult = self.ob.process_one(order)
+
+        ''' 
+        Expected:
+
+        - askprice + 10 | 400 | 2
+        - *
+        ----------------------------
+        - bidprice | 400 | 2
+        - bidprice - 10 | 400 | 2
+        '''
         
         self.assertTrue(result.success())
         self.assertEqual(result.orders_filled, 2)
@@ -168,12 +374,28 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._ask_side.volume(), 400)
         self.assertEqual(self.ob._ask_side.best().volume(), 400)
         self.assertEqual(self.ob._ask_side.best().valid_orders(), 2)
-        self.assertEqual(self.ob._ask_side.best().price(), 1600)
+        self.assertEqual(self.ob._ask_side.best().price(), askprice + 10)
         self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
 
-    def test_bid_5(self):
-        order = OrderParams(OrderSide.BID, 1600, 500)
+    @given(askprice)
+    def test_bid_5(self, askprice):
+        '''Market bid order fully fills best ask limit and partially fills second limit best order.'''
+
+        askprice = todecimal(askprice)
+        self.setUp(askprice)
+
+        order = OrderParams(OrderSide.BID, askprice + 10, 500)
         result : MarketResult = self.ob.process_one(order)
+
+        ''' 
+        Expected:
+
+        - askprice + 10 | *300* | 2
+        - *
+        ----------------------------
+        - bidprice | 400 | 2
+        - bidprice - 10 | 400 | 2
+        '''
         
         self.assertTrue(result.success())
         self.assertEqual(result.orders_filled, 2)
@@ -181,12 +403,27 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._ask_side.volume(), 300)
         self.assertEqual(self.ob._ask_side.best().volume(), 300)
         self.assertEqual(self.ob._ask_side.best().valid_orders(), 2)
-        self.assertEqual(self.ob._ask_side.best().price(), 1600)
+        self.assertEqual(self.ob._ask_side.best().price(), askprice + 10)
         self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
 
-    def test_bid_6(self):
-        order = OrderParams(OrderSide.BID, 1600, 600)
+    @given(askprice)
+    def test_bid_6(self, askprice):
+        '''Market ask order fully fills best bid limit and fully fills second limit best order.'''
+        askprice = todecimal(askprice)
+        self.setUp(askprice)
+
+        order = OrderParams(OrderSide.BID, askprice + 10, 600)
         result : MarketResult = self.ob.process_one(order)
+
+        ''' 
+        Expected:
+
+        - askprice + 10 | *200* | *1*
+        - *
+        ----------------------------
+        - bidprice | 400 | 2
+        - bidprice - 10 | 400 | 2
+        '''
         
         self.assertTrue(result.success())
         self.assertEqual(result.orders_filled, 3)
@@ -194,16 +431,34 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._ask_side.volume(), 200)
         self.assertEqual(self.ob._ask_side.best().volume(), 200)
         self.assertEqual(self.ob._ask_side.best().valid_orders(), 1)
-        self.assertEqual(self.ob._ask_side.best().price(), 1600)
+        self.assertEqual(self.ob._ask_side.best().price(), askprice + 10)
         self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
 
-    def test_bid_7(self):
-        order = OrderParams(OrderSide.BID, 1600, 800)
+    @given(askprice)
+    def test_bid_7(self, askprice):
+        '''Market bid order fully fills bid side.'''
+        askprice = todecimal(askprice)
+        self.setUp(askprice)
+
+        order = OrderParams(OrderSide.BID, askprice + 10, 800)
         result : MarketResult = self.ob.process_one(order)
+
+        ''' 
+        Expected:
+
+        - *
+        - *
+        ----------------------------
+        - bidprice | 400 | 2
+        - bidprice - 10 | 400 | 2
+        '''
         
         self.assertTrue(result.success())
         self.assertEqual(result.orders_filled, 4)
         self.assertEqual(result.limits_filled, 2)
+
+        self.assertTrue(self.ob._ask_side.empty())
         self.assertEqual(self.ob._ask_side.volume(), 0)
         self.assertEqual(self.ob._ask_side.size(), 0)
+
         self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))

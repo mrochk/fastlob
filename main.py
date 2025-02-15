@@ -3,10 +3,10 @@ import cProfile
 from scipy.stats import genpareto, norm, poisson
 from random import shuffle
 
-import pylob
-from pylob import OrderBook, OrderParams, OrderSide
+import pylob as lob
+from pylob import OrderParams, OrderSide
 
-def get_orders(n):
+def genorders(n):
     Orders = []
 
     for t in range(n):
@@ -51,25 +51,34 @@ def get_orders(n):
 
     return Orders
 
-def simulate(n, orders, display=True):
-    orderbook = OrderBook('Simulation')
+def simulate(orders, display=True):
+    orderbook = lob.OrderBook('Simulation')
+    query = Query(orderbook)
+    query.start()
 
-    start = time.time()
+    for o in orders:
+        results = orderbook.process_many(o)
+        time.sleep(1.5)
 
-    for t in range(n):
+    query.stop()
 
-        r = orderbook.process_many(orders[t])
+from threading import Thread
 
-        end = time.perf_counter()
-        duration = end - start
+class Query(Thread):
+    def __init__(self, ob):
+        super().__init__()
+        self.ob = ob
+        self.s = False
 
-        if display:
-            print(orderbook, flush=True)
-            print(f'    time = {round(orderbook.clock(), 1)}s\n')
-            time.sleep(0.5)
+    def stop(self): self.s = True
+
+    def run(self):
+        while not self.s:
+            print(self.ob, flush=True)
+            time.sleep(1)
 
 if __name__ == "__main__":
     n = 10
-    orders = get_orders(n)
-    cProfile.run('simulate(n, orders, display=False)', sort='time')
-    #simulate(10, orders)
+    orders = genorders(n)
+    #cProfile.run('simulate(n, orders, display=False)', sort='time')
+    simulate(orders)
