@@ -203,7 +203,7 @@ class OrderBook:
         '''
         length = 46
         buffer = io.StringIO()
-        buffer.write(f"   ORDER-BOOK \"{self.name}\"\n\n")
+        buffer.write(f"   [ORDER-BOOK {self.name}]\n\n")
         buffer.write(colored(str(self.ask_side), "red"))
         buffer.write(" " + ("-" * length) + "\n")
         buffer.write(colored(str(self.bid_side), "green"))

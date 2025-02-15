@@ -4,7 +4,7 @@ from numbers import Number
 from pylob.consts import DECIMAL_PRECISION
 
 def todecimal(n: Number | str) -> Decimal:
-    '''Wrapper around the Decimal constructor.'''
+    '''Wrapper around the Decimal constructor to properly round numbers to user defined precision.'''
     if not isinstance(n, Number | str): raise TypeError("invalid type to be converted to decimal")
 
     dec = Decimal.from_float(n) if isinstance(n, float) else Decimal(n)

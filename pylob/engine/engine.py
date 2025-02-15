@@ -33,8 +33,8 @@ def _fill_whole_limits(side: Side, order: Order, result: MarketResult) -> bool:
 
         if order.quantity() < lim.volume(): return False
 
-        result.limits_matched += 1
-        result.orders_matched += lim.valid_orders()
+        result.limits_filled += 1
+        result.orders_filled += lim.valid_orders()
         result.execution_prices[lim.price()] = lim.volume()
 
         order.fill(lim.volume())
@@ -45,6 +45,8 @@ def _fill_whole_limits(side: Side, order: Order, result: MarketResult) -> bool:
 
 def _fill_whole_orders(side: Side, order: Order, result: MarketResult) -> bool:
     '''While the order to execute is larger than whole orders, fill them.'''
+    if side.empty(): return False
+
     lim = side.best()
 
     if _oop(order, lim.price()):
@@ -56,7 +58,7 @@ def _fill_whole_orders(side: Side, order: Order, result: MarketResult) -> bool:
 
         if order.quantity() < next_order.quantity(): return False
 
-        result.orders_matched += 1
+        result.orders_filled += 1
         result.execution_prices[next_order.price()] += next_order.quantity()
 
         order.fill(next_order.quantity())
@@ -65,10 +67,12 @@ def _fill_whole_orders(side: Side, order: Order, result: MarketResult) -> bool:
 
 def _fill_last_order(side: Side, order: Order, result: MarketResult):
     '''**Partially** fill the last order left with what's left of our order.'''
+    if side.empty(): return False
+
     lim = side.best()
     lim_order = lim.next_order()
 
-    if order.status() == OrderStatus.PARTIAL:
+    if order.valid():
         result.execution_prices[lim_order.price()] += order.quantity()
 
         lim.fill_next(order.quantity())

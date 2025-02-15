@@ -5,7 +5,6 @@ import cProfile
 
 from pylob import OrderBook, OrderParams, OrderSide
 
-
 def benchmark(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -18,7 +17,6 @@ def benchmark(func):
         return result
 
     return wrapper
-
 
 if __name__ == "__main__":
     raise NotImplemented

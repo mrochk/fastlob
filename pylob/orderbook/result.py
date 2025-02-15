@@ -34,21 +34,21 @@ class LimitResult(OrderExecutionResult):
         return f'LimitResult(success={self.success()}, order_id={self.order_id()}, messages={self.messages()})'
 
 class MarketResult(OrderExecutionResult):
-    orders_matched: int
-    limits_matched: int
+    orders_filled: int
+    limits_filled: int
     execution_prices: Optional[defaultdict[Decimal, Decimal]]
 
     def __init__(self, success: bool, order_id: str = '', messages: list[str] = [], orders_matched: int = 0,
         limits_matched: int = 0, execution_prices: Optional[defaultdict] = defaultdict(Decimal)):
 
         super().__init__(success, order_id, messages)
-        self.orders_matched = orders_matched
-        self.limits_matched = limits_matched
+        self.orders_filled = orders_matched
+        self.limits_filled = limits_matched
         self.execution_prices = execution_prices
 
     def __repr__(self):
         return f'MarketResult(success={self.success()}, order_id={self.order_id()}, messages={self.messages()}, ' \
-            + f'limits_matched={self.limits_matched}, orders_matched={self.orders_matched})'
+            + f'limits_matched={self.limits_filled}, orders_matched={self.orders_filled})'
 
 class CancelResult(ExecutionResult):
     def __init__(self, success: bool, messages: list[str] = []):
