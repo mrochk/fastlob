@@ -56,7 +56,7 @@ class Limit:
         Returns:
             bool: True if limit is empty.
         '''
-        return self.volume() == 0 or self.valid_orders() == 0
+        return self.volume() == 0 or self.valid_orders() == 0 or len(self._orderqueue) == 0
 
     ####################################################################################################################
 
@@ -112,7 +112,7 @@ class Limit:
 
     def prune_canceled_orders(self):
         '''Pop the next order whil it is a canceled one.'''
-        while not self.empty() and self._orderqueue[0].canceled(): 
+        while not self.empty() and self.next_order().canceled(): 
             self.pop_next_order()
 
     def __repr__(self) -> str:

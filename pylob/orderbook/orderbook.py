@@ -15,30 +15,30 @@ class OrderBook:
     '''The `OrderBook` is a collection of bid and ask limits. It is reponsible for calling the matching engine, placing
     limit orders, and safety checking.'''
 
-    name: str
-    ask_side: AskSide
-    bid_side: BidSide
-    id2order: dict[str, Order]
-    start: float
+    _name: str
+    _ask_side: AskSide
+    _bid_side: BidSide
+    _orders: dict[str, Order]
+    _start: float
 
     def __init__(self, name: Optional[str] = None):
         '''
         Args:
             name (Optional[str]): A name for the order-book. Defaults to None.
         '''
-        self.name = name if name else ""
-        self.ask_side = AskSide()
-        self.bid_side = BidSide()
-        self.id2order = dict()
-        self.start = time.time()
+        self._name = name if name else ""
+        self._ask_side = AskSide()
+        self._bid_side = BidSide()
+        self._orders = dict()
+        self._start = time.time()
 
     def reset(self) -> None:
-        self.ask_side = AskSide()
-        self.bid_side = BidSide()
-        self.id2order = dict()
-        self.start = time.time()
+        self._ask_side = AskSide()
+        self._bid_side = BidSide()
+        self._orders = dict()
+        self._start = time.time()
 
-    def clock(self) -> float: return time.time() - self.start
+    def clock(self) -> float: return time.time() - self._start
 
     def best_ask(self) -> Decimal:
         '''Get the best ask price in the book.
@@ -46,7 +46,7 @@ class OrderBook:
         Returns:
             Decimal: The best ask price.
         '''
-        return self.ask_side.best().price()
+        return self._ask_side.best().price()
 
     def best_bid(self) -> Decimal:
         '''Get the best bid price in the book.
@@ -54,7 +54,7 @@ class OrderBook:
         Returns:
             Decimal: The best bid price.
         '''
-        return self.bid_side.best().price()
+        return self._bid_side.best().price()
 
     def n_bids(self) -> int:
         '''Get the number of bids limits in the book.
@@ -62,7 +62,7 @@ class OrderBook:
         Returns:
             int: The number of bids limits.
         '''
-        return self.bid_side.size()
+        return self._bid_side.size()
 
     def n_asks(self) -> int:
         '''Get the number of asks limits in the book.
@@ -70,7 +70,7 @@ class OrderBook:
         Returns:
             int: The number of asks limits.
         '''
-        return self.ask_side.size()
+        return self._ask_side.size()
 
     def n_prices(self) -> int:
         '''Get the total number of limits (price levels) in the book.
@@ -97,9 +97,9 @@ class OrderBook:
         '''
         return self.best_ask() - self.best_bid()
 
-    def get_order_status_qty(self, order_id: str) -> Optional[tuple[OrderStatus, Decimal]]:
+    def get_order(self, order_id: str) -> Optional[tuple[OrderStatus, Decimal]]:
         try: 
-            order = self.id2order[order_id]
+            order = self._orders[order_id]
             return (order.status(), order.quantity())
         except KeyError: return None
 
@@ -130,7 +130,7 @@ class OrderBook:
     def cancel_order(self, order_id: str) -> CancelResult:
         result = CancelResult(False)
 
-        try: order = self.id2order[order_id]
+        try: order = self._orders[order_id]
         except KeyError: 
             result.add_message(f'<orderbook> order not in orderbook')
             return result
@@ -140,8 +140,8 @@ class OrderBook:
             return result
 
         match order.side():
-            case OrderSide.BID: self.bid_side.cancel_order(order)
-            case OrderSide.ASK: self.ask_side.cancel_order(order)
+            case OrderSide.BID: self._bid_side.cancel_order(order)
+            case OrderSide.ASK: self._ask_side.cancel_order(order)
 
         result._success = True
         result.add_message(f'order {order.id()} canceled properly')
@@ -155,22 +155,22 @@ class OrderBook:
 
         match order.side():
             case OrderSide.BID:
-                if self._is_market(order):
-                    result = engine.execute(order, self.ask_side)
-                    if order.status() == OrderStatus.PARTIAL: self.bid_side.place(order)
+                if self._is_market_bid(order):
+                    result = engine.execute(order, self._ask_side)
+                    if order.status() == OrderStatus.PARTIAL: self._bid_side.place(order)
                 else:
-                    self.bid_side.place(order)
+                    self._bid_side.place(order)
                     result = LimitResult(True, order.id())
 
             case OrderSide.ASK:
-                if self._is_market(order):
-                    result = engine.execute(order, self.bid_side)
-                    if order.status() == OrderStatus.PARTIAL: self.ask_side.place(order)
+                if self._is_market_ask(order):
+                    result = engine.execute(order, self._bid_side)
+                    if order.status() == OrderStatus.PARTIAL: self._ask_side.place(order)
                 else:
-                    self.ask_side.place(order)
+                    self._ask_side.place(order)
                     result = LimitResult(True, order.id())
 
-        if result.success(): self.id2order[order.id()] = order
+        if result.success(): self._orders[order.id()] = order
 
         if order.status() == OrderStatus.PARTIAL:
             msg = f"<orderbook>: order partially filled by engine, {order.quantity()} " f"placed at {order.price()}"
@@ -178,17 +178,14 @@ class OrderBook:
 
         return result
 
-    def _is_market(self, order: Order) -> bool:
-        '''Check if an order is a market order.'''
-        match order.side():
-            case OrderSide.BID:
-                if self.ask_side.empty(): return False
-                if self.best_ask() <= order.price(): return True
+    def _is_market_bid(self, order):
+        if self._ask_side.empty(): return False
+        if self.best_ask() <= order.price(): return True
+        return False
 
-            case OrderSide.ASK:
-                if self.bid_side.empty(): return False
-                if self.best_bid() >= order.price(): return True
-
+    def _is_market_ask(self, order):
+        if self._bid_side.empty(): return False
+        if self.best_bid() >= order.price(): return True
         return False
 
     def __repr__(self) -> str:
@@ -203,12 +200,12 @@ class OrderBook:
         '''
         length = 46
         buffer = io.StringIO()
-        buffer.write(f"   [ORDER-BOOK {self.name}]\n\n")
-        buffer.write(colored(str(self.ask_side), "red"))
+        buffer.write(f"   [ORDER-BOOK {self._name}]\n\n")
+        buffer.write(colored(str(self._ask_side), "red"))
         buffer.write(" " + ("-" * length) + "\n")
-        buffer.write(colored(str(self.bid_side), "green"))
+        buffer.write(colored(str(self._bid_side), "green"))
 
-        if self.ask_side.empty() or self.bid_side.empty(): return buffer.getvalue()
+        if self._ask_side.empty() or self._bid_side.empty(): return buffer.getvalue()
 
         buffer.write(colored(f"\n    Spread = {self.spread()}", color="blue"))
         buffer.write(colored(f", Mid-price = {self.midprice()}", color="blue"))

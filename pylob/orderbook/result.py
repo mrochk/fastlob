@@ -20,7 +20,7 @@ class ExecutionResult(abc.ABC):
 class OrderExecutionResult(ExecutionResult, abc.ABC):
     _order_id: str
 
-    def __init__(self, success, order_id: str = "", messages: list[str] = []):
+    def __init__(self, success, order_id: str = "", messages: list[str] = list()):
         self._order_id = order_id
         super().__init__(success, messages)
 

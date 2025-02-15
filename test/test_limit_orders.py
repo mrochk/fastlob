@@ -34,7 +34,7 @@ class TestLimitOrders(unittest.TestCase):
             self.assertEqual(self.ob.best_ask(), op.price)
             self.assertEqual(self.ob.n_asks(), 1)
         
-        s, q = self.ob.get_order_status_qty(result.order_id())
+        s, q = self.ob.get_order(result.order_id())
 
         self.assertEqual(s, OrderStatus.PENDING)
         self.assertEqual(q, op.quantity)
@@ -59,7 +59,7 @@ class TestLimitOrders(unittest.TestCase):
                 self.assertEqual(self.ob.n_asks(), 1)
                 self.assertEqual(self.ob.best_ask(), op.price)
         
-            s, q = self.ob.get_order_status_qty(result.order_id())
+            s, q = self.ob.get_order(result.order_id())
 
             self.assertEqual(s, OrderStatus.PENDING)
             self.assertEqual(q, op.quantity) 
@@ -81,7 +81,7 @@ class TestLimitOrders(unittest.TestCase):
 
             self.assertEqual(self.ob.n_prices(), i)
         
-            s, q = self.ob.get_order_status_qty(result.order_id())
+            s, q = self.ob.get_order(result.order_id())
 
             self.assertEqual(s, OrderStatus.PENDING)
             self.assertEqual(q, op.quantity) 
@@ -109,11 +109,11 @@ class TestLimitOrders(unittest.TestCase):
             self.assertTrue(result1.success())
             self.assertTrue(result1.success())
 
-            s, q = self.ob.get_order_status_qty(result1.order_id())
+            s, q = self.ob.get_order(result1.order_id())
             self.assertEqual(s, OrderStatus.PENDING)
             self.assertEqual(q, opbid.quantity) 
 
-            s, q = self.ob.get_order_status_qty(result2.order_id())
+            s, q = self.ob.get_order(result2.order_id())
             self.assertEqual(s, OrderStatus.PENDING)
             self.assertEqual(q, opask.quantity) 
 
@@ -146,11 +146,11 @@ class TestLimitOrders(unittest.TestCase):
             self.assertTrue(result1.success())
             self.assertTrue(result1.success())
 
-            s, q = self.ob.get_order_status_qty(result1.order_id())
+            s, q = self.ob.get_order(result1.order_id())
             self.assertEqual(s, OrderStatus.PENDING)
             self.assertEqual(q, opbid.quantity) 
 
-            s, q = self.ob.get_order_status_qty(result2.order_id())
+            s, q = self.ob.get_order(result2.order_id())
             self.assertEqual(s, OrderStatus.PENDING)
             self.assertEqual(q, opask.quantity) 
 

@@ -16,4 +16,4 @@ lines:
 	@find pylob -name "*.py" | xargs wc -l
 
 clean:
-	@rm -rf .hypothesis .mypy_cache __pycache__ pylob.egg-info
+	@rm -rf build .hypothesis .mypy_cache __pycache__ pylob.egg-info

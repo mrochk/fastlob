@@ -1,1 +1,3 @@
 - [x] Limits do not need to have a side attribute
+- [ ] testing for market orders placing if not filled 
+- [ ] testing for order cancellation 
