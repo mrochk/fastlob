@@ -1,15 +1,17 @@
 # `pylob` | Python Limit-Order-Book
 **Fast &amp; minimalist limit-order-book (LOB) implementation in pure Python.**
 
-*Package currently in development, not usable yet.*
+*Package currently in development, can not be used yet.*
 
-The goal is to build an efficient, clean and easy to use package for whoever needs to be able to quickly run a limit order-book in their Python project. We aim to keep the API minimalist and simple, while having reasonable performances (for a pure Python implementation). We intend the final project to contain no more than around 1000 lines of code.
+The goal is to build an efficient, clean and easy to use package for whoever needs to be able to quickly run a limit-order-book in their Python project. 
 
-We implement three types of orders: FOK, GTC and GTD. Every order is defined as a limit order, but will be executed as market order if its price matches the best bid or ask limit in the book.
-
-<a href="TODO.md">TODO</a>
+We aim to keep the API minimalist and simple, while having reasonable performances (for a pure Python implementation). We intend the final project to contain no more than ~1000 lines of code.
 
 <img src="ss.png" width=400>
+
+We implement three types of orders: *FOK*, *GTC* and *GTD*. Every order is defined as a limit order, but will be executed as a market order if its price matches the best (bid or ask) limit price in the book.
+
+<a href="TODO.md">TODO</a>
 
 # Usage
 
@@ -28,7 +30,7 @@ python3 -m unittest discover test
 
 ***
 
-*Lines count (as of 13-02-2025):*
+*Lines count:*
 ```
    92 pylob/engine/engine.py
     1 pylob/engine/__init__.py
@@ -52,4 +54,6 @@ python3 -m unittest discover test
   944 total
 ```
 
-*NOTE: LLMs are used for writing some tests.*
+***
+
+*NOTE: LLMs are sometimes used for writing tests.*
