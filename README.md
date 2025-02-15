@@ -11,6 +11,23 @@ We implement three types of orders: FOK, GTC and GTD. Every order is defined as 
 
 <img src="ss.png" width=400>
 
+# Usage
+
+Start by cloning the repository
+```bash
+git clone git@github.com:mrochk/pylob.git
+cd pylob
+```
+
+To run the tests you can use
+```bash
+make test
+# or
+python3 -m unittest discover test
+```
+
+***
+
 *Lines count (as of 13-02-2025):*
 ```
    92 pylob/engine/engine.py
