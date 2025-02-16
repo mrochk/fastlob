@@ -2,4 +2,5 @@
 - [ ] testing for market orders placing if not filled 
 - [ ] testing for order cancellation 
 - [ ] ob result and order params may be moved to separate packages
-- [ ] multi-threading
+- [ ] multi-threading (methods thats affect the state of the book separated from methods that concern the user)
+- [ ] limits may be printed differently
