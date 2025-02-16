@@ -1,13 +1,11 @@
 from numbers import Number
 from decimal import Decimal
-from dataclasses import dataclass
 from typing import Optional
 
 from pylob.enums import OrderSide, OrderType
 from pylob.utils import todecimal
 from pylob.consts import MIN_VALUE, MAX_VALUE
 
-@dataclass(repr=True)
 class OrderParams:
     '''This class is used for instantiating orders, it is necessary because we do not want to have the system 
     performing any safety checks, or at least it should have to do as few as possible. Therefore this class is used to 
@@ -54,3 +52,6 @@ class OrderParams:
 
     def unwrap(self) -> tuple[Decimal, Decimal, OrderType, Optional[float]]:
         return self.price, self.quantity, self.type, self.expiry
+
+    def __repr__(self) -> str:
+        return f'OrderParams(side={self.side.name}, price={self.price}, qty={self.quantity}, type={self.type}, expiry={self.expiry})'
