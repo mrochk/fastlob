@@ -33,9 +33,9 @@ def _fill_whole_limits(side: Side, order: Order, result: MarketResult) -> bool:
 
         if order.quantity() < lim.volume(): return False
 
-        result.limits_filled += 1
-        result.orders_filled += lim.valid_orders()
-        result.execution_prices[lim.price()] = lim.volume()
+        result._limits_matched += 1
+        result._orders_matched += lim.valid_orders()
+        result._execution_prices[lim.price()] = lim.volume()
 
         order.fill(lim.volume())
         side._volume -= lim.volume()
@@ -58,8 +58,8 @@ def _fill_whole_orders(side: Side, order: Order, result: MarketResult) -> bool:
 
         if order.quantity() < next_order.quantity(): return False
 
-        result.orders_filled += 1
-        result.execution_prices[next_order.price()] += next_order.quantity()
+        result._orders_matched += 1
+        result._execution_prices[next_order.price()] += next_order.quantity()
 
         order.fill(next_order.quantity())
         side._volume -= next_order.quantity()
@@ -73,7 +73,7 @@ def _fill_last_order(side: Side, order: Order, result: MarketResult):
     lim_order = lim.next_order()
 
     if order.valid():
-        result.execution_prices[lim_order.price()] += order.quantity()
+        result._execution_prices[lim_order.price()] += order.quantity()
 
         lim.fill_next(order.quantity())
         side._volume -= order.quantity()

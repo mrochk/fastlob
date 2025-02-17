@@ -72,8 +72,8 @@ class TestLimitOrders(unittest.TestCase):
         '''
         
         self.assertTrue(result.success())
-        self.assertEqual(result.orders_filled, 0)
-        self.assertEqual(result.limits_filled, 0)
+        self.assertEqual(result._orders_matched, 0)
+        self.assertEqual(result._limits_matched, 0)
         self.assertEqual(self.ob._bid_side.volume(), 700)
         self.assertEqual(self.ob._bid_side.best().volume(), 300)
         self.assertEqual(self.ob._bid_side.best().valid_orders(), 2)
@@ -102,8 +102,8 @@ class TestLimitOrders(unittest.TestCase):
         '''
         
         self.assertTrue(result.success())
-        self.assertEqual(result.orders_filled, 1)
-        self.assertEqual(result.limits_filled, 0)
+        self.assertEqual(result._orders_matched, 1)
+        self.assertEqual(result._limits_matched, 0)
         self.assertEqual(self.ob._bid_side.volume(), 600)
         self.assertEqual(self.ob._bid_side.best().volume(), 200)
         self.assertEqual(self.ob._bid_side.best().valid_orders(), 1)
@@ -132,8 +132,8 @@ class TestLimitOrders(unittest.TestCase):
         '''
         
         self.assertTrue(result.success())
-        self.assertEqual(result.orders_filled, 1)
-        self.assertEqual(result.limits_filled, 0)
+        self.assertEqual(result._orders_matched, 1)
+        self.assertEqual(result._limits_matched, 0)
         self.assertEqual(self.ob._bid_side.volume(), 500)
         self.assertEqual(self.ob._bid_side.best().volume(), 100)
         self.assertEqual(self.ob._bid_side.best().valid_orders(), 1)
@@ -162,8 +162,8 @@ class TestLimitOrders(unittest.TestCase):
         '''
         
         self.assertTrue(result.success())
-        self.assertEqual(result.orders_filled, 2)
-        self.assertEqual(result.limits_filled, 1)
+        self.assertEqual(result._orders_matched, 2)
+        self.assertEqual(result._limits_matched, 1)
         self.assertEqual(self.ob._bid_side.volume(), 400)
         self.assertEqual(self.ob._bid_side.best().volume(), 400)
         self.assertEqual(self.ob._bid_side.best().valid_orders(), 2)
@@ -192,8 +192,8 @@ class TestLimitOrders(unittest.TestCase):
         '''
         
         self.assertTrue(result.success())
-        self.assertEqual(result.orders_filled, 2)
-        self.assertEqual(result.limits_filled, 1)
+        self.assertEqual(result._orders_matched, 2)
+        self.assertEqual(result._limits_matched, 1)
         self.assertEqual(self.ob._bid_side.volume(), 300)
         self.assertEqual(self.ob._bid_side.best().volume(), 300)
         self.assertEqual(self.ob._bid_side.best().valid_orders(), 2)
@@ -221,8 +221,8 @@ class TestLimitOrders(unittest.TestCase):
         '''
         
         self.assertTrue(result.success())
-        self.assertEqual(result.orders_filled, 3)
-        self.assertEqual(result.limits_filled, 1)
+        self.assertEqual(result._orders_matched, 3)
+        self.assertEqual(result._limits_matched, 1)
         self.assertEqual(self.ob._bid_side.volume(), 200)
         self.assertEqual(self.ob._bid_side.best().volume(), 200)
         self.assertEqual(self.ob._bid_side.best().valid_orders(), 1)
@@ -250,8 +250,8 @@ class TestLimitOrders(unittest.TestCase):
         '''
         
         self.assertTrue(result.success())
-        self.assertEqual(result.orders_filled, 4)
-        self.assertEqual(result.limits_filled, 2)
+        self.assertEqual(result._orders_matched, 4)
+        self.assertEqual(result._limits_matched, 2)
 
         self.assertTrue(self.ob._bid_side.empty())
         self.assertEqual(self.ob._bid_side.volume(), 0)
@@ -282,8 +282,8 @@ class TestLimitOrders(unittest.TestCase):
         '''
         
         self.assertTrue(result.success())
-        self.assertEqual(result.orders_filled, 0)
-        self.assertEqual(result.limits_filled, 0)
+        self.assertEqual(result._orders_matched, 0)
+        self.assertEqual(result._limits_matched, 0)
         self.assertEqual(self.ob._ask_side.volume(), 700)
         self.assertEqual(self.ob._ask_side.best().volume(), 300)
         self.assertEqual(self.ob._ask_side.best().valid_orders(), 2)
@@ -311,8 +311,8 @@ class TestLimitOrders(unittest.TestCase):
         '''
         
         self.assertTrue(result.success())
-        self.assertEqual(result.orders_filled, 1)
-        self.assertEqual(result.limits_filled, 0)
+        self.assertEqual(result._orders_matched, 1)
+        self.assertEqual(result._limits_matched, 0)
         self.assertEqual(self.ob._ask_side.volume(), 600)
         self.assertEqual(self.ob._ask_side.best().volume(), 200)
         self.assertEqual(self.ob._ask_side.best().valid_orders(), 1)
@@ -340,8 +340,8 @@ class TestLimitOrders(unittest.TestCase):
         '''
         
         self.assertTrue(result.success())
-        self.assertEqual(result.orders_filled, 1)
-        self.assertEqual(result.limits_filled, 0)
+        self.assertEqual(result._orders_matched, 1)
+        self.assertEqual(result._limits_matched, 0)
         self.assertEqual(self.ob._ask_side.volume(), 500)
         self.assertEqual(self.ob._ask_side.best().volume(), 100)
         self.assertEqual(self.ob._ask_side.best().valid_orders(), 1)
@@ -369,8 +369,8 @@ class TestLimitOrders(unittest.TestCase):
         '''
         
         self.assertTrue(result.success())
-        self.assertEqual(result.orders_filled, 2)
-        self.assertEqual(result.limits_filled, 1)
+        self.assertEqual(result._orders_matched, 2)
+        self.assertEqual(result._limits_matched, 1)
         self.assertEqual(self.ob._ask_side.volume(), 400)
         self.assertEqual(self.ob._ask_side.best().volume(), 400)
         self.assertEqual(self.ob._ask_side.best().valid_orders(), 2)
@@ -398,8 +398,8 @@ class TestLimitOrders(unittest.TestCase):
         '''
         
         self.assertTrue(result.success())
-        self.assertEqual(result.orders_filled, 2)
-        self.assertEqual(result.limits_filled, 1)
+        self.assertEqual(result._orders_matched, 2)
+        self.assertEqual(result._limits_matched, 1)
         self.assertEqual(self.ob._ask_side.volume(), 300)
         self.assertEqual(self.ob._ask_side.best().volume(), 300)
         self.assertEqual(self.ob._ask_side.best().valid_orders(), 2)
@@ -426,8 +426,8 @@ class TestLimitOrders(unittest.TestCase):
         '''
         
         self.assertTrue(result.success())
-        self.assertEqual(result.orders_filled, 3)
-        self.assertEqual(result.limits_filled, 1)
+        self.assertEqual(result._orders_matched, 3)
+        self.assertEqual(result._limits_matched, 1)
         self.assertEqual(self.ob._ask_side.volume(), 200)
         self.assertEqual(self.ob._ask_side.best().volume(), 200)
         self.assertEqual(self.ob._ask_side.best().valid_orders(), 1)
@@ -454,8 +454,8 @@ class TestLimitOrders(unittest.TestCase):
         '''
         
         self.assertTrue(result.success())
-        self.assertEqual(result.orders_filled, 4)
-        self.assertEqual(result.limits_filled, 2)
+        self.assertEqual(result._orders_matched, 4)
+        self.assertEqual(result._limits_matched, 2)
 
         self.assertTrue(self.ob._ask_side.empty())
         self.assertEqual(self.ob._ask_side.volume(), 0)
