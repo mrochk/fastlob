@@ -30,5 +30,5 @@ if __name__ == "__main__":
     ob.process_one(lob.OrderParams(lob.OrderSide.BID, 78, 100))
     ob.process_one(lob.OrderParams(lob.OrderSide.BID, 77, 100))
     ob.process_one(lob.OrderParams(lob.OrderSide.BID, 76, 100))
-    print(ob)
-    exit(0)
+
+    print(ob.view())

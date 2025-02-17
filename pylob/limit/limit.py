@@ -130,9 +130,8 @@ class Limit:
         while not self.deepempty() and self._orderqueue[0].canceled(): 
             self._orderqueue.popleft()
 
-    def display(self) -> str:
-        notional = self.price() * self.volume()
-        return f'{self.price()} | {self.valid_orders()} | {self.volume()} | {self.notional()}'
+    def view(self) -> str:
+        return f'{self.price()} | {self.valid_orders():03d} | {self.volume():0>8f} | {self.notional()}'
 
     def __repr__(self) -> str:
         return f'Limit(price={self.price()}, orders={self.valid_orders()}, notional={self.notional()})'

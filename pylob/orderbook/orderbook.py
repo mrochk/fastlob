@@ -188,7 +188,7 @@ class OrderBook:
         if self.best_bid() >= order.price(): return True
         return False
 
-    def __repr__(self) -> str:
+    def view(self) -> str:
         '''Outputs the order-book in the following format:\n
 
         Order-book <pair>:
@@ -198,12 +198,12 @@ class OrderBook:
         - BidLimit(price=.., size=.., vol=..)
         - ...
         '''
-        length = 46
+        length = 35
         buffer = io.StringIO()
         buffer.write(f"   [ORDER-BOOK {self._name}]\n\n")
-        buffer.write(colored(str(self._ask_side), "red"))
+        buffer.write(colored(self._ask_side.view(), "red"))
         buffer.write(" " + ("-" * length) + "\n")
-        buffer.write(colored(str(self._bid_side), "green"))
+        buffer.write(colored(self._bid_side.view(), "green"))
 
         if self._ask_side.empty() or self._bid_side.empty(): return buffer.getvalue()
 
@@ -212,6 +212,10 @@ class OrderBook:
 
         return buffer.getvalue()
 
-    def display(self) -> None:
-        '''Clear terminal & display order-book.'''
-        os.system("cls" if os.name == "nt" else "clear"); print("\n", self)
+    def __repr__(self) -> str:
+        try: return \
+                f'OrderBook(name={self._name}, midprice={self.midprice()}, spread={self.spread()},' \
+                + f'nprices={self.n_prices()}, nbids={self.n_bids()}, nasks={self.n_asks()}, clock={self.clock()})'
+        except: return \
+                f'OrderBook(name={self._name}, nprices={self.n_prices()}, nbids={self.n_bids()}, ' \
+                f'nasks={self.n_asks()}, clock={self.clock()})'

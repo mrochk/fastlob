@@ -57,5 +57,3 @@ python3 -m unittest discover test
 ```
 
 ***
-
-*NOTE: LLMs are sometimes used for writing tests.*

@@ -1,5 +1,5 @@
 import io
-from abc import ABC
+import abc
 from decimal import Decimal
 from sortedcollections import SortedDict
 
@@ -8,7 +8,7 @@ from pylob.order import Order
 from pylob.enums import OrderSide
 from pylob.utils import zero
 
-class Side(ABC):
+class Side(abc.ABC):
     '''A side is a collection of limits, whose ordering by price depends if it is the bid or ask side.'''
 
     _side: OrderSide
@@ -103,6 +103,12 @@ class Side(ABC):
         '''Create price level if not exists.'''
         if not self._price_exists(price): self._new_price(price)
 
+    def __repr__(self) -> str:
+        return f'{self.side().name}Side(size={self.size()}, volume={self.volume()}, best={self.best()})'
+
+    @abc.abstractmethod
+    def view(self) -> str: pass
+
 class BidSide(Side):
     '''The bid side, where the best price level is the highest.'''
 
@@ -111,7 +117,7 @@ class BidSide(Side):
         self._side = OrderSide.BID
         self._limits = SortedDict(lambda x: -x)
 
-    def __repr__(self):
+    def view(self) -> str:
         buffer = io.StringIO()
 
         count = 0
@@ -120,7 +126,7 @@ class BidSide(Side):
                 if count < self.size():
                     buffer.write(f"   ...({self.size() - 10} more bids)\n")
                 break
-            buffer.write(f" - {bidlim.display()}\n")
+            buffer.write(f" - {bidlim.view()}\n")
             count += 1
 
         return buffer.getvalue()
@@ -133,7 +139,7 @@ class AskSide(Side):
         self._side = OrderSide.ASK
         self._limits = SortedDict()
 
-    def __repr__(self):
+    def view(self) -> str:
         buffer = io.StringIO()
 
         if self.size() > 10: buffer.write(f"   ...({self.size() - 10} more asks)\n")
@@ -142,7 +148,7 @@ class AskSide(Side):
         l = list()
         for asklim in self._limits.values():
             if count >= 10: break
-            l.append(f" - {asklim.display()}\n")
+            l.append(f" - {asklim.view()}\n")
             count += 1
 
         buffer.writelines(reversed(l))
