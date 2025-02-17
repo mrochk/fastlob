@@ -16,5 +16,3 @@ MIN_VALUE = UNIT = Decimal('0.' + ('0' * (DECIMAL_PRECISION - 1)) + '1')
 MAX_VALUE = Decimal(int(10e10))
 
 ORDERS_ID_SIZE = 8
-
-def zero(): return Decimal('0')

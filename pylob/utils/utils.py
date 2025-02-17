@@ -11,3 +11,5 @@ def todecimal(n: Number | str) -> Decimal:
     exp = Decimal(f'0.{"0"*DECIMAL_PRECISION}')
 
     return dec.quantize(exp)
+
+def zero(): return Decimal('0')

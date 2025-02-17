@@ -3,7 +3,7 @@ from collections import deque
 
 from pylob.order import Order
 from pylob.enums import OrderStatus
-from pylob.consts import zero
+from pylob.utils import zero
 
 class Limit:
     '''
@@ -41,6 +41,9 @@ class Limit:
             Decimal: The volume of the limit.
         '''
         return self._volume
+
+    def notional(self) -> Decimal:
+        return self.price() * self.volume()
 
     def valid_orders(self) -> int:
         '''Getter for limit size (number of orders).
@@ -127,5 +130,9 @@ class Limit:
         while not self.deepempty() and self._orderqueue[0].canceled(): 
             self._orderqueue.popleft()
 
+    def display(self) -> str:
+        notional = self.price() * self.volume()
+        return f'{self.price()} | {self.valid_orders()} | {self.volume()} | {self.notional()}'
+
     def __repr__(self) -> str:
-        return f'Limit(price={self.price()}, orders={self.valid_orders()}, volume={self.volume()})'
+        return f'Limit(price={self.price()}, orders={self.valid_orders()}, notional={self.notional()})'

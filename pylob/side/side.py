@@ -6,7 +6,7 @@ from sortedcollections import SortedDict
 from pylob.limit import Limit
 from pylob.order import Order
 from pylob.enums import OrderSide
-from pylob.consts import zero
+from pylob.utils import zero
 
 class Side(ABC):
     '''A side is a collection of limits, whose ordering by price depends if it is the bid or ask side.'''
@@ -120,7 +120,7 @@ class BidSide(Side):
                 if count < self.size():
                     buffer.write(f"   ...({self.size() - 10} more bids)\n")
                 break
-            buffer.write(f" - {bidlim}\n")
+            buffer.write(f" - {bidlim.display()}\n")
             count += 1
 
         return buffer.getvalue()
@@ -142,7 +142,7 @@ class AskSide(Side):
         l = list()
         for asklim in self._limits.values():
             if count >= 10: break
-            l.append(f" - {asklim}\n")
+            l.append(f" - {asklim.display()}\n")
             count += 1
 
         buffer.writelines(reversed(l))

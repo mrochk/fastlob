@@ -15,6 +15,8 @@ We implement three types of orders: *FOK*, *GTC* and *GTD*. Every order is defin
 
 # Usage
 
+This book runs at a fixed decimal precision through the Python `decimal` package. The precision can be set via the `PYLOB_DECIMAL_PRECISION` environment variable, it's default value being 2.
+
 Start by cloning the repository
 ```bash
 git clone git@github.com:mrochk/pylob.git
