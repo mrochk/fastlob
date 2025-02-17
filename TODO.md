@@ -4,5 +4,6 @@
 - [ ] ob result and order params may be moved to separate packages (?)
 - [ ] multi-threading (methods thats affect the state of the book separated from methods that concern the user)
 - [ ] limits may be printed differently
-- [ ] orderbook and side should have a proper __repr__ and a display() method
+- [x] orderbook and side should have a proper __repr__ and a view() method
 - [ ] is there something faster than `decimal` ?
+- [ ] user should be able to control number of limits displayed
