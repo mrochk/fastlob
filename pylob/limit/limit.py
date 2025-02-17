@@ -51,12 +51,29 @@ class Limit:
         return self._valid_orders
 
     def empty(self) -> bool:
-        '''Check if limit is empty.
+        '''Check if limit **contains zero valid orders**, not if the limit queue is empty.
 
         Returns:
             bool: True if limit is empty.
         '''
-        return self.volume() == 0 or self.valid_orders() == 0 or len(self._orderqueue) == 0
+        return self.valid_orders() == 0
+
+    def deepempty(self): 
+        '''Check if limit **contains zero orders**.
+
+        Returns:
+            bool: True if limit is empty.
+        '''
+        return len(self._orderqueue) == 0
+
+    def next_order(self) -> Order:
+        '''Returns the next order to be matched by an incoming market order.
+
+        Returns:
+            Order: The next order to be executed.
+        '''
+        self._prune_canceled()
+        return self._orderqueue[0]
 
     ####################################################################################################################
 
@@ -72,14 +89,6 @@ class Limit:
         self._volume += order.quantity()
         self._valid_orders += 1
 
-    def next_order(self) -> Order:
-        '''Returns the next order to be matched by an incoming market order.
-
-        Returns:
-            Order: The next order to be executed.
-        '''
-        return self._orderqueue[0]
-
     def fill_next(self, quantity: Decimal):
         '''**Partially** fill the next order in the queue. Filling it entirely would lead to problems, to only use in 
         last stage of order execution (i.e: `_partial_fill_order`).
@@ -94,6 +103,8 @@ class Limit:
 
     def pop_next_order(self) -> None:
         '''Pop from the queue the next order to be executed. Does not return it, only removes it.'''
+        self._prune_canceled()
+
         order = self._orderqueue.popleft()
 
         self._valid_orders -= 1
@@ -110,10 +121,11 @@ class Limit:
 
         order.set_status(OrderStatus.CANCELED)
 
-    def prune_canceled_orders(self):
-        '''Pop the next order whil it is a canceled one.'''
-        while not self.empty() and self.next_order().canceled(): 
-            self.pop_next_order()
+    def _prune_canceled(self):
+        '''Pop the next order while it is a canceled one.'''
+        # this method should not use any other method to ensure no infinite recursion
+        while not self.deepempty() and self._orderqueue[0].canceled(): 
+            self._orderqueue.popleft()
 
     def __repr__(self) -> str:
         return f'Limit(price={self.price()}, orders={self.valid_orders()}, volume={self.volume()})'
