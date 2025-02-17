@@ -345,7 +345,7 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._ask_side.volume(), 500)
         self.assertEqual(self.ob._ask_side.best().volume(), 100)
         self.assertEqual(self.ob._ask_side.best().valid_orders(), 1)
-        self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
+        self.assertTupleEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
         self.assertEqual(self.ob.best_ask(), askprice)
 
     @given(askprice)

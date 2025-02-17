@@ -4,3 +4,4 @@
 - [ ] ob result and order params may be moved to separate packages
 - [ ] multi-threading (methods thats affect the state of the book separated from methods that concern the user)
 - [ ] limits may be printed differently
+- [ ] orderbook and side should have a proper __repr__ and a display() method
