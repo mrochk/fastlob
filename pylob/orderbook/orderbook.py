@@ -293,11 +293,11 @@ class OrderBook:
         - BidLimit(price=.., size=.., vol=..)
         - ...
         '''
-        length = 35
+        length = len(self._bid_side.best().view()) + 2
         buffer = io.StringIO()
         buffer.write(f"   [ORDER-BOOK {self._name}]\n\n")
         buffer.write(colored(self._ask_side.view(), "red"))
-        buffer.write(" " + ("-" * length) + "\n")
+        buffer.write(' ' + '~'*length + '\n')
         buffer.write(colored(self._bid_side.view(), "green"))
 
         if self._ask_side.empty() or self._bid_side.empty(): return buffer.getvalue()
