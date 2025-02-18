@@ -25,7 +25,7 @@ class TestOrder(unittest.TestCase):
 
         self.assertEqual(order.price(), todecimal(price))
         self.assertEqual(order.quantity(), todecimal(quantity))
-        self.assertEqual(order.type(), type)
+        self.assertEqual(order.otype(), type)
         self.assertEqual(order.expiry(), expiry)
         self.assertEqual(order.status(), OrderStatus.CREATED)
 

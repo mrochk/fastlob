@@ -20,14 +20,14 @@ class Order(abc.ABC):
     _side: OrderSide
     _price: Decimal
     _quantity: Decimal
-    _type: OrderType
+    _otype: OrderType
     _expiry: Optional[float]
     _status: OrderStatus
 
     def __init__(self, params: OrderParams):
         self._price = params.price
         self._quantity = params.quantity
-        self._type = params.type
+        self._otype = params.otype
         self._expiry = params.expiry
 
         self._status = OrderStatus.CREATED
@@ -67,13 +67,13 @@ class Order(abc.ABC):
         '''
         return self._quantity
 
-    def type(self) -> OrderType:
+    def otype(self) -> OrderType:
         '''Getter for order type
 
         Returns:
             OrderType: The type of the order.
         '''
-        return self._type
+        return self._otype
 
     def expiry(self) -> Optional[float]:
         '''Getter for the expiration date of the order. Only relevant in the
@@ -134,7 +134,7 @@ class Order(abc.ABC):
         return self.id() == other.id()
 
     def __repr__(self) -> str:
-        return f"Order(id={self.id()}, s={self.status()}, p={self.price()}," + f" q={self.quantity()}, t={self.type()})"
+        return f"Order(id={self.id()}, s={self.status()}, p={self.price()}," + f" q={self.quantity()}, t={self.otype()})"
 
 @dataclass
 class BidOrder(Order):

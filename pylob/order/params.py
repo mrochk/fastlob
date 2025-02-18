@@ -14,18 +14,18 @@ class OrderParams:
     side: OrderSide
     price: Decimal
     quantity: Decimal
-    type: OrderType = OrderType.GTC
+    otype: OrderType = OrderType.GTC
     expiry: Optional[float] = None
 
-    def __init__(self, side: OrderSide, price: Number, quantity: Number, type: OrderType = OrderType.GTC,
+    def __init__(self, side: OrderSide, price: Number, quantity: Number, otype: OrderType = OrderType.GTC,
                  expiry: Optional[float] = None):
 
-        OrderParams.check_args(side, price, quantity, type, expiry)
+        OrderParams.check_args(side, price, quantity, otype, expiry)
 
         self.side = side
         self.price = todecimal(price)
         self.quantity = todecimal(quantity)
-        self.type = type
+        self.otype = otype
         self.expiry = expiry
 
     @staticmethod
@@ -51,7 +51,7 @@ class OrderParams:
         if quantity_decimal > MAX_VALUE: raise ValueError(f"quantity ({quantity}) is too large")
 
     def unwrap(self) -> tuple[Decimal, Decimal, OrderType, Optional[float]]:
-        return self.price, self.quantity, self.type, self.expiry
+        return self.price, self.quantity, self.otype, self.expiry
 
     def __repr__(self) -> str:
-        return f'OrderParams(side={self.side.name}, price={self.price}, qty={self.quantity}, type={self.type}, expiry={self.expiry})'
+        return f'OrderParams(side={self.side.name}, price={self.price}, qty={self.quantity}, type={self.otype}, expiry={self.expiry})'
