@@ -6,10 +6,12 @@ from decimal import Decimal
 from termcolor import colored
 
 from pylob import engine
-from pylob.enums import OrderSide, OrderStatus
+from pylob.limit import Limit
+from pylob.utils import zero
+from pylob.enums import OrderSide, OrderStatus, OrderType
 from pylob.side import AskSide, BidSide
 from pylob.order import OrderParams, Order, AskOrder, BidOrder
-from .result import ExecutionResult, LimitResult, CancelResult
+from .result import ExecutionResult, MarketResult, LimitResult, CancelResult
 
 class OrderBook:
     '''The `OrderBook` is a collection of bid and ask limits. It is reponsible for calling the matching engine, placing
@@ -156,19 +158,68 @@ class OrderBook:
         match order.side():
             case OrderSide.BID:
                 if self._is_market_bid(order):
-                    result = engine.execute(order, self._ask_side)
-                    if order.status() == OrderStatus.PARTIAL: self._bid_side.place(order)
+
+                    valid = True
+
+                    if order.otype() == OrderType.FOK:
+                        # we want the limit volume up to the order price to be >= order.quantity()
+                        volume = zero()
+                        limits = self._ask_side._limits.values()
+
+                        lim : Limit
+                        for lim in limits:
+                            if lim.price() > order.price(): break
+                            if volume >= order.quantity(): break
+                            volume += lim.volume()
+
+                        if volume < order.quantity(): 
+                            valid = False
+                            result = self.FOK_error_quantity(order)
+
+                    if valid:
+                        result = engine.execute(order, self._ask_side)
+                        if order.status() == OrderStatus.PARTIAL: self._bid_side.place(order)
                 else:
-                    self._bid_side.place(order)
-                    result = LimitResult(True, order.id())
+
+                    if order.otype() == OrderType.FOK:
+                        result = self.FOK_error_price(order)
+
+                    else:
+                        self._bid_side.place(order)
+                        result = LimitResult(True, order.id())
 
             case OrderSide.ASK:
                 if self._is_market_ask(order):
-                    result = engine.execute(order, self._bid_side)
-                    if order.status() == OrderStatus.PARTIAL: self._ask_side.place(order)
+
+                    valid = True
+
+                    if order.otype() == OrderType.FOK:
+                        # we want the limit volume down to the order price to be >= order.quantity()
+                        volume = zero()
+                        limits = self._ask_side._limits.values()
+
+                        lim : Limit
+                        for lim in limits:
+                            if lim.price() < order.price(): break
+                            if volume >= order.quantity(): break
+                            volume += lim.volume()
+
+                        if volume < order.quantity(): 
+                            valid = False
+                            result = self.FOK_error_quantity(order)
+
+                    if valid:
+                        result = engine.execute(order, self._bid_side)
+                        if order.status() == OrderStatus.PARTIAL: self._ask_side.place(order)
+
                 else:
-                    self._ask_side.place(order)
-                    result = LimitResult(True, order.id())
+
+                    if order.otype() == OrderType.FOK: 
+                        result = self.FOK_error_price(order)
+
+                    else:
+                        self._ask_side.place(order)
+                        result = LimitResult(True, order.id())
 
         if result.success(): self._orders[order.id()] = order
 
@@ -176,6 +227,18 @@ class OrderBook:
             msg = f"<orderbook>: order partially filled by engine, {order.quantity()} " f"placed at {order.price()}"
             result.add_message(msg)
 
+        return result
+
+    def FOK_error_price(self, order : Order) -> MarketResult:
+        result = MarketResult(False)
+        msg = f'<orderbook>: FOK {order.side().name} order can not be executed at this price ({order.price()})'
+        result.add_message(msg)
+        return result
+
+    def FOK_error_quantity(self, order : Order) -> MarketResult:
+        result = MarketResult(False)
+        msg = f'<orderbook>: FOK {order.side().name} order can not be executed for this quantity ({order.quantity()})'
+        result.add_message(msg)
         return result
 
     def _is_market_bid(self, order):

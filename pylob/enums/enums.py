@@ -41,6 +41,8 @@ class OrderStatus(Enum):
     '''Order canceled, can not be fully or partially filled anymore.'''
     EXPIRED = (6,)
     '''Order expired, can not be fully or partially filled anymore.'''
+    ERROR = (7,)
+    '''Set by order-book if the order can not be processed.'''
 
     @staticmethod
     def valid_states() -> set:
