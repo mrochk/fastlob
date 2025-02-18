@@ -15,10 +15,10 @@ class OrderParams:
     price: Decimal
     quantity: Decimal
     otype: OrderType = OrderType.GTC
-    expiry: Optional[float] = None
+    expiry: Optional[Number] = None
 
     def __init__(self, side: OrderSide, price: Number, quantity: Number, otype: OrderType = OrderType.GTC,
-                 expiry: Optional[float] = None):
+                 expiry: Optional[Number] = None):
 
         OrderParams.check_args(side, price, quantity, otype, expiry)
 
@@ -29,15 +29,17 @@ class OrderParams:
         self.expiry = expiry
 
     @staticmethod
-    def check_args(side: OrderSide, price: Number, quantity: Number, ordertype: OrderType, 
-                   expiry: Optional[float]) -> None:
+    def check_args(side: OrderSide, price: Number, quantity: Number, otype: OrderType, 
+                   expiry: Optional[Number]) -> None:
         '''Check for args correctness. This method is very important, since we do not check for this after the 
         OrderParams object is created.'''
         if not isinstance(side, OrderSide): raise TypeError(f'side should of type OrderSide but is {type(side)}')
         if not isinstance(price, Number): raise TypeError(f'price should be of type Number but is {type(price)}')
         if not isinstance(quantity, Number): raise TypeError(f'quantity should be of type Number but is {type(quantity)}')
-        if not isinstance(ordertype, OrderType): raise TypeError(f'ordertype should be of type OrderType but is {type(ordertype)}')
-        if expiry and not isinstance(expiry, float): raise TypeError(f'expiry should be of type float but is {type(expiry)}')
+        if not isinstance(otype, OrderType): raise TypeError(f'ordertype should be of type OrderType but is {type(otype)}')
+        if expiry and not isinstance(expiry, Number): raise TypeError(f'expiry should be of type Number but is {type(expiry)}')
+
+        if otype == OrderType.GTD and not expiry: raise ValueError('order is GTD but expiry is None')
 
         price_decimal = todecimal(price)
         quantity_decimal = todecimal(quantity)
@@ -50,7 +52,7 @@ class OrderParams:
 
         if quantity_decimal > MAX_VALUE: raise ValueError(f"quantity ({quantity}) is too large")
 
-    def unwrap(self) -> tuple[Decimal, Decimal, OrderType, Optional[float]]:
+    def unwrap(self) -> tuple[Decimal, Decimal, OrderType, Optional[Number]]:
         return self.price, self.quantity, self.otype, self.expiry
 
     def __repr__(self) -> str:

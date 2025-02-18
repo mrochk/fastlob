@@ -177,7 +177,7 @@ class OrderBook:
             case OrderSide.ASK:
                 if self._is_market_ask(order):
 
-                    error = self.check_ask_market_order()
+                    error = self.check_ask_market_order(order)
 
                     if not error: # call matching engine
                         result = engine.execute(order, self._bid_side)

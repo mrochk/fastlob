@@ -20,14 +20,18 @@ valid_expiry = st.one_of(st.none(), st.floats(min_value=0, allow_nan=False, allo
 class TestOrder(unittest.TestCase):
     @given(valid_order_side, valid_price, valid_quantity, valid_order_type, valid_expiry)
     def test_order_initialization(self, side, price, quantity, type, expiry):
+        if type == OrderType.GTD and not expiry:
+            with self.assertRaises(ValueError): OrderParams(side, price, quantity, type, expiry)
+            return
+
         params = OrderParams(side, price, quantity, type, expiry)
         order = BidOrder(params) if side == OrderSide.BID else AskOrder(params)
 
         self.assertEqual(order.price(), todecimal(price))
         self.assertEqual(order.quantity(), todecimal(quantity))
         self.assertEqual(order.otype(), type)
-        self.assertEqual(order.expiry(), expiry)
         self.assertEqual(order.status(), OrderStatus.CREATED)
+        self.assertEqual(order.expiry(), expiry)
 
     @given(valid_price, valid_fill)
     def test_order_fill(self, price, quantity):

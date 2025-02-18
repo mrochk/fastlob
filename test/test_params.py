@@ -19,6 +19,10 @@ valid_expiry = st.one_of(st.none(), st.floats(min_value=0, allow_nan=False, allo
 class TestOrderParams(unittest.TestCase):
     @given(valid_order_side, valid_price, valid_quantity, valid_order_type, valid_expiry)
     def test_order_params_valid(self, side, price, quantity, type, expiry):
+        if type == OrderType.GTD and not expiry:
+            with self.assertRaises(ValueError): OrderParams(side, price, quantity, type, expiry)
+            return
+
         order = OrderParams(side, price, quantity, type, expiry)
         self.assertEqual(order.side, side)
         self.assertEqual(order.price, todecimal(price))
@@ -60,5 +64,8 @@ class TestOrderParams(unittest.TestCase):
 
     @given(valid_order_side, valid_price, valid_quantity, valid_order_type, valid_expiry)
     def test_unwrap(self, side, price, quantity, type, expiry):
+        if type == OrderType.GTD and not expiry:
+            with self.assertRaises(ValueError): OrderParams(side, price, quantity, type, expiry)
+            return
         order = OrderParams(side, price, quantity, type, expiry)
         self.assertEqual(order.unwrap(), (todecimal(price), todecimal(quantity), type, expiry))
