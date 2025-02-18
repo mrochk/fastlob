@@ -134,11 +134,11 @@ class OrderBook:
 
         try: order = self._orders[order_id]
         except KeyError: 
-            result.add_message(f'<orderbook> order not in orderbook')
+            result.add_message(f'<orderbook>: order not in orderbook')
             return result
 
         if not order.valid(): 
-            result.add_message(f'order can not be canceled (status={order.status()})')
+            result.add_message(f'<orderbook>: order can not be canceled (status={order.status()})')
             return result
 
         match order.side():
@@ -146,7 +146,7 @@ class OrderBook:
             case OrderSide.ASK: self._ask_side.cancel_order(order)
 
         result._success = True
-        result.add_message(f'order {order.id()} canceled properly')
+        result.add_message(f'<orderbook>: order {order.id()} canceled properly')
 
         return result
 
