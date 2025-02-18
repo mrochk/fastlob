@@ -159,67 +159,41 @@ class OrderBook:
             case OrderSide.BID:
                 if self._is_market_bid(order):
 
-                    valid = True
+                    error = self.check_bid_market_order(order)
 
-                    if order.otype() == OrderType.FOK:
-                        # we want the limit volume up to the order price to be >= order.quantity()
-                        volume = zero()
-                        limits = self._ask_side._limits.values()
-
-                        lim : Limit
-                        for lim in limits:
-                            if lim.price() > order.price(): break
-                            if volume >= order.quantity(): break
-                            volume += lim.volume()
-
-                        if volume < order.quantity(): 
-                            valid = False
-                            result = self.FOK_error_quantity(order)
-
-                    if valid:
+                    if not error: # call matching engine
                         result = engine.execute(order, self._ask_side)
                         if order.status() == OrderStatus.PARTIAL: self._bid_side.place(order)
-                else:
+                    else: result = error
 
-                    if order.otype() == OrderType.FOK:
-                        result = self.FOK_error_price(order)
+                else: # is limit order
+                    error = self.check_limit_order(order)
 
-                    else:
+                    if not error:
                         self._bid_side.place(order)
                         result = LimitResult(True, order.id())
+                    else: result = error
 
             case OrderSide.ASK:
                 if self._is_market_ask(order):
 
-                    valid = True
+                    error = self.check_ask_market_order()
 
-                    if order.otype() == OrderType.FOK:
-                        # we want the limit volume down to the order price to be >= order.quantity()
-                        volume = zero()
-                        limits = self._ask_side._limits.values()
-
-                        lim : Limit
-                        for lim in limits:
-                            if lim.price() < order.price(): break
-                            if volume >= order.quantity(): break
-                            volume += lim.volume()
-
-                        if volume < order.quantity(): 
-                            valid = False
-                            result = self.FOK_error_quantity(order)
-
-                    if valid:
+                    if not error: # call matching engine
                         result = engine.execute(order, self._bid_side)
                         if order.status() == OrderStatus.PARTIAL: self._ask_side.place(order)
 
-                else:
+                    else: result = error
 
-                    if order.otype() == OrderType.FOK: 
-                        result = self.FOK_error_price(order)
+                else: # is limit order
 
-                    else:
+                    error = self.check_limit_order(order)
+
+                    if not error:
                         self._ask_side.place(order)
                         result = LimitResult(True, order.id())
+
+                    else: result = error
 
         if result.success(): self._orders[order.id()] = order
 
@@ -240,6 +214,64 @@ class OrderBook:
         msg = f'<orderbook>: FOK {order.side().name} order can not be executed for this quantity ({order.quantity()})'
         result.add_message(msg)
         return result
+
+    def check_limit_order(self, order : Order) -> Optional[LimitResult]:
+        result = LimitResult(False)
+
+        match order.otype():
+
+            case OrderType.FOK: # FOK can not be a limit order by definition
+                result.add_message(self.FOK_error_price(order))
+                return result
+
+            case _: return None
+
+    def check_bid_market_order(self, order : Order) -> Optional[MarketResult]:
+        result = None
+
+        match order.otype():
+
+            case OrderType.FOK: # check that order quantity can be filled
+                # we want the limit volume down to the order price to be >= order quantity
+                volume = zero()
+                limits = self._bid_side._limits.values()
+
+                lim : Limit
+                for lim in limits:
+                    if lim.price() > order.price(): break
+                    if volume >= order.quantity():  break
+                    volume += lim.volume()
+
+                if volume < order.quantity(): 
+                    result = self.FOK_error_quantity(order)
+
+                return result
+
+            case _: return None
+
+
+    def check_ask_market_order(self, order : Order) -> Optional[MarketResult]:
+        result = None
+
+        match order.otype():
+
+            case OrderType.FOK: # check that order quantity can be filled
+                # we want the limit volume down to the order price to be >= order quantity
+                volume = zero()
+                limits = self._bid_side._limits.values()
+
+                lim : Limit
+                for lim in limits:
+                    if lim.price() < order.price(): break
+                    if volume >= order.quantity():  break
+                    volume += lim.volume()
+
+                if volume < order.quantity(): 
+                    result = self.FOK_error_quantity(order)
+
+                return result
+
+            case _: return None
 
     def _is_market_bid(self, order):
         if self._ask_side.empty(): return False
