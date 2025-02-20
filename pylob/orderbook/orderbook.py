@@ -239,7 +239,7 @@ class OrderBook:
             case OrderType.FOK: # check that order quantity can be filled
                 # we want the limit volume down to the order price to be >= order quantity
                 volume = zero()
-                limits = self._bid_side._limits.values()
+                limits = self._ask_side._limits.values()
 
                 lim : Limit
                 for lim in limits:

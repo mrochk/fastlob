@@ -3,16 +3,21 @@
 run:
 	@python3 main.py
 
-test: 
+test: test-base test-GTC test-FOK test-GTD
+
+test-base:
 	@echo "-- TESTING FOR BASE CLASSES:"
 	@python3 -m unittest discover test -vvv
 
+test-GTC:
 	@echo "-- TESTING FOR GTC ORDERS:"
 	@python3 -m unittest discover test/GTC -vvv
 
+test-FOK:
 	@echo "-- TESTING FOR FOK ORDERS:"
 	@python3 -m unittest discover test/FOK -vvv
 
+test-GTD:
 	@echo "-- TESTING FOR GTD ORDERS:"
 	@python3 -m unittest discover test/GTD -vvv
 
