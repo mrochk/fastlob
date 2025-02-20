@@ -106,7 +106,7 @@ class Side(abc.ABC):
         return f'{self.side().name}Side(size={self.size()}, volume={self.volume()}, best={self.best()})'
 
     @abc.abstractmethod
-    def view(self) -> str: pass
+    def view(self, n : int) -> str: pass
 
 class BidSide(Side):
     '''The bid side, where the best price level is the highest.'''
@@ -116,14 +116,14 @@ class BidSide(Side):
         self._side = OrderSide.BID
         self._limits = SortedDict(lambda x: -x)
 
-    def view(self) -> str:
+    def view(self, n : int = 10) -> str:
         buffer = io.StringIO()
 
         count = 0
         for bidlim in self._limits.values():
-            if count >= 10:
+            if count >= n:
                 if count < self.size():
-                    buffer.write(f"   ...({self.size() - 10} more bids)\n")
+                    buffer.write(f"   ...({self.size() - n} more bids)\n")
                 break
             buffer.write(f" - {bidlim.view()}\n")
             count += 1
@@ -138,17 +138,17 @@ class AskSide(Side):
         self._side = OrderSide.ASK
         self._limits = SortedDict()
 
-    def view(self) -> str:
+    def view(self, n : int = 10) -> str:
         if self.empty(): return str()
 
         buffer = io.StringIO()
 
-        if self.size() > 10: buffer.write(f"   ...({self.size() - 10} more asks)\n")
+        if self.size() > n: buffer.write(f"   ...({self.size() - n} more asks)\n")
 
         count = 0
         l = list()
         for asklim in self._limits.values():
-            if count >= 10: break
+            if count >= n: break
             l.append(f" - {asklim.view()}\n")
             count += 1
 

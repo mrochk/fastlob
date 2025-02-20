@@ -11,6 +11,7 @@ from pylob.utils import zero
 from pylob.enums import OrderSide, OrderStatus, OrderType
 from pylob.side import AskSide, BidSide
 from pylob.order import OrderParams, Order, AskOrder, BidOrder
+from pylob.consts import DEFAULT_LIMITS_TO_DISPLAY
 from .result import ExecutionResult, MarketResult, LimitResult, CancelResult
 
 class OrderBook:
@@ -283,7 +284,7 @@ class OrderBook:
         if self.best_bid() >= order.price(): return True
         return False
 
-    def view(self) -> str:
+    def view(self, n : int = DEFAULT_LIMITS_TO_DISPLAY) -> str:
         '''Outputs the order-book in the following format:\n
 
         Order-book <pair>:
@@ -292,6 +293,8 @@ class OrderBook:
         -------------------------------------
         - BidLimit(price=.., size=.., vol=..)
         - ...
+
+        `n` controls the number of limits to display on each side
         '''
         if not self._bid_side.empty():
             length = len(self._bid_side.best().view()) + 2
@@ -301,9 +304,9 @@ class OrderBook:
 
         buffer = io.StringIO()
         buffer.write(f"   [ORDER-BOOK {self._name}]\n\n")
-        buffer.write(colored(self._ask_side.view(), "red"))
+        buffer.write(colored(self._ask_side.view(n), "red"))
         buffer.write(' ' + '~'*length + '\n')
-        buffer.write(colored(self._bid_side.view(), "green"))
+        buffer.write(colored(self._bid_side.view(n), "green"))
 
         if self._ask_side.empty() or self._bid_side.empty(): return buffer.getvalue()
 
