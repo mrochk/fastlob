@@ -199,6 +199,8 @@ class OrderBook:
 
                     else: result = error
 
+        result._order_id = order.id()
+
         if result.success(): self._orders[order.id()] = order
 
         if order.status() == OrderStatus.PARTIAL:

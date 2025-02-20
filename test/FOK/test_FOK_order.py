@@ -15,11 +15,11 @@ valid_price = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_infini
 valid_qty = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE-10, allow_infinity=False, allow_nan=False)
 
 '''
-There is no such thing as a FOK limit order, it should never succeed.
+There is no such thing as a FOK limit order, so it should never succeed.
 '''
 
-class TestLimitOrders(unittest.TestCase):
-    def setUp(self): self.ob = OrderBook('TestLimitOrders')
+class TestOrders(unittest.TestCase):
+    def setUp(self): self.ob = OrderBook('TestOrders')
 
     @given(valid_side, valid_price, valid_qty)
     def test_one_fail(self, side, price, qty):
@@ -87,4 +87,74 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(s, OrderStatus.FILLED)
         self.assertEqual(q, 0)
 
-        
+    def test_qty_fail_bid(self):
+        '''Testing the _check_bid_market_order func of the book'''
+        self.ob.reset()
+
+        limit1 = OrderParams(OrderSide.ASK, 1100, 10)
+        limit2 = OrderParams(OrderSide.ASK, 1110, 10)
+
+        r1, r2 = self.ob((limit1, limit2))
+
+        self.assertTrue(r1.success())
+        self.assertTrue(r2.success())
+
+        # qty correct, but price should be 1110, so should fail
+
+        fok = OrderParams(OrderSide.BID, 1105, 20, OrderType.FOK)
+
+        fokresult = self.ob(fok)
+
+        self.assertFalse(fokresult.success())
+
+        # partially fill first
+
+        fok = OrderParams(OrderSide.BID, 1100, 5, OrderType.FOK)
+        fokresult = self.ob(fok)
+        self.assertTrue(fokresult.success())
+
+        # fail again because of qty
+        fok = OrderParams(OrderSide.BID, 1110, 16, OrderType.FOK)
+        fokresult = self.ob(fok)
+        self.assertFalse(fokresult.success())
+
+        # finally we fill the book entirely
+        fok = OrderParams(OrderSide.BID, 1110, 15, OrderType.FOK)
+        fokresult = self.ob(fok)
+        self.assertTrue(fokresult.success())
+
+    def test_qty_fail_ask(self):
+        '''Testing the _check_ask_market_order func of the book'''
+        self.ob.reset()
+
+        limit1 = OrderParams(OrderSide.BID, 1110, 10)
+        limit2 = OrderParams(OrderSide.BID, 1100, 10)
+
+        r1, r2 = self.ob((limit1, limit2))
+
+        self.assertTrue(r1.success())
+        self.assertTrue(r2.success())
+
+        # qty correct, but price should be 1100, so should fail
+
+        fok = OrderParams(OrderSide.ASK, 1105, 20, OrderType.FOK)
+
+        fokresult = self.ob(fok)
+
+        self.assertFalse(fokresult.success())
+
+        # partially fill first
+
+        fok = OrderParams(OrderSide.ASK, 1105, 5, OrderType.FOK)
+        fokresult = self.ob(fok)
+        self.assertTrue(fokresult.success())
+
+        # fail again because of qty
+        fok = OrderParams(OrderSide.ASK, 1100, 16, OrderType.FOK)
+        fokresult = self.ob(fok)
+        self.assertFalse(fokresult.success())
+
+        # finally we fill the book entirely
+        fok = OrderParams(OrderSide.ASK, 1100, 15, OrderType.FOK)
+        fokresult = self.ob(fok)
+        self.assertTrue(fokresult.success())
