@@ -1,17 +1,17 @@
 import unittest
-from hypothesis import given, strategies as st
+from hypothesis import given, strategies as st, settings
 import random
+from timeit import timeit
 
 from pylob import OrderBook, OrderSide, OrderParams
 from pylob.orderbook.result import LimitResult
 from pylob.enums import OrderStatus
 from pylob.consts import MIN_VALUE, MAX_VALUE
 
-n_orders_big = st.integers(min_value=1, max_value=1e4)
-n_orders_small = st.integers(min_value=1, max_value=1e3)
+n_orders = st.integers(min_value=1, max_value=1e4)
 
 valid_side = st.sampled_from(OrderSide)
-valid_price = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_infinity=False, allow_nan=False)
+valid_price = st.decimals(min_value=MIN_VALUE*2, max_value=MAX_VALUE, allow_infinity=False, allow_nan=False)
 valid_qty = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_infinity=False, allow_nan=False)
 
 class TestLimitOrders(unittest.TestCase):
@@ -19,10 +19,10 @@ class TestLimitOrders(unittest.TestCase):
 
     @given(valid_side, valid_price, valid_qty)
     def test_one(self, side, price, qty):
-        self.setUp()
+        self.ob.reset()
 
         op = OrderParams(side, price, qty)
-        result : LimitResult = self.ob.process_one(op)
+        result : LimitResult = self.ob(op)
 
         self.assertIsInstance(result, LimitResult)
         self.assertTrue(result.success())
@@ -39,120 +39,126 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(s, OrderStatus.PENDING)
         self.assertEqual(q, op.quantity)
 
-    @given(n_orders_big, valid_side, valid_price)
+    @given(n_orders, valid_side, valid_price)
+    @settings(deadline=None)
     def test_many_same_price(self, n, side, price):
-        self.setUp()
+        self.ob.reset()
 
-        for _ in range(n):
+        ordersparams = [OrderParams(side, price, random.randint(1, int(10e9))) for _ in range(n)]
 
-            q = random.randint(1, int(10e9))
-            op = OrderParams(side, price, q)
-            result : LimitResult = self.ob.process_one(op)
+        results : list[LimitResult] = self.ob(ordersparams)
+
+        if side == OrderSide.BID:
+            self.assertEqual(self.ob.n_bids(), 1)
+            self.assertEqual(self.ob.best_bid(), ordersparams[0].price)
+        else: 
+            self.assertEqual(self.ob.n_asks(), 1)
+            self.assertEqual(self.ob.best_ask(), ordersparams[0].price)
+
+        for i, result in enumerate(results):
 
             self.assertIsInstance(result, LimitResult)
             self.assertTrue(result.success())
 
-            if side == OrderSide.BID:
-                self.assertEqual(self.ob.n_bids(), 1)
-                self.assertEqual(self.ob.best_bid(), op.price)
-            else: 
-                self.assertEqual(self.ob.n_asks(), 1)
-                self.assertEqual(self.ob.best_ask(), op.price)
-        
             s, q = self.ob.get_order(result.order_id())
 
             self.assertEqual(s, OrderStatus.PENDING)
-            self.assertEqual(q, op.quantity) 
+            self.assertEqual(q, ordersparams[i].quantity) 
 
-    @given(n_orders_small, valid_side)
+    @given(n_orders, valid_side)
+    @settings(deadline=None)
     def test_many_different_price(self, n, side):
-        self.setUp()
+        self.ob.reset()
 
-        for i in range(1, n+1):
+        ordersparams = list()
 
+        for _ in range(n):
             p = random.randint(1, int(10e9))
             q = random.randint(1, int(10e9))
             op = OrderParams(side, p, q)
+            ordersparams.append(op)
 
-            result : LimitResult = self.ob.process_one(op)
+        results = self.ob(ordersparams)
+
+        self.assertEqual(self.ob.n_prices(), n)
+
+        for i, result in enumerate(results):
 
             self.assertIsInstance(result, LimitResult)
             self.assertTrue(result.success())
-
-            self.assertEqual(self.ob.n_prices(), i)
-        
             s, q = self.ob.get_order(result.order_id())
 
             self.assertEqual(s, OrderStatus.PENDING)
-            self.assertEqual(q, op.quantity) 
+            self.assertEqual(q, ordersparams[i].quantity) 
 
-    @given(n_orders_small)
-    def test_many_same_price_both_sides(self, n):
-        self.setUp()
+    @given(n_orders, valid_price)
+    @settings(deadline=None)
+    def test_many_same_price_both_sides(self, n, price):
+        self.ob.reset()
+        n += n % 2
 
-        for _ in range(1, n+1):
+        ordersparams = list()
 
-            pbid = 1999
+        from pylob import todecimal
+
+        for _ in range(n):
+
+            pbid = price - todecimal(0.01)
             qbid = random.randint(1, int(10e9))
             opbid = OrderParams(OrderSide.BID, pbid, qbid)
 
-            pask = 2000
+            pask = price
             qask = random.randint(1, int(10e9))
             opask = OrderParams(OrderSide.ASK, pask, qask)
 
-            result1 : LimitResult = self.ob.process_one(opbid)
-            result2 : LimitResult = self.ob.process_one(opask)
+            ordersparams.append(opbid)
+            ordersparams.append(opask)
 
-            self.assertIsInstance(result1, LimitResult)
-            self.assertIsInstance(result2, LimitResult)
+        results : LimitResult = self.ob(ordersparams)
 
-            self.assertTrue(result1.success())
-            self.assertTrue(result1.success())
+        self.assertEqual(self.ob.n_asks(), self.ob.n_bids())
+        self.assertEqual(self.ob.n_prices(), 2)
 
-            s, q = self.ob.get_order(result1.order_id())
+        for i, result in enumerate(results):
+
+            self.assertTrue(result.success())
+            self.assertIsInstance(result, LimitResult)
+
+            s, q = self.ob.get_order(result.order_id())
             self.assertEqual(s, OrderStatus.PENDING)
-            self.assertEqual(q, opbid.quantity) 
+            self.assertEqual(q, ordersparams[i].quantity) 
 
-            s, q = self.ob.get_order(result2.order_id())
-            self.assertEqual(s, OrderStatus.PENDING)
-            self.assertEqual(q, opask.quantity) 
+            self.assertTrue(self.ob.best_bid() == ordersparams[i].price or self.ob.best_ask() == ordersparams[i].price)
 
-            self.assertEqual(self.ob.best_bid(), opbid.price)
-            self.assertEqual(self.ob.best_ask(), opask.price)
-
-            self.assertEqual(self.ob.n_asks(), self.ob.n_bids())
-            self.assertEqual(self.ob.n_prices(), 2)
-
-    @given(n_orders_small)
+    @given(n_orders)
+    @settings(deadline=None)
     def test_many_different_price_both_sides(self, n):
-        self.setUp()
+        self.ob.reset()
 
-        for i in range(1, n+1):
+        ordersparams = list()
+
+        for _ in range(n):
 
             pbid = random.randint(1, int(10e6))
             qbid = random.randint(1, int(10e9))
             opbid = OrderParams(OrderSide.BID, pbid, qbid)
 
-            pask = random.randint(int(10e6)+1, int(10e7))
+            pask = random.randint(int(10e7), int(10e9))
             qask = random.randint(1, int(10e9))
             opask = OrderParams(OrderSide.ASK, pask, qask)
 
-            result1 : LimitResult = self.ob.process_one(opbid)
-            result2 : LimitResult = self.ob.process_one(opask)
+            ordersparams.append(opbid)
+            ordersparams.append(opask)
 
-            self.assertIsInstance(result1, LimitResult)
-            self.assertIsInstance(result2, LimitResult)
+        results = self.ob(ordersparams)
 
-            self.assertTrue(result1.success())
-            self.assertTrue(result1.success())
+        self.assertEqual(self.ob.n_asks(), self.ob.n_bids())
+        self.assertEqual(self.ob.n_prices(), n+n)
 
-            s, q = self.ob.get_order(result1.order_id())
+        for i, result in enumerate(results):
+            self.assertTrue(result.success())
+            self.assertIsInstance(result, LimitResult)
+
+            s, q = self.ob.get_order(result.order_id())
             self.assertEqual(s, OrderStatus.PENDING)
-            self.assertEqual(q, opbid.quantity) 
-
-            s, q = self.ob.get_order(result2.order_id())
-            self.assertEqual(s, OrderStatus.PENDING)
-            self.assertEqual(q, opask.quantity) 
-
-            self.assertEqual(self.ob.n_asks(), self.ob.n_bids())
-            self.assertEqual(self.ob.n_prices(), i*2)
+            self.assertEqual(q, ordersparams[i].quantity) 

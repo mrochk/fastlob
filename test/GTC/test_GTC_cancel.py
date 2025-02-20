@@ -2,8 +2,8 @@ import unittest
 from hypothesis import given, strategies as st
 
 from pylob import OrderBook, OrderSide, OrderParams, todecimal
-from pylob.orderbook.result import ExecutionResult, LimitResult, CancelResult, MarketResult
 from pylob.enums import OrderStatus
+from pylob.orderbook.result import LimitResult, MarketResult, CancelResult
 from pylob.consts import MIN_VALUE, MAX_VALUE
 
 valid_price = st.decimals(MIN_VALUE, MAX_VALUE, allow_infinity=False, allow_nan=False)
