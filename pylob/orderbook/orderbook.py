@@ -226,6 +226,7 @@ class OrderBook:
 
             case OrderType.FOK: # FOK can not be a limit order by definition
                 result.add_message(self._FOK_error_price(order))
+                order.set_status(OrderStatus.ERROR)
                 return result
 
             case _: return None
@@ -248,6 +249,7 @@ class OrderBook:
 
                 if volume < order.quantity(): 
                     result = self._FOK_error_quantity(order)
+                    order.set_status(OrderStatus.ERROR)
 
                 return result
 
@@ -272,6 +274,7 @@ class OrderBook:
 
                 if volume < order.quantity(): 
                     result = self._FOK_error_quantity(order)
+                    order.set_status(OrderStatus.ERROR)
 
                 return result
 
