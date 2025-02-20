@@ -6,6 +6,9 @@ class OrderSide(Enum):
     BID = False
     ASK = True
 
+    @staticmethod
+    def invert(side): return OrderSide.BID if side == OrderSide.ASK else OrderSide.ASK
+
 class OrderType(Enum):
     '''The type of the order, can be FOK, GTC or GTD.'''
 

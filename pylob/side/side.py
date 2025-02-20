@@ -80,11 +80,10 @@ class Side(abc.ABC):
         Args:
             order (Order): The order to cancel.
         '''
-        lim = self._get_limit(order.price())
-        lim.cancel_order(order)
-
         self._volume -= order.quantity()
 
+        lim = self._get_limit(order.price())
+        lim.cancel_order(order)
         if lim.empty(): del self._limits[lim.price()]
 
     def _get_limit(self, price: Decimal) -> Limit:
@@ -140,6 +139,8 @@ class AskSide(Side):
         self._limits = SortedDict()
 
     def view(self) -> str:
+        if self.empty(): return str()
+
         buffer = io.StringIO()
 
         if self.size() > 10: buffer.write(f"   ...({self.size() - 10} more asks)\n")

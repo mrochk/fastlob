@@ -1,13 +1,13 @@
 import unittest
 from hypothesis import given, strategies as st
 
-from pylob import OrderBook, OrderSide, OrderParams
-from pylob.orderbook.result import LimitResult, CancelResult, MarketResult
+from pylob import OrderBook, OrderSide, OrderParams, todecimal
+from pylob.orderbook.result import ExecutionResult, LimitResult, CancelResult, MarketResult
 from pylob.enums import OrderStatus
 from pylob.consts import MIN_VALUE, MAX_VALUE
 
 valid_price = st.decimals(MIN_VALUE, MAX_VALUE, allow_infinity=False, allow_nan=False)
-valid_qty = st.decimals(MIN_VALUE, MAX_VALUE, allow_infinity=False, allow_nan=False)
+valid_qty = st.decimals(todecimal(100), MAX_VALUE, allow_infinity=False, allow_nan=False)
 valid_side = st.sampled_from(OrderSide)
 
 class TestCancelOrders(unittest.TestCase):
@@ -121,3 +121,38 @@ class TestCancelOrders(unittest.TestCase):
             case OrderSide.ASK:
                 with self.assertRaises(KeyError):
                     self.ob._ask_side._get_limit(order1.price)
+
+    @given(valid_side, valid_price, valid_qty)
+    def test_cancel2(self, side, price, qty):
+        '''Place then partially execute one order, and then cancel it.'''
+        self.ob.reset()
+
+        params = OrderParams(side, price, qty)
+        result : LimitResult = self.ob(params)
+
+        self.assertEqual(self.ob.best_ask() if side == OrderSide.ASK else self.ob.best_bid(), params.price)
+        self.assertFalse(self.ob.get_order(result.order_id()) is None)
+
+        # partially execute order
+
+        params2 = OrderParams(OrderSide.invert(side), price, qty / 2)
+        result2 : MarketResult = self.ob(params2)
+
+        self.assertTrue(isinstance(result2, MarketResult))
+
+        s, q = self.ob.get_order(result2.order_id())
+
+        self.assertEqual(s, OrderStatus.FILLED)
+        self.assertEqual(q, 0)
+
+        s, _ = self.ob.get_order(result.order_id())
+        self.assertEqual(s, OrderStatus.PARTIAL)
+
+        cancelresult = self.ob.cancel_order(result.order_id())
+        self.assertTrue(cancelresult.success())
+
+        s, _ = self.ob.get_order(result.order_id())
+        self.assertEqual(s, OrderStatus.CANCELED)
+
+        self.assertEqual(self.ob.n_prices(), 0)
+        self.assertEqual(self.ob.n_bids(), 0)
