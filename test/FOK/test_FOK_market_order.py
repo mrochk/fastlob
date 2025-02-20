@@ -12,7 +12,7 @@ n_orders_small = st.integers(min_value=1, max_value=1e3)
 
 valid_side = st.sampled_from(OrderSide)
 valid_price = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_infinity=False, allow_nan=False)
-valid_qty = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_infinity=False, allow_nan=False)
+valid_qty = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE-10, allow_infinity=False, allow_nan=False)
 
 '''
 There is no such thing as a FOK limit order, it should never succeed.
@@ -74,15 +74,17 @@ class TestLimitOrders(unittest.TestCase):
         fok = OrderParams(OrderSide.invert(side), price, qty, otype=OrderType.FOK)
         resultFOK : MarketResult = self.ob.process_one(fok)
 
-        print(resultFOK)
-
-        s, q = self.ob.get_order(resultGTC.order_id())
-        self.assertEqual(s, OrderStatus.PARTIAL)
-
-        s, _ = self.ob.get_order(resultFOK.order_id())
-        self.assertEqual(s, OrderStatus.FILLED)
-
         self.assertTrue(resultFOK.success())
         self.assertEqual(resultFOK.orders_matched(), 0)
         self.assertEqual(resultFOK.limits_matched(), 0)
         self.assertTrue(isinstance(resultFOK, MarketResult))
+
+        s, q = self.ob.get_order(resultGTC.order_id())
+        self.assertEqual(s, OrderStatus.PARTIAL)
+        self.assertEqual(q, op.quantity - fok.quantity)
+
+        s, q = self.ob.get_order(resultFOK.order_id())
+        self.assertEqual(s, OrderStatus.FILLED)
+        self.assertEqual(q, 0)
+
+        

@@ -1,4 +1,4 @@
-.PHONY: test typecheck lines clean
+.PHONY: test test-FOK test-GTC test-GTD typecheck lines clean
 
 run:
 	@python3 main.py
@@ -20,9 +20,6 @@ test-FOK:
 test-GTD:
 	@echo "-- TESTING FOR GTD ORDERS:"
 	@python3 -m unittest discover test/GTD -vvv
-
-benchmark:
-	@python3 benchmark.py
 
 typecheck: 
 	@mypy pylob
