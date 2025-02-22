@@ -1,17 +1,16 @@
-import io
-import os
-import time
+import io, time
+from sortedcollections import SortedDict
 from typing import Optional, Iterable
 from decimal import Decimal
 from termcolor import colored
 
 from pylob import engine
-from pylob.limit import Limit
-from pylob.utils import zero
-from pylob.enums import OrderSide, OrderStatus, OrderType
 from pylob.side import AskSide, BidSide
+from pylob.limit import Limit
 from pylob.order import OrderParams, Order, AskOrder, BidOrder
-from pylob.consts import DEFAULT_LIMITS_TO_DISPLAY
+from pylob.enums import OrderSide, OrderStatus, OrderType
+from pylob.consts import DEFAULT_LIMITS_VIEW
+from pylob.utils import zero, time_int
 from .result import ExecutionResult, MarketResult, LimitResult, CancelResult
 
 class OrderBook:
@@ -22,6 +21,7 @@ class OrderBook:
     _ask_side: AskSide
     _bid_side: BidSide
     _orders: dict[str, Order]
+    _expirymap: SortedDict
     _start: float
 
     def __init__(self, name: Optional[str] = None):
@@ -33,15 +33,17 @@ class OrderBook:
         self._ask_side = AskSide()
         self._bid_side = BidSide()
         self._orders = dict()
-        self._start = time.time()
+        self._expirymap = SortedDict()
+        self._start = time_int()
 
     def reset(self) -> None:
         self._ask_side = AskSide()
         self._bid_side = BidSide()
-        self._orders = dict()
-        self._start = time.time()
+        self._orders.clear()
+        self._expirymap.clear()
+        self._start = time_int()
 
-    def clock(self) -> float: return time.time() - self._start
+    def clock(self) -> int: return time_int() - self._start
 
     def best_ask(self) -> Decimal:
         '''Get the best ask price in the book.
@@ -49,6 +51,7 @@ class OrderBook:
         Returns:
             Decimal: The best ask price.
         '''
+        self.cancel_expired_orders()
         return self._ask_side.best().price()
 
     def best_bid(self) -> Decimal:
@@ -57,6 +60,7 @@ class OrderBook:
         Returns:
             Decimal: The best bid price.
         '''
+        self.cancel_expired_orders()
         return self._bid_side.best().price()
 
     def n_bids(self) -> int:
@@ -65,6 +69,7 @@ class OrderBook:
         Returns:
             int: The number of bids limits.
         '''
+        self.cancel_expired_orders()
         return self._bid_side.size()
 
     def n_asks(self) -> int:
@@ -73,6 +78,7 @@ class OrderBook:
         Returns:
             int: The number of asks limits.
         '''
+        self.cancel_expired_orders()
         return self._ask_side.size()
 
     def n_prices(self) -> int:
@@ -81,6 +87,7 @@ class OrderBook:
         Returns:
             int: Number of limits.
         '''
+        self.cancel_expired_orders()
         return self.n_asks() + self.n_bids()
 
     def midprice(self) -> Decimal:
@@ -89,6 +96,7 @@ class OrderBook:
         Returns:
             Decimal: (best_bid + best_ask) / 2
         '''
+        self.cancel_expired_orders()
         best_ask, best_bid = self.best_ask(), self.best_bid()
         return Decimal(0.5) * (best_ask + best_bid)
 
@@ -98,9 +106,12 @@ class OrderBook:
         Returns:
             Decimal: best_ask - best_bid
         '''
+        self.cancel_expired_orders()
         return self.best_ask() - self.best_bid()
 
     def get_order(self, order_id: str) -> Optional[tuple[OrderStatus, Decimal]]:
+        self.cancel_expired_orders()
+
         try: 
             order = self._orders[order_id]
             return (order.status(), order.quantity())
@@ -155,18 +166,45 @@ class OrderBook:
 
         return result
 
+    def cancel_expired_orders(self):
+        timestamps = self._expirymap.keys()
+        keys = list()
+        now = time_int()
+
+        for timestamp in timestamps:
+            if timestamp < now: keys.append(timestamp)
+            now = time_int()
+
+        print()
+        for key in keys:
+            order : Order
+            orders_to_cancel = self._expirymap[key]
+            print(f'cancelling {len(orders_to_cancel)} orders @ {key}')
+            for order in orders_to_cancel:
+                match order.side():
+                    case OrderSide.ASK: self._ask_side.cancel_order(order)
+                    case OrderSide.BID: self._bid_side.cancel_order(order)
+
+            del self._expirymap[key]
+
     def _process_order(self, order: Order) -> ExecutionResult:
         '''**Place or execute** the given order depending on its price level.'''
 
-        result : ExecutionResult
+        self.cancel_expired_orders()
 
+        result : ExecutionResult
         match order.side():
-          case OrderSide.BID: result = self._process_order_bid(order)
-          case OrderSide.ASK: result = self._process_order_ask(order)
+            case OrderSide.BID: result = self._process_order_bid(order)
+            case OrderSide.ASK: result = self._process_order_ask(order)
               
         result._order_id = order.id()
 
-        if result.success(): self._orders[order.id()] = order
+        if result.success(): 
+            self._orders[order.id()] = order
+
+            if order.otype() == OrderType.GTD: 
+                if order.expiry() not in self._expirymap.keys(): self._expirymap[order.expiry()] = list()
+                self._expirymap[order.expiry()].append(order)
 
         if order.status() == OrderStatus.PARTIAL:
             msg = f"<orderbook>: order partially filled by engine, {order.quantity()} " f"placed at {order.price()}"
@@ -202,6 +240,16 @@ class OrderBook:
                 return LimitResult(True, order.id())
             else: return error
 
+    def _is_market_bid(self, order):
+        if self._ask_side.empty(): return False
+        if self.best_ask() <= order.price(): return True
+        return False
+
+    def _is_market_ask(self, order):
+        if self._bid_side.empty(): return False
+        if self.best_bid() >= order.price(): return True
+        return False
+
     def _FOK_error_price(self, order : Order) -> MarketResult:
         result = MarketResult(False)
         msg = f'<orderbook>: FOK {order.side().name} order can not be executed at this price ({order.price()})'
@@ -230,6 +278,12 @@ class OrderBook:
               return self._check_FOK_bid_order(order)
           case _: return None
 
+    def _check_ask_market_order(self, order : Order) -> Optional[MarketResult]:
+        match order.otype():
+          case OrderType.FOK: # check that order quantity can be filled
+              return self._check_FOK_ask_order(order)
+          case _: return None
+
     def _check_FOK_bid_order(self, order):
         result = None
 
@@ -248,12 +302,6 @@ class OrderBook:
             order.set_status(OrderStatus.ERROR)
 
         return result
-
-    def _check_ask_market_order(self, order : Order) -> Optional[MarketResult]:
-        match order.otype():
-          case OrderType.FOK: # check that order quantity can be filled
-              return self._check_FOK_ask_order(order)
-          case _: return None
 
     def _check_FOK_ask_order(self, order):
         result = None
@@ -274,17 +322,7 @@ class OrderBook:
 
         return result
 
-    def _is_market_bid(self, order):
-        if self._ask_side.empty(): return False
-        if self.best_ask() <= order.price(): return True
-        return False
-
-    def _is_market_ask(self, order):
-        if self._bid_side.empty(): return False
-        if self.best_bid() >= order.price(): return True
-        return False
-
-    def view(self, n : int = DEFAULT_LIMITS_TO_DISPLAY) -> str:
+    def view(self, n : int = DEFAULT_LIMITS_VIEW) -> str:
         '''Outputs the order-book in the following format:\n
 
         Order-book <pair>:
@@ -296,11 +334,9 @@ class OrderBook:
 
         `n` controls the number of limits to display on each side
         '''
-        if not self._bid_side.empty():
-            length = len(self._bid_side.best().view()) + 2
-        elif not self._ask_side.empty():
-            length = len(self._ask_side.best().view()) + 2
-        else: length = 40
+        length = 40
+        if not self._bid_side.empty(): length = len(self._bid_side.best().view()) + 2
+        elif not self._ask_side.empty(): length = len(self._ask_side.best().view()) + 2
 
         buffer = io.StringIO()
         buffer.write(f"   [ORDER-BOOK {self._name}]\n\n")

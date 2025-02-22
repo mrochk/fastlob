@@ -1,4 +1,4 @@
-.PHONY: test test-FOK test-GTC test-GTD typecheck lines clean
+.PHONY: test test-base test-FOK test-GTC test-GTD typecheck lines clean
 
 run:
 	@python3 main.py

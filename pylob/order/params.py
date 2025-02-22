@@ -1,6 +1,8 @@
 from numbers import Number
 from decimal import Decimal
 from typing import Optional
+import time
+from math import ceil
 
 from pylob.enums import OrderSide, OrderType
 from pylob.utils import todecimal
@@ -15,7 +17,7 @@ class OrderParams:
     price: Decimal
     quantity: Decimal
     otype: OrderType = OrderType.GTC
-    expiry: Optional[Number] = None
+    expiry: Optional[int] = None
 
     def __init__(self, side: OrderSide, price: Number, quantity: Number, otype: OrderType = OrderType.GTC,
                  expiry: Optional[Number] = None):
@@ -26,7 +28,7 @@ class OrderParams:
         self.price = todecimal(price)
         self.quantity = todecimal(quantity)
         self.otype = otype
-        self.expiry = expiry
+        self.expiry = int(expiry) if expiry is not None else None
 
     @staticmethod
     def check_args(side: OrderSide, price: Number, quantity: Number, otype: OrderType, 
@@ -44,13 +46,16 @@ class OrderParams:
         price_decimal = todecimal(price)
         quantity_decimal = todecimal(quantity)
 
-        if price_decimal < MIN_VALUE: raise ValueError(f"price ({price}) must be greater than {MIN_VALUE}")
+        if price_decimal < MIN_VALUE: raise ValueError(f'price ({price}) must be greater than {MIN_VALUE}')
 
-        if quantity_decimal < MIN_VALUE: raise ValueError(f"quantity ({quantity}) must be greater than {MIN_VALUE}")
+        if quantity_decimal < MIN_VALUE: raise ValueError(f'quantity ({quantity}) must be greater than {MIN_VALUE}')
 
-        if price_decimal > MAX_VALUE: raise ValueError(f"price ({price}) is too large")
+        if price_decimal > MAX_VALUE: raise ValueError(f'price ({price}) is too large')
 
-        if quantity_decimal > MAX_VALUE: raise ValueError(f"quantity ({quantity}) is too large")
+        if quantity_decimal > MAX_VALUE: raise ValueError(f'quantity ({quantity}) is too large')
+
+        now = ceil(time.time())
+        if otype == OrderType.GTD and (expiry is not None) and expiry <= now: raise ValueError(f'order expiry ({expiry}) is less than current timestamp ({now}), or too close')
 
     def unwrap(self) -> tuple[Decimal, Decimal, OrderType, Optional[Number]]:
         return self.price, self.quantity, self.otype, self.expiry

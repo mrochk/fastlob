@@ -1,7 +1,6 @@
 import unittest
 from hypothesis import given, strategies as st, settings
 import random
-from timeit import timeit
 
 from pylob import OrderBook, OrderSide, OrderParams
 from pylob.orderbook.result import LimitResult

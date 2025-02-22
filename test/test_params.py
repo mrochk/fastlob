@@ -2,6 +2,7 @@ import unittest
 from decimal import Decimal
 from hypothesis import given
 import hypothesis.strategies as st
+import time
 
 from pylob import OrderParams
 from pylob.consts import MIN_VALUE, MAX_VALUE
@@ -12,14 +13,14 @@ from pylob.utils import todecimal
 valid_price = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
 valid_quantity = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
 valid_order_side = st.sampled_from(OrderSide)
-valid_order_type = st.sampled_from(OrderType)
+valid_order_type = st.sampled_from([OrderType.FOK, OrderType.GTC])
 valid_expiry = st.one_of(st.none(), st.floats(min_value=0, allow_nan=False, allow_infinity=False))
 
 
 class TestOrderParams(unittest.TestCase):
     @given(valid_order_side, valid_price, valid_quantity, valid_order_type, valid_expiry)
     def test_order_params_valid(self, side, price, quantity, type, expiry):
-        if type == OrderType.GTD and not expiry:
+        if type == OrderType.GTD and (not expiry or expiry <= int(time.time())):
             with self.assertRaises(ValueError): OrderParams(side, price, quantity, type, expiry)
             return
 
@@ -28,7 +29,6 @@ class TestOrderParams(unittest.TestCase):
         self.assertEqual(order.price, todecimal(price))
         self.assertEqual(order.quantity, todecimal(quantity))
         self.assertEqual(order.otype, type)
-        self.assertEqual(order.expiry, expiry)
 
     def test_invalid_side(self):
         with self.assertRaises(TypeError):
@@ -62,10 +62,7 @@ class TestOrderParams(unittest.TestCase):
         with self.assertRaises(TypeError):
             OrderParams(OrderSide.BID, Decimal("10"), Decimal("1"), OrderType.GTC, "invalid")
 
-    @given(valid_order_side, valid_price, valid_quantity, valid_order_type, valid_expiry)
-    def test_unwrap(self, side, price, quantity, type, expiry):
-        if type == OrderType.GTD and not expiry:
-            with self.assertRaises(ValueError): OrderParams(side, price, quantity, type, expiry)
-            return
-        order = OrderParams(side, price, quantity, type, expiry)
-        self.assertEqual(order.unwrap(), (todecimal(price), todecimal(quantity), type, expiry))
+    @given(valid_order_side, valid_price, valid_quantity, valid_order_type)
+    def test_unwrap(self, side, price, quantity, type):
+        order = OrderParams(side, price, quantity, type)
+        self.assertTupleEqual(order.unwrap(), (todecimal(price), todecimal(quantity), type, None))

@@ -1,5 +1,6 @@
 from decimal import Decimal
 from numbers import Number
+import time
 
 from pylob.consts import DECIMAL_PRECISION
 
@@ -13,3 +14,5 @@ def todecimal(n: Number | str) -> Decimal:
     return dec.quantize(exp)
 
 def zero(): return Decimal('0')
+
+def time_int() -> int: return int(time.time())
