@@ -33,13 +33,12 @@ class TestLimitOrders(unittest.TestCase):
             self.assertEqual(self.ob.best_ask(), op.price)
             self.assertEqual(self.ob.n_asks(), 1)
         
-        s, q = self.ob.get_order(result.order_id())
+        s, q = self.ob.get_order_status(result.order_id())
 
         self.assertEqual(s, OrderStatus.PENDING)
         self.assertEqual(q, op.quantity)
 
     @given(n_orders, valid_side, valid_price)
-    @settings(deadline=None)
     def test_many_same_price(self, n, side, price):
         self.ob.reset()
 
@@ -59,13 +58,12 @@ class TestLimitOrders(unittest.TestCase):
             self.assertIsInstance(result, LimitResult)
             self.assertTrue(result.success())
 
-            s, q = self.ob.get_order(result.order_id())
+            s, q = self.ob.get_order_status(result.order_id())
 
             self.assertEqual(s, OrderStatus.PENDING)
             self.assertEqual(q, ordersparams[i].quantity) 
 
     @given(n_orders, valid_side)
-    @settings(deadline=None)
     def test_many_different_price(self, n, side):
         self.ob.reset()
 
@@ -85,15 +83,15 @@ class TestLimitOrders(unittest.TestCase):
 
             self.assertIsInstance(result, LimitResult)
             self.assertTrue(result.success())
-            s, q = self.ob.get_order(result.order_id())
+            s, q = self.ob.get_order_status(result.order_id())
 
             self.assertEqual(s, OrderStatus.PENDING)
             self.assertEqual(q, ordersparams[i].quantity) 
 
     @given(n_orders, valid_price)
-    @settings(deadline=None)
     def test_many_same_price_both_sides(self, n, price):
         self.ob.reset()
+        self.ob.start()
         n += n % 2
 
         ordersparams = list()
@@ -123,14 +121,15 @@ class TestLimitOrders(unittest.TestCase):
             self.assertTrue(result.success())
             self.assertIsInstance(result, LimitResult)
 
-            s, q = self.ob.get_order(result.order_id())
+            s, q = self.ob.get_order_status(result.order_id())
             self.assertEqual(s, OrderStatus.PENDING)
             self.assertEqual(q, ordersparams[i].quantity) 
 
             self.assertTrue(self.ob.best_bid() == ordersparams[i].price or self.ob.best_ask() == ordersparams[i].price)
 
+        self.ob.stop()
+
     @given(n_orders)
-    @settings(deadline=None)
     def test_many_different_price_both_sides(self, n):
         self.ob.reset()
 
@@ -158,6 +157,6 @@ class TestLimitOrders(unittest.TestCase):
             self.assertTrue(result.success())
             self.assertIsInstance(result, LimitResult)
 
-            s, q = self.ob.get_order(result.order_id())
+            s, q = self.ob.get_order_status(result.order_id())
             self.assertEqual(s, OrderStatus.PENDING)
             self.assertEqual(q, ordersparams[i].quantity) 

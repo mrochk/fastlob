@@ -42,11 +42,11 @@ class TestOrders(unittest.TestCase):
         fok = OrderParams(side, price, qty, otype=OrderType.FOK)
         resultFOK : MarketResult = self.ob.process_one(fok)
 
-        s, q = self.ob.get_order(resultGTC.order_id())
+        s, q = self.ob.get_order_status(resultGTC.order_id())
         self.assertEqual(s, OrderStatus.FILLED)
         self.assertEqual(q, 0)
 
-        s, _ = self.ob.get_order(resultFOK.order_id())
+        s, _ = self.ob.get_order_status(resultFOK.order_id())
         self.assertEqual(s, OrderStatus.FILLED)
 
         self.assertTrue(resultFOK.success())
@@ -75,11 +75,11 @@ class TestOrders(unittest.TestCase):
         self.assertEqual(resultFOK.limits_matched(), 0)
         self.assertTrue(isinstance(resultFOK, MarketResult))
 
-        s, q = self.ob.get_order(resultGTC.order_id())
+        s, q = self.ob.get_order_status(resultGTC.order_id())
         self.assertEqual(s, OrderStatus.PARTIAL)
         self.assertEqual(q, op.quantity - fok.quantity)
 
-        s, q = self.ob.get_order(resultFOK.order_id())
+        s, q = self.ob.get_order_status(resultFOK.order_id())
         self.assertEqual(s, OrderStatus.FILLED)
         self.assertEqual(q, 0)
 

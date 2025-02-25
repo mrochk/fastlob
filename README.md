@@ -1,5 +1,5 @@
 # `pylob` | Python Limit-Order-Book
-**Fast &amp; minimalist limit-order-book (LOB) implementation in pure Python.**
+**Fast &amp; minimalist fixed decimal precision limit-order-book (LOB) implementation in pure Python.**
 
 *Package currently in development, can not be used yet.*
 
@@ -10,6 +10,8 @@ We aim to keep the API minimalist and simple, while having reasonable performanc
 <img src="ss.png" width=400>
 
 We implement three types of orders: *FOK*, *GTC* and *GTD*. Every order is defined as a limit order, but will be executed as a market order if its price matches the best (bid or ask) limit price in the book.
+
+For GTD orders, the book only supports whole seconds for the order expiry (order can not expire in 3.8 seconds, will be rounded to 4). 
 
 <a href="TODO.md">TODO</a>
 
@@ -23,35 +25,65 @@ git clone git@github.com:mrochk/pylob.git
 cd pylob
 ```
 
-To run the tests you can use
+To run the tests
 ```bash
 make test
 # or
 python3 -m unittest discover test
 ```
 
+Placing an order
+```python
+import time
+from pylob import OrderBook, OrderParams, OrderSide, OrderType
+
+book = OrderBook('My Order-Book')
+book.start()
+
+order_params = OrderParams(
+    side = OrderSide.BID,
+    price = 123.32,
+    quantity = 3.4,
+    otype = OrderType.GTD, # good-till-date order
+    expiry = time.time() + 120 # order expires in two minutes
+)
+
+# -> at this point an exception will be raised if invalid attributes are provided
+
+result = book(order_params) # let the book process the order
+
+assert result.success() # result object can be used to see various infos about the order execution
+
+order_id = result.order_id()
+status, quantity_left = book.get_order_status(order_id)
+
+print(f'Current status of the order: {status}, quantity left: {quantity_left}.')
+
+print(book.view()) # pretty-print the book
+```
+
 ***
 
 *Lines count:*
 ```
- 92 pylob/engine/engine.py
-  1 pylob/engine/__init__.py
- 15 pylob/utils/utils.py
-  1 pylob/utils/__init__.py
- 59 pylob/order/params.py
-  1 pylob/order/__init__.py
-161 pylob/order/order.py
- 49 pylob/enums/enums.py
-  1 pylob/enums/__init__.py
- 64 pylob/orderbook/result.py
-315 pylob/orderbook/orderbook.py
-  1 pylob/orderbook/__init__.py
- 17 pylob/consts/consts.py
-  1 pylob/consts/__init__.py
-137 pylob/limit/limit.py
-  1 pylob/limit/__init__.py
-155 pylob/side/side.py
-  1 pylob/side/__init__.py
-  4 pylob/__init__.py
-1076 total
+   92 pylob/engine/engine.py
+    1 pylob/engine/__init__.py
+   18 pylob/utils/utils.py
+    1 pylob/utils/__init__.py
+   64 pylob/order/params.py
+    1 pylob/order/__init__.py
+  161 pylob/order/order.py
+   52 pylob/enums/enums.py
+    1 pylob/enums/__init__.py
+   64 pylob/orderbook/result.py
+  361 pylob/orderbook/orderbook.py
+    1 pylob/orderbook/__init__.py
+   19 pylob/consts/consts.py
+    1 pylob/consts/__init__.py
+  137 pylob/limit/limit.py
+    1 pylob/limit/__init__.py
+  156 pylob/side/side.py
+    1 pylob/side/__init__.py
+    4 pylob/__init__.py
+ 1136 total
 ```

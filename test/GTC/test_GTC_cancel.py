@@ -27,7 +27,7 @@ class TestCancelOrders(unittest.TestCase):
 
         order_id = result.order_id()
 
-        status, qty = self.ob.get_order(order_id)
+        status, qty = self.ob.get_order_status(order_id)
         self.assertEqual(status, OrderStatus.PENDING)
         self.assertEqual(qty, orderp.quantity)
 
@@ -38,7 +38,7 @@ class TestCancelOrders(unittest.TestCase):
 
         self.assertEqual(self.ob.n_prices(), 0)
 
-        status, qty = self.ob.get_order(order_id)
+        status, qty = self.ob.get_order_status(order_id)
         self.assertEqual(status, OrderStatus.CANCELED)
         self.assertEqual(qty, orderp.quantity)
 
@@ -80,7 +80,7 @@ class TestCancelOrders(unittest.TestCase):
 
         self.assertEqual(self.ob.n_prices(), 1)
 
-        status, qty = self.ob.get_order(id1)
+        status, qty = self.ob.get_order_status(id1)
         self.assertEqual(status, OrderStatus.CANCELED)
         self.assertEqual(qty, order1.quantity)
 
@@ -110,7 +110,7 @@ class TestCancelOrders(unittest.TestCase):
 
         self.assertEqual(self.ob.n_prices(), 0)
 
-        status, qty = self.ob.get_order(id2)
+        status, qty = self.ob.get_order_status(id2)
         self.assertEqual(status, OrderStatus.CANCELED)
         self.assertEqual(qty, order2.quantity)
 
@@ -131,7 +131,7 @@ class TestCancelOrders(unittest.TestCase):
         result : LimitResult = self.ob(params)
 
         self.assertEqual(self.ob.best_ask() if side == OrderSide.ASK else self.ob.best_bid(), params.price)
-        self.assertFalse(self.ob.get_order(result.order_id()) is None)
+        self.assertFalse(self.ob.get_order_status(result.order_id()) is None)
 
         # partially execute order
 
@@ -140,18 +140,18 @@ class TestCancelOrders(unittest.TestCase):
 
         self.assertTrue(isinstance(result2, MarketResult))
 
-        s, q = self.ob.get_order(result2.order_id())
+        s, q = self.ob.get_order_status(result2.order_id())
 
         self.assertEqual(s, OrderStatus.FILLED)
         self.assertEqual(q, 0)
 
-        s, _ = self.ob.get_order(result.order_id())
+        s, _ = self.ob.get_order_status(result.order_id())
         self.assertEqual(s, OrderStatus.PARTIAL)
 
         cancelresult = self.ob.cancel_order(result.order_id())
         self.assertTrue(cancelresult.success())
 
-        s, _ = self.ob.get_order(result.order_id())
+        s, _ = self.ob.get_order_status(result.order_id())
         self.assertEqual(s, OrderStatus.CANCELED)
 
         self.assertEqual(self.ob.n_prices(), 0)

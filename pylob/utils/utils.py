@@ -15,4 +15,4 @@ def todecimal(n: Number | str) -> Decimal:
 
 def zero(): return Decimal('0')
 
-def time_int() -> int: return int(time.time())
+def time_asint() -> int: return int(time.time())

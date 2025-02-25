@@ -1,16 +1,17 @@
-import io
+import io, time
 from sortedcollections import SortedDict
 from typing import Optional, Iterable
 from decimal import Decimal
 from termcolor import colored
+import threading
 
 from pylob import engine
 from pylob.side import AskSide, BidSide
 from pylob.limit import Limit
 from pylob.order import OrderParams, Order, AskOrder, BidOrder
 from pylob.enums import OrderSide, OrderStatus, OrderType
+from pylob.utils import zero, time_asint
 from pylob.consts import DEFAULT_LIMITS_VIEW
-from pylob.utils import zero, time_int
 from .result import ExecutionResult, MarketResult, LimitResult, CancelResult
 
 class OrderBook:
@@ -22,7 +23,7 @@ class OrderBook:
     _bid_side: BidSide
     _orders: dict[str, Order]
     _expirymap: SortedDict
-    _start: float
+    _start_time: float
 
     def __init__(self, name: Optional[str] = None):
         '''
@@ -34,90 +35,26 @@ class OrderBook:
         self._bid_side = BidSide()
         self._orders = dict()
         self._expirymap = SortedDict()
-        self._start = time_int()
+        self._start_time = time_asint()
+        self._alive = False
 
-    def reset(self) -> None:
-        self._ask_side = AskSide()
-        self._bid_side = BidSide()
-        self._orders.clear()
-        self._expirymap.clear()
-        self._start = time_int()
+    def reset(self) -> None: self.__init__(self._name)
 
-    def clock(self) -> int: return time_int() - self._start
+    def start(self):
+        '''Start the order-book, in fact this is simply starting the background GTD order manager, however ,if you are 
+        not planning on using this kind of orders you can ommit calling this function.'''
+        def loop():
+            while self._alive:
+                self._cancel_expired_orders()
+                time.sleep(0.9)
 
-    def best_ask(self) -> Decimal:
-        '''Get the best ask price in the book.
+        self._alive = True
+        threading.Thread(target=loop).start()
 
-        Returns:
-            Decimal: The best ask price.
-        '''
-        self.cancel_expired_orders()
-        return self._ask_side.best().price()
-
-    def best_bid(self) -> Decimal:
-        '''Get the best bid price in the book.
-
-        Returns:
-            Decimal: The best bid price.
-        '''
-        self.cancel_expired_orders()
-        return self._bid_side.best().price()
-
-    def n_bids(self) -> int:
-        '''Get the number of bids limits in the book.
-
-        Returns:
-            int: The number of bids limits.
-        '''
-        self.cancel_expired_orders()
-        return self._bid_side.size()
-
-    def n_asks(self) -> int:
-        '''Get the number of asks limits in the book.
-
-        Returns:
-            int: The number of asks limits.
-        '''
-        self.cancel_expired_orders()
-        return self._ask_side.size()
-
-    def n_prices(self) -> int:
-        '''Get the total number of limits (price levels) in the book.
-
-        Returns:
-            int: Number of limits.
-        '''
-        self.cancel_expired_orders()
-        return self.n_asks() + self.n_bids()
-
-    def midprice(self) -> Decimal:
-        '''Get the order-book mid-price.
-
-        Returns:
-            Decimal: (best_bid + best_ask) / 2
-        '''
-        self.cancel_expired_orders()
-        best_ask, best_bid = self.best_ask(), self.best_bid()
-        return Decimal(0.5) * (best_ask + best_bid)
-
-    def spread(self) -> Decimal:
-        '''Get the order-book spread.
-
-        Returns:
-            Decimal: best_ask - best_bid
-        '''
-        self.cancel_expired_orders()
-        return self.best_ask() - self.best_bid()
-
-    def get_order(self, order_id: str) -> Optional[tuple[OrderStatus, Decimal]]:
-        self.cancel_expired_orders()
-
-        try: 
-            order = self._orders[order_id]
-            return (order.status(), order.quantity())
-        except KeyError: return None
+    def stop(self): self._alive = False
 
     def __call__(self, order_params: OrderParams | Iterable[OrderParams]) -> ExecutionResult | list[ExecutionResult]:
+        '''Process one or many orders: equivalent to calling `process_one` or `process_many`.'''
         if isinstance(order_params, OrderParams): return self.process_one(order_params)
         return self.process_many(order_params)
 
@@ -166,28 +103,78 @@ class OrderBook:
 
         return result
 
-    def cancel_expired_orders(self):
-        timestamps = self._expirymap.keys()
+    def clock(self) -> int: return time_asint() - self._start_time
 
-        if not timestamps: return
+    def best_ask(self) -> Decimal:
+        '''Get the best ask price in the book.
 
-        now = time_int()
-        keys_outdated = filter(lambda timestamp: timestamp < now, timestamps)
+        Returns:
+            Decimal: The best ask price.
+        '''
+        return self._ask_side.best().price()
 
-        for key in keys_outdated:
-            orders_to_cancel = self._expirymap[key]
-            #print(f'cancelling {len(orders_to_cancel)} orders @ {key}')
-            for order in orders_to_cancel:
-                match order.side():
-                    case OrderSide.ASK: self._ask_side.cancel_order(order)
-                    case OrderSide.BID: self._bid_side.cancel_order(order)
+    def best_bid(self) -> Decimal:
+        '''Get the best bid price in the book.
 
-            del self._expirymap[key]
+        Returns:
+            Decimal: The best bid price.
+        '''
+        return self._bid_side.best().price()
+
+    def n_bids(self) -> int:
+        '''Get the number of bids limits in the book.
+
+        Returns:
+            int: The number of bids limits.
+        '''
+        return self._bid_side.size()
+
+    def n_asks(self) -> int:
+        '''Get the number of asks limits in the book.
+
+        Returns:
+            int: The number of asks limits.
+        '''
+        return self._ask_side.size()
+
+    def n_prices(self) -> int:
+        '''Get the total number of limits (price levels) in the book.
+
+        Returns:
+            int: Number of limits.
+        '''
+        return self.n_asks() + self.n_bids()
+
+    def midprice(self) -> Decimal:
+        '''Get the order-book mid-price.
+
+        Returns:
+            Decimal: (best_bid + best_ask) / 2
+        '''
+        best_ask, best_bid = self.best_ask(), self.best_bid()
+        return Decimal(0.5) * (best_ask + best_bid)
+
+    def spread(self) -> Decimal:
+        '''Get the order-book spread.
+
+        Returns:
+            Decimal: best_ask - best_bid
+        '''
+        return self.best_ask() - self.best_bid()
+
+    def get_order_status(self, order_id: str) -> Optional[tuple[OrderStatus, Decimal]]:
+        '''Get the status and the qty left for a given order, or None if order was not accepted by the book.
+
+        Returns:
+            Optional[tuple[OrderStatus, Decimal]]: (status, quantity left)
+        '''
+        try: 
+            order = self._orders[order_id]
+            return order.status(), order.quantity()
+        except KeyError: return None
 
     def _process_order(self, order: Order) -> ExecutionResult:
         '''**Place or execute** the given order depending on its price level.'''
-
-        self.cancel_expired_orders()
 
         result : ExecutionResult
         match order.side():
@@ -319,6 +306,25 @@ class OrderBook:
 
         return result
 
+    def _cancel_expired_orders(self):
+        timestamps = self._expirymap.keys()
+
+        if not timestamps: return
+
+        now = time_asint()
+        keys_outdated = filter(lambda timestamp: timestamp < now, timestamps)
+
+        for key in keys_outdated:
+            orders_to_cancel = self._expirymap[key]
+            print(f'cancelling {len(orders_to_cancel)} orders with t={key}')
+            for order in orders_to_cancel:
+                if not order.valid(): continue
+                match order.side():
+                    case OrderSide.ASK: self._ask_side.cancel_order(order)
+                    case OrderSide.BID: self._bid_side.cancel_order(order)
+
+            del self._expirymap[key]
+
     def view(self, n : int = DEFAULT_LIMITS_VIEW) -> str:
         '''Outputs the order-book in the following format:\n
 
@@ -349,9 +355,8 @@ class OrderBook:
         return buffer.getvalue()
 
     def __repr__(self) -> str:
-        try: return \
+        if (self.n_bids() + self.n_asks()) > 1: return \
                 f'OrderBook(name={self._name}, midprice={self.midprice()}, spread={self.spread()},' \
                 + f'nprices={self.n_prices()}, nbids={self.n_bids()}, nasks={self.n_asks()}, clock={self.clock()})'
-        except: return \
-                f'OrderBook(name={self._name}, nprices={self.n_prices()}, nbids={self.n_bids()}, ' \
-                f'nasks={self.n_asks()}, clock={self.clock()})'
+        return f'OrderBook(name={self._name}, nprices={self.n_prices()}, nbids={self.n_bids()}, ' \
+            f'nasks={self.n_asks()}, clock={self.clock()})'

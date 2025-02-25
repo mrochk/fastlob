@@ -77,7 +77,7 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._bid_side.volume(), 700)
         self.assertEqual(self.ob._bid_side.best().volume(), 300)
         self.assertEqual(self.ob._bid_side.best().valid_orders(), 2)
-        self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
+        self.assertEqual(self.ob.get_order_status(result.order_id()), (OrderStatus.FILLED, 0))
         self.assertEqual(self.ob.best_bid(), bidprice)
 
     @given(askprice)
@@ -107,7 +107,7 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._bid_side.volume(), 600)
         self.assertEqual(self.ob._bid_side.best().volume(), 200)
         self.assertEqual(self.ob._bid_side.best().valid_orders(), 1)
-        self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
+        self.assertEqual(self.ob.get_order_status(result.order_id()), (OrderStatus.FILLED, 0))
         self.assertEqual(self.ob.best_bid(), bidprice)
 
     @given(askprice)
@@ -137,7 +137,7 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._bid_side.volume(), 500)
         self.assertEqual(self.ob._bid_side.best().volume(), 100)
         self.assertEqual(self.ob._bid_side.best().valid_orders(), 1)
-        self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
+        self.assertEqual(self.ob.get_order_status(result.order_id()), (OrderStatus.FILLED, 0))
         self.assertEqual(self.ob.best_bid(), bidprice)
 
     @given(askprice)
@@ -168,7 +168,7 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._bid_side.best().volume(), 400)
         self.assertEqual(self.ob._bid_side.best().valid_orders(), 2)
         self.assertEqual(self.ob._bid_side.best().price(), bidprice - 10)
-        self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
+        self.assertEqual(self.ob.get_order_status(result.order_id()), (OrderStatus.FILLED, 0))
 
     @given(askprice)
     def test_ask_5(self, askprice):
@@ -198,7 +198,7 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._bid_side.best().volume(), 300)
         self.assertEqual(self.ob._bid_side.best().valid_orders(), 2)
         self.assertEqual(self.ob._bid_side.best().price(), bidprice - 10)
-        self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
+        self.assertEqual(self.ob.get_order_status(result.order_id()), (OrderStatus.FILLED, 0))
 
     @given(askprice)
     def test_ask_6(self, askprice):
@@ -227,7 +227,7 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._bid_side.best().volume(), 200)
         self.assertEqual(self.ob._bid_side.best().valid_orders(), 1)
         self.assertEqual(self.ob._bid_side.best().price(), bidprice - 10)
-        self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
+        self.assertEqual(self.ob.get_order_status(result.order_id()), (OrderStatus.FILLED, 0))
 
     @given(askprice)
     def test_ask_7(self, askprice):
@@ -257,7 +257,7 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._bid_side.volume(), 0)
         self.assertEqual(self.ob._bid_side.size(), 0)
 
-        self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
+        self.assertEqual(self.ob.get_order_status(result.order_id()), (OrderStatus.FILLED, 0))
 
     # bid side
 
@@ -287,7 +287,7 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._ask_side.volume(), 700)
         self.assertEqual(self.ob._ask_side.best().volume(), 300)
         self.assertEqual(self.ob._ask_side.best().valid_orders(), 2)
-        self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
+        self.assertEqual(self.ob.get_order_status(result.order_id()), (OrderStatus.FILLED, 0))
         self.assertEqual(self.ob.best_ask(), askprice)
 
     @given(askprice)
@@ -316,7 +316,7 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._ask_side.volume(), 600)
         self.assertEqual(self.ob._ask_side.best().volume(), 200)
         self.assertEqual(self.ob._ask_side.best().valid_orders(), 1)
-        self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
+        self.assertEqual(self.ob.get_order_status(result.order_id()), (OrderStatus.FILLED, 0))
         self.assertEqual(self.ob.best_ask(), askprice)
 
     @given(askprice)
@@ -345,7 +345,7 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._ask_side.volume(), 500)
         self.assertEqual(self.ob._ask_side.best().volume(), 100)
         self.assertEqual(self.ob._ask_side.best().valid_orders(), 1)
-        self.assertTupleEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
+        self.assertTupleEqual(self.ob.get_order_status(result.order_id()), (OrderStatus.FILLED, 0))
         self.assertEqual(self.ob.best_ask(), askprice)
 
     @given(askprice)
@@ -375,7 +375,7 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._ask_side.best().volume(), 400)
         self.assertEqual(self.ob._ask_side.best().valid_orders(), 2)
         self.assertEqual(self.ob._ask_side.best().price(), askprice + 10)
-        self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
+        self.assertEqual(self.ob.get_order_status(result.order_id()), (OrderStatus.FILLED, 0))
 
     @given(askprice)
     def test_bid_5(self, askprice):
@@ -404,7 +404,7 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._ask_side.best().volume(), 300)
         self.assertEqual(self.ob._ask_side.best().valid_orders(), 2)
         self.assertEqual(self.ob._ask_side.best().price(), askprice + 10)
-        self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
+        self.assertEqual(self.ob.get_order_status(result.order_id()), (OrderStatus.FILLED, 0))
 
     @given(askprice)
     def test_bid_6(self, askprice):
@@ -432,7 +432,7 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._ask_side.best().volume(), 200)
         self.assertEqual(self.ob._ask_side.best().valid_orders(), 1)
         self.assertEqual(self.ob._ask_side.best().price(), askprice + 10)
-        self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
+        self.assertEqual(self.ob.get_order_status(result.order_id()), (OrderStatus.FILLED, 0))
 
     @given(askprice)
     def test_bid_7(self, askprice):
@@ -461,4 +461,4 @@ class TestLimitOrders(unittest.TestCase):
         self.assertEqual(self.ob._ask_side.volume(), 0)
         self.assertEqual(self.ob._ask_side.size(), 0)
 
-        self.assertEqual(self.ob.get_order(result.order_id()), (OrderStatus.FILLED, 0))
+        self.assertEqual(self.ob.get_order_status(result.order_id()), (OrderStatus.FILLED, 0))
