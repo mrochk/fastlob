@@ -1,9 +1,9 @@
 # `pylob` | Python Limit-Order-Book
 **Fast &amp; minimalist fixed decimal precision limit-order-book (LOB) implementation in pure Python.**
 
-*Package currently in development, can not be used yet.*
+*Package currently in development, bugs are expected.*
 
-The goal is to build an efficient, clean and easy to use package for whoever needs to be able to quickly run a limit-order-book in their Python project. 
+The goal is to build an efficient, clean and easy to use package for whoever needs a limit-order-book in their project. 
 
 We aim to keep the API minimalist and simple, while having reasonable performances (for a pure Python implementation). We intend the final project to contain no more than ~1000 lines of code.
 
@@ -13,19 +13,18 @@ We implement three types of orders: *FOK*, *GTC* and *GTD*. Every order is defin
 
 For GTD orders, the book only supports whole seconds for the order expiry (order can not expire in 3.8 seconds, will be rounded to 4). 
 
-<a href="TODO.md">TODO</a>
-
 # Usage
 
 This book runs at a fixed decimal precision through the Python `decimal` package. The precision can be set via the `PYLOB_DECIMAL_PRECISION` environment variable, it's default value being 2.
 
-Start by cloning the repository
+To be able to use this project, clone the repository and install the requirements: 
 ```bash
 git clone git@github.com:mrochk/pylob.git
 cd pylob
+pip install -r requirements.txt
 ```
 
-To run the tests run `make test` or `python3 -m unittest discover test`.
+To run tests, use `make test` or `python3 -m unittest discover test`.
 
 ***Placing an order***
 ```python
@@ -81,3 +80,15 @@ print(book.view()) # pretty-print the book
     4 pylob/__init__.py
  1136 total
 ```
+
+***
+
+# TODOs:
+
+As mentioned earlier, this package is still in early development, and contributions are more than welcome.
+
+The main tasks that have to be done are:
+- **More and better testing for edge cases. In fact, some tests have to be rewritten too.**
+- **Benchmarking / profiling to have an idea of the performance, and see where it's slow.**
+- **Some parts probably need to be rewritten in a cleaner way.**
+- **Publish package.**
