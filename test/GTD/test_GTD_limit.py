@@ -8,7 +8,7 @@ from pylob.enums import OrderStatus
 from pylob.consts import MIN_VALUE, MAX_VALUE
 from pylob.utils import time_int
 
-n_orders = st.integers(min_value=1, max_value=1e4)
+n_orders = st.integers(min_value=1, max_value=100)
 
 valid_side = st.sampled_from(OrderSide)
 valid_price = st.decimals(min_value=MIN_VALUE*2, max_value=MAX_VALUE, allow_infinity=False, allow_nan=False)

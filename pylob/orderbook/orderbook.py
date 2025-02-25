@@ -1,4 +1,4 @@
-import io, time
+import io
 from sortedcollections import SortedDict
 from typing import Optional, Iterable
 from decimal import Decimal
@@ -168,18 +168,15 @@ class OrderBook:
 
     def cancel_expired_orders(self):
         timestamps = self._expirymap.keys()
-        keys = list()
+
+        if not timestamps: return
+
         now = time_int()
+        keys_outdated = filter(lambda timestamp: timestamp < now, timestamps)
 
-        for timestamp in timestamps:
-            if timestamp < now: keys.append(timestamp)
-            now = time_int()
-
-        print()
-        for key in keys:
-            order : Order
+        for key in keys_outdated:
             orders_to_cancel = self._expirymap[key]
-            print(f'cancelling {len(orders_to_cancel)} orders @ {key}')
+            #print(f'cancelling {len(orders_to_cancel)} orders @ {key}')
             for order in orders_to_cancel:
                 match order.side():
                     case OrderSide.ASK: self._ask_side.cancel_order(order)
