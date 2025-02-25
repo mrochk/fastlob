@@ -25,12 +25,7 @@ git clone git@github.com:mrochk/pylob.git
 cd pylob
 ```
 
-To run the tests
-```bash
-make test
-# or
-python3 -m unittest discover test
-```
+To run the tests run `make test` or `python3 -m unittest discover test`.
 
 ***Placing an order***
 ```python

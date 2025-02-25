@@ -91,8 +91,6 @@ class TestLimitOrders(unittest.TestCase):
     @given(n_orders, valid_price)
     def test_many_same_price_both_sides(self, n, price):
         self.ob.reset()
-        self.ob.start()
-        n += n % 2
 
         ordersparams = list()
 
@@ -100,7 +98,7 @@ class TestLimitOrders(unittest.TestCase):
 
         for _ in range(n):
 
-            pbid = price - todecimal(0.01)
+            pbid = price - todecimal('0.01')
             qbid = random.randint(1, int(10e9))
             opbid = OrderParams(OrderSide.BID, pbid, qbid)
 
@@ -126,8 +124,6 @@ class TestLimitOrders(unittest.TestCase):
             self.assertEqual(q, ordersparams[i].quantity) 
 
             self.assertTrue(self.ob.best_bid() == ordersparams[i].price or self.ob.best_ask() == ordersparams[i].price)
-
-        self.ob.stop()
 
     @given(n_orders)
     def test_many_different_price_both_sides(self, n):
