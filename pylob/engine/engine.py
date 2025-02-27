@@ -65,9 +65,11 @@ def _fill_whole_orders(side: Side, order: Order, result: MarketResult) -> bool:
         side._volume -= next_order.quantity()
         lim.pop_next_order()
 
+    return False
+
 def _fill_last_order(side: Side, order: Order, result: MarketResult):
     '''**Partially** fill the last order left with what's left of our order.'''
-    if side.empty(): return False
+    if side.empty(): return
 
     lim = side.best()
     lim_order = lim.next_order()

@@ -50,7 +50,7 @@ class MarketResult(OrderExecutionResult):
 
     def limits_matched(self) -> int: return self._limits_matched
 
-    def execprices(self) -> defaultdict[Decimal, Decimal]: return self._execution_prices
+    def execprices(self) -> Optional[defaultdict[Decimal, Decimal]]: return self._execution_prices
 
     def __repr__(self):
         return f'MarketResult(success={self.success()}, order_id={self.order_id()}, messages={self.messages()}, ' \

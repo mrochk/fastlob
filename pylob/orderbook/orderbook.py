@@ -23,7 +23,7 @@ class OrderBook:
     _bid_side: BidSide
     _orders: dict[str, Order]
     _expirymap: SortedDict
-    _start_time: float
+    _start_time: int
 
     def __init__(self, name: Optional[str] = None):
         '''
@@ -67,6 +67,7 @@ class OrderBook:
         Returns:
             ExecutionResult: The result of processing the order params.
         '''
+        order : Order
         match order_params.side:
             case OrderSide.BID: order = BidOrder(order_params)
             case OrderSide.ASK: order = AskOrder(order_params)
@@ -174,7 +175,7 @@ class OrderBook:
     def _process_order(self, order: Order) -> ExecutionResult:
         '''**Place or execute** the given order depending on its price level.'''
 
-        result : ExecutionResult
+        result : MarketResult | LimitResult
         match order.side():
             case OrderSide.BID: result = self._process_order_bid(order)
             case OrderSide.ASK: result = self._process_order_ask(order)
@@ -265,8 +266,8 @@ class OrderBook:
 
         match order.otype():
           case OrderType.FOK: # FOK can not be a limit order by definition
-              result.add_message(self._FOK_error_price(order))
               order.set_status(OrderStatus.ERROR)
+              result.add_message('FOK order must be immediately matchable')
               return result
           case _: return None
 
@@ -282,7 +283,7 @@ class OrderBook:
               return self._check_FOK_ask_order(order)
           case _: return None
 
-    def _check_FOK_bid_order(self, order):
+    def _check_FOK_bid_order(self, order) -> Optional[MarketResult]:
         result = None
 
         # we want the limit volume down to the order price to be >= order quantity
@@ -301,7 +302,7 @@ class OrderBook:
 
         return result
 
-    def _check_FOK_ask_order(self, order):
+    def _check_FOK_ask_order(self, order) -> Optional[MarketResult]:
         result = None
 
         # we want the limit volume down to the order price to be >= order quantity

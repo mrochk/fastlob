@@ -96,13 +96,14 @@ class TestLimitOrders(unittest.TestCase):
 
         from pylob import todecimal
 
+        pbid = price - todecimal('0.01')
+        pask = price
+
         for _ in range(n):
 
-            pbid = price - todecimal('0.01')
             qbid = random.randint(1, int(10e9))
             opbid = OrderParams(OrderSide.BID, pbid, qbid)
 
-            pask = price
             qask = random.randint(1, int(10e9))
             opask = OrderParams(OrderSide.ASK, pask, qask)
 
@@ -110,9 +111,6 @@ class TestLimitOrders(unittest.TestCase):
             ordersparams.append(opask)
 
         results : LimitResult = self.ob(ordersparams)
-
-        import time
-        time.sleep(0.1)
 
         self.assertEqual(self.ob.n_asks(), self.ob.n_bids())
         self.assertEqual(self.ob.n_prices(), 2)

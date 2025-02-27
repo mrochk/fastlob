@@ -55,9 +55,10 @@ class OrderParams:
         if quantity_decimal > MAX_VALUE: raise ValueError(f'quantity ({quantity}) is too large')
 
         now = ceil(time.time())
-        if otype == OrderType.GTD and (expiry is not None) and expiry <= now: raise ValueError(f'order expiry ({expiry}) is less than current timestamp ({now}), or too close')
+        if otype == OrderType.GTD and (expiry is not None) and expiry <= now: 
+            raise ValueError(f'order expiry ({expiry}) is less than current timestamp ({now}), or too close')
 
-    def unwrap(self) -> tuple[Decimal, Decimal, OrderType, Optional[Number]]:
+    def unwrap(self) -> tuple[Decimal, Decimal, OrderType, Optional[int]]:
         return self.price, self.quantity, self.otype, self.expiry
 
     def __repr__(self) -> str:
