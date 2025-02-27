@@ -111,6 +111,9 @@ class TestLimitOrders(unittest.TestCase):
 
         results : LimitResult = self.ob(ordersparams)
 
+        import time
+        time.sleep(0.1)
+
         self.assertEqual(self.ob.n_asks(), self.ob.n_bids())
         self.assertEqual(self.ob.n_prices(), 2)
 

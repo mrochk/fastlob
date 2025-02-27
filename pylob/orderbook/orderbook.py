@@ -41,8 +41,7 @@ class OrderBook:
     def reset(self) -> None: self.__init__(self._name)
 
     def start(self):
-        '''Start the order-book, in fact this is simply starting the background GTD order manager, however ,if you are 
-        not planning on using this kind of orders you can ommit calling this function.'''
+        '''Start the order-book, in fact this is simply starting the background GTD order manager.'''
         def loop():
             while self._alive:
                 self._cancel_expired_orders()
@@ -95,8 +94,11 @@ class OrderBook:
             return result
 
         match order.side():
-            case OrderSide.BID: self._bid_side.cancel_order(order)
-            case OrderSide.ASK: self._ask_side.cancel_order(order)
+            case OrderSide.BID: 
+                with self._bid_side._mutex: self._bid_side.cancel_order(order)
+
+            case OrderSide.ASK: 
+                with self._ask_side._mutex: self._ask_side.cancel_order(order)
 
         result._success = True
         result.add_message(f'<orderbook>: order {order.id()} canceled properly')
@@ -163,11 +165,7 @@ class OrderBook:
         return self.best_ask() - self.best_bid()
 
     def get_order_status(self, order_id: str) -> Optional[tuple[OrderStatus, Decimal]]:
-        '''Get the status and the qty left for a given order, or None if order was not accepted by the book.
-
-        Returns:
-            Optional[tuple[OrderStatus, Decimal]]: (status, quantity left)
-        '''
+        '''Get the status and the quantity left for a given order, or None if order was not accepted by the book.'''
         try: 
             order = self._orders[order_id]
             return order.status(), order.quantity()
@@ -198,31 +196,47 @@ class OrderBook:
 
     def _process_order_bid(self, order):
         if self._is_market_bid(order):
-            if not (error := self._check_bid_market_order(order)): # call matching engine
+            if (error := self._check_bid_market_order(order)): return error
+
+            # execute order
+            with self._ask_side._mutex:
                 result = engine.execute(order, self._ask_side)
-                if order.status() == OrderStatus.PARTIAL: self._bid_side.place(order)
-                return result
-            else: return error
+
+            if order.status() == OrderStatus.PARTIAL: 
+                with self._bid_side._mutex: self._bid_side.place(order)
+
+            return result
 
         else: # is limit order
-            if not (error := self._check_limit_order(order)):
-                self._bid_side.place(order)
-                return LimitResult(True, order.id())
-            else: return error
+            if (error := self._check_limit_order(order)): return error
+
+            # place order
+            with self._bid_side._mutex: self._bid_side.place(order)
+
+            return LimitResult(True, order.id())
 
     def _process_order_ask(self, order):
         if self._is_market_ask(order):
-            if not (error := self._check_ask_market_order(order)): # call matching engine
+            if (error := self._check_ask_market_order(order)): 
+                print(error)
+                return error
+
+            # execute the order
+            with self._bid_side._mutex:
                 result = engine.execute(order, self._bid_side)
-                if order.status() == OrderStatus.PARTIAL: self._ask_side.place(order)
-                return result
-            else: return error
+
+            if order.status() == OrderStatus.PARTIAL: 
+                with self._ask_side._mutex: self._ask_side.place(order)
+
+            return result
 
         else: # is limit order
-            if not (error := self._check_limit_order(order)):
-                self._ask_side.place(order)
-                return LimitResult(True, order.id())
-            else: return error
+            if (error := self._check_limit_order(order)): return error
+
+            # place the order in the side
+            with self._ask_side._mutex: self._ask_side.place(order)
+
+            return LimitResult(True, order.id())
 
     def _is_market_bid(self, order):
         if self._ask_side.empty(): return False
@@ -315,13 +329,15 @@ class OrderBook:
         keys_outdated = filter(lambda timestamp: timestamp < now, timestamps)
 
         for key in keys_outdated:
-            orders_to_cancel = self._expirymap[key]
-            print(f'cancelling {len(orders_to_cancel)} orders with t={key}')
-            for order in orders_to_cancel:
+            expired_orders = self._expirymap[key]
+            print(f'cancelling {len(expired_orders)} with t={key}')
+            for order in expired_orders:
                 if not order.valid(): continue
                 match order.side():
-                    case OrderSide.ASK: self._ask_side.cancel_order(order)
-                    case OrderSide.BID: self._bid_side.cancel_order(order)
+                    case OrderSide.ASK: 
+                        with self._ask_side._mutex: self._ask_side.cancel_order(order)
+                    case OrderSide.BID: 
+                        with self._bid_side._mutex: self._bid_side.cancel_order(order)
 
             del self._expirymap[key]
 

@@ -11,8 +11,6 @@ def execute(order: Order, side: Side) -> MarketResult:
     '''Execute a market order in a given side.'''
     result = MarketResult(success=False)
 
-    # oop = out of price
-
     oop = _fill_whole_limits(side, order, result)
     if oop: return _result_okay(result, order.id())
 
@@ -27,19 +25,21 @@ def _fill_whole_limits(side: Side, order: Order, result: MarketResult) -> bool:
     while order.quantity() > 0 and not side.empty():
         lim = side.best()
 
-        if _oop(order, lim.price()):
+        if _oop(order, lim.price()): # if out of price break
             result.add_message(_oop_msg(lim.price(), order.quantity()))
             return True
 
-        if order.quantity() < lim.volume(): return False
+        if order.quantity() < lim.volume(): return False # if can not match whole limits anymore, break
 
+        # update result object
         result._limits_matched += 1
         result._orders_matched += lim.valid_orders()
         result._execution_prices[lim.price()] = lim.volume()
 
-        order.fill(lim.volume())
-        side._volume -= lim.volume()
-        side._limits.pop(lim.price())
+        order.fill(lim.volume()) # partially fill order with limit volume
+        side._volume -= lim.volume() # substract limit volume from side volume before filling all orders in limit
+        lim.fill_all() # set all orders to filled
+        side._limits.pop(lim.price()) # remove limit from side
 
     return False
 

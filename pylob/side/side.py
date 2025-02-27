@@ -1,5 +1,6 @@
 import io
 import abc
+import threading
 from decimal import Decimal
 from sortedcollections import SortedDict
 
@@ -14,10 +15,11 @@ class Side(abc.ABC):
     _side: OrderSide
     _volume: Decimal
     _limits: SortedDict[Decimal, Limit]
+    _mutex: threading.Lock # the role of this mutex is to prevent a limit order being canceled meanwhile we are matching a market order
 
-    def __init__(self): self._volume = zero()
-
-    ## GETTERS #########################################################################################################
+    def __init__(self): 
+        self._volume = zero()
+        self._mutex = threading.Lock()
 
     def side(self) -> OrderSide:
         '''Get the side of the limit.
@@ -58,8 +60,6 @@ class Side(abc.ABC):
             Limit: The best limit.
         '''
         return self._limits.peekitem(0)[1]
-
-    ####################################################################################################################
 
     def place(self, order: Order) -> None:
         '''Place an order in the side at its corresponding limit.

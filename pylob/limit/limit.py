@@ -24,8 +24,6 @@ class Limit:
         self._valid_orders = 0
         self._orderqueue = deque()
 
-    ## GETTERS #########################################################################################################
-
     def price(self) -> Decimal:
         '''Getter for limit price.
 
@@ -78,8 +76,6 @@ class Limit:
         self._prune_canceled()
         return self._orderqueue[0]
 
-    ####################################################################################################################
-
     def enqueue(self, order: Order):
         '''Add (enqueue) an order in limit.
 
@@ -103,6 +99,13 @@ class Limit:
         order.fill(quantity)
 
         self._volume -= quantity
+
+    def fill_all(self):
+        '''Fill all orders in limit.'''
+        while self.valid_orders() > 0:
+            order = self.next_order()
+            order.fill(order.quantity())
+            self.pop_next_order()
 
     def pop_next_order(self) -> None:
         '''Pop from the queue the next order to be executed. Does not return it, only removes it.'''
