@@ -1,13 +1,17 @@
-# *fast*lob | Python Limit-Order-Book
+# fastlob | Fast Python Limit-Order-Book
 **Fast &amp; minimalist fixed decimal precision limit-order-book (LOB) implementation in pure Python.**
 
-<img src="https://github.com/mrochk/pylob/raw/main/logo.png" width=800>
+<br>
+
+<img src="https://github.com/mrochk/pylob/raw/main/logo.png" width=700>
 
 *Package currently in development, bugs are expected.*
 
 The goal is to build an efficient easy to use package with a clean and comprehensible API. 
 
 We aim to keep the it minimalist and simple, while having reasonable performances (for a pure Python implementation). We intend the final project to contain no more than ~1000 lines of code.
+
+<br>
 
 <img src="https://github.com/mrochk/pylob/raw/main/ss.png" width=450>
 
@@ -30,10 +34,15 @@ To run tests, use `make test` or `python3 -m unittest discover test`.
 
 ***Placing an order***
 ```python
+# example.py
 import time
 import fastlob as lob
 
-book = lob.OrderBook('My Order-Book')
+  book = lob.OrderBook(
+      name='My Order-Book',
+      log_level=logging.WARNING # default logging level, change to INFO or WARNING to increase or reduce
+  )
+
 book.start()
 
 # every order must be created this way 
@@ -53,35 +62,37 @@ assert result.success() # result object can be used to see various infos about t
 
 order_id = result.order_id() # unique id is used to query our order after it's been placed
 status, quantity_left = book.get_order_status(order_id)
-print(f'Current status of the order: {status}, quantity left: {quantity_left}.')
+print(f'Current status of the order: {status.name}, quantity left: {quantity_left}.\n')
 
 print(book.view()) # pretty-print the book
+
+book.stop()
 ```
 
 ***
 
 *Lines count:*
 ```
-   92 pylob/engine/engine.py
-    1 pylob/engine/__init__.py
-   18 pylob/utils/utils.py
-    1 pylob/utils/__init__.py
-   64 pylob/order/params.py
-    1 pylob/order/__init__.py
-  161 pylob/order/order.py
-   52 pylob/enums/enums.py
-    1 pylob/enums/__init__.py
-   64 pylob/orderbook/result.py
-  361 pylob/orderbook/orderbook.py
-    1 pylob/orderbook/__init__.py
-   19 pylob/consts/consts.py
-    1 pylob/consts/__init__.py
-  137 pylob/limit/limit.py
-    1 pylob/limit/__init__.py
-  156 pylob/side/side.py
-    1 pylob/side/__init__.py
-    4 pylob/__init__.py
- 1136 total
+   94 fastlob/engine/engine.py
+    1 fastlob/engine/__init__.py
+   18 fastlob/utils/utils.py
+    1 fastlob/utils/__init__.py
+   65 fastlob/order/params.py
+    1 fastlob/order/__init__.py
+  161 fastlob/order/order.py
+   52 fastlob/enums/enums.py
+    1 fastlob/enums/__init__.py
+   64 fastlob/orderbook/result.py
+  484 fastlob/orderbook/orderbook.py
+    0 fastlob/orderbook/__init__.py
+   19 fastlob/consts/consts.py
+    1 fastlob/consts/__init__.py
+  140 fastlob/limit/limit.py
+    1 fastlob/limit/__init__.py
+  162 fastlob/side/side.py
+    1 fastlob/side/__init__.py
+    4 fastlob/__init__.py
+ 1270 total
 ```
 
 ***
