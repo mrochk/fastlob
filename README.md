@@ -3,7 +3,7 @@
 
 <br>
 
-<img src="https://github.com/mrochk/pylob/raw/main/logo.png" width=700>
+<img src="https://github.com/mrochk/pylob/raw/main/logo.png" width=800>
 
 *Package currently in development, bugs are expected.*
 
@@ -11,30 +11,34 @@ The goal is to build an efficient easy to use package with a clean and comprehen
 
 We aim to keep it minimalist and simple, while keeping reasonable performances (for a pure Python implementation). We intend the final project to contain no more than ~1000 lines of code.
 
-<!-- <br> -->
-
-<!-- <img src="https://github.com/mrochk/pylob/raw/main/ss.png" width=450> -->
-
 We implement three types of orders: *FOK*, *GTC* and *GTD*. Every order is defined as a limit order, but will be executed as a market order if its price matches the best (bid or ask) limit price in the book.
 
 *In the case of GTD orders, the book only supports whole seconds for the order expiry (order can not be set to expire in 3.8 seconds, it will be rounded to 4).*
 
-# Usage
+## Installation
+
+The package is now available on PyPI, you can simply install it using
+```
+pip install fastlob
+```
+
+Otherwise, one can install it from source
+```bash
+git clone git@github.com:mrochk/fastlob.git
+cd fastlob
+pip install -r requirements.txt
+pip install .
+```
+
+To run tests and check that everything is okay, run `make test` or `python3 -m unittest discover test`.
+
+## Usage
 
 This book runs at a fixed decimal precision through the Python `decimal` package. The precision can be set via the `PYLOB_DECIMAL_PRECISION` environment variable, the default value is 2.
 
-To be able to use this project, clone the repository and install the requirements: 
-```bash
-git clone git@github.com:mrochk/pylob.git
-cd pylob
-pip install -r requirements.txt
-```
-
-To run tests, use `make test` or `python3 -m unittest discover test`.
-
-***Placing an order***
 ```python
 # example.py
+
 import time
 import fastlob as lob
 
@@ -69,9 +73,19 @@ print(book.view()) # pretty-print the book
 book.stop()
 ```
 
+## TODO
+
+As mentioned earlier, this package is still in early development, and contributions are more than welcome.
+
+The main tasks that have to be done are:
+- **More and better testing for edge cases. In fact, most tests have to be rewritten too.**
+- **Benchmarking / profiling to have an idea of the performance, and see where is the bottleneck.**
+- **Some parts probably need to be completely rewritten in a cleaner way, such as the orderbook module.**
+
+
 ***
 
-*Lines count:*
+**Lines count:**
 ```
    94 fastlob/engine/engine.py
     1 fastlob/engine/__init__.py
@@ -95,14 +109,3 @@ book.stop()
  1270 total
 ```
 
-***
-
-# TODOs:
-
-As mentioned earlier, this package is still in early development, and contributions are more than welcome.
-
-The main tasks that have to be done are:
-- **More and better testing for edge cases. In fact, some tests have to be rewritten too.**
-- **Benchmarking / profiling to have an idea of the performance, and see where it's slow.**
-- **Some parts probably need to be rewritten in a cleaner way.**
-- **Publish the package on pypi.**
