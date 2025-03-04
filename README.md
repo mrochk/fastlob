@@ -9,7 +9,7 @@
 
 The goal is to build an efficient easy to use package with a clean and comprehensible API. 
 
-We aim to keep the it minimalist and simple, while having reasonable performances (for a pure Python implementation). We intend the final project to contain no more than ~1000 lines of code.
+We aim to keep it minimalist and simple, while keeping reasonable performances (for a pure Python implementation). We intend the final project to contain no more than ~1000 lines of code.
 
 <br>
 
@@ -38,10 +38,10 @@ To run tests, use `make test` or `python3 -m unittest discover test`.
 import time
 import fastlob as lob
 
-  book = lob.OrderBook(
-      name='My Order-Book',
-      log_level=logging.WARNING # default logging level, change to INFO or WARNING to increase or reduce
-  )
+book = lob.OrderBook(
+    name='My Order-Book',
+    log_level=logging.WARNING # default logging level, change to INFO or WARNING to increase or reduce
+)
 
 book.start()
 
