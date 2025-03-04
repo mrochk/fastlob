@@ -3,7 +3,7 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pylob"
+name = "fastlob"
 version = "0.1.0"
 description = ""
 authors = [
