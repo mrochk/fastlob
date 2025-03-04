@@ -31,7 +31,7 @@ To run tests, use `make test` or `python3 -m unittest discover test`.
 ***Placing an order***
 ```python
 import time
-import pylob as lob
+import fastlob as lob
 
 book = lob.OrderBook('My Order-Book')
 book.start()

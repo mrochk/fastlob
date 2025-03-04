@@ -1,19 +1,24 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "fastlob"
-version = "0.1.0"
-description = ""
+version = "0.0.1"
+description = "Fast & minimalist fixed decimal precision limit-order-book (LOB) implementation in pure Python."
 authors = [
     {name = "Maxime Rochkoulets", email = "mrochkoulets@gmail.com"}
 ]
 readme = "README.md"
 requires-python = ">=3.6"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
 dependencies = [
     "sortedcollections==2.1.0",
+    "termcolor==2.5.0",
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/mrochk/pylob"
+"Homepage" = "https://github.com/mrochk/fastlob"
