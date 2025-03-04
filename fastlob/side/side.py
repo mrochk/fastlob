@@ -103,7 +103,11 @@ class Side(abc.ABC):
         if not self._price_exists(price): self._new_price(price)
 
     def __repr__(self) -> str:
-        return f'{self.side().name}Side(size={self.size()}, volume={self.volume()}, best={self.best()})'
+        try:
+            return f'{self.side().name}Side(size={self.size()}, volume={self.volume()}, best={self.best()})'
+        except:
+            return f'{self.side().name}Side(size={self.size()}, volume={self.volume()})'
+
 
     @abc.abstractmethod
     def view(self, n : int) -> str: pass
@@ -117,6 +121,8 @@ class BidSide(Side):
         self._limits = SortedDict(lambda x: -x)
 
     def view(self, n : int = 10) -> str:
+        if self.empty(): return str()
+
         buffer = io.StringIO()
 
         count = 0

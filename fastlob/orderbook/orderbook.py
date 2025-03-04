@@ -108,21 +108,23 @@ class OrderBook:
 
     def clock(self) -> int: return time_asint() - self._start_time
 
-    def best_ask(self) -> Decimal:
+    def best_ask(self) -> Optional[Decimal]:
         '''Get the best ask price in the book.
 
         Returns:
             Decimal: The best ask price.
         '''
-        return self._ask_side.best().price()
+        try: return self._ask_side.best().price()
+        except: return None
 
-    def best_bid(self) -> Decimal:
+    def best_bid(self) -> Optional[Decimal]:
         '''Get the best bid price in the book.
 
         Returns:
             Decimal: The best bid price.
         '''
-        return self._bid_side.best().price()
+        try: return self._bid_side.best().price()
+        except: return None
 
     def n_bids(self) -> int:
         '''Get the number of bids limits in the book.
