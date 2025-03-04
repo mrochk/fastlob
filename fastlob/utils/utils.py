@@ -2,7 +2,7 @@ from decimal import Decimal
 from numbers import Number
 import time
 
-from pylob.consts import DECIMAL_PRECISION
+from fastlob.consts import DECIMAL_PRECISION
 
 def todecimal(n: Number | str) -> Decimal:
     '''Wrapper around the Decimal constructor to properly round numbers to user defined precision.'''

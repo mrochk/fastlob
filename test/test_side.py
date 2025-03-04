@@ -1,11 +1,11 @@
 import unittest
 from hypothesis import given, strategies as st
 
-from pylob import OrderSide
-from pylob.enums import OrderStatus
-from pylob.side import AskSide, BidSide
-from pylob.order import AskOrder, BidOrder, OrderParams
-from pylob.consts import MIN_VALUE, MAX_VALUE
+from fastlob import OrderSide
+from fastlob.enums import OrderStatus
+from fastlob.side import AskSide, BidSide
+from fastlob.order import AskOrder, BidOrder, OrderParams
+from fastlob.consts import MIN_VALUE, MAX_VALUE
 
 valid_side = st.sampled_from(OrderSide)
 valid_price = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_infinity=False, allow_nan=False)

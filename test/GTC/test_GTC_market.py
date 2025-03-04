@@ -1,10 +1,10 @@
 import unittest
 from hypothesis import given, strategies as st
 
-from pylob import OrderBook, OrderSide, OrderParams, todecimal
-from pylob.enums import OrderStatus
-from pylob.orderbook.result import MarketResult
-from pylob.consts import MIN_VALUE, MAX_VALUE
+from fastlob import OrderBook, OrderSide, OrderParams, todecimal
+from fastlob.enums import OrderStatus
+from fastlob.orderbook.result import MarketResult
+from fastlob.consts import MIN_VALUE, MAX_VALUE
 
 askprice = st.decimals(min_value=MIN_VALUE + 12, max_value=MAX_VALUE-10, allow_infinity=False, allow_nan=False)
 valid_qty = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_infinity=False, allow_nan=False)

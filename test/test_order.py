@@ -4,11 +4,11 @@ from hypothesis import given
 import hypothesis.strategies as st
 import time
 
-from pylob import OrderParams
-from pylob.consts import MAX_VALUE, MIN_VALUE
-from pylob.enums import OrderSide, OrderType, OrderStatus
-from pylob.utils import todecimal
-from pylob.order import Order, BidOrder, AskOrder
+from fastlob import OrderParams
+from fastlob.consts import MAX_VALUE, MIN_VALUE
+from fastlob.enums import OrderSide, OrderType, OrderStatus
+from fastlob.utils import todecimal
+from fastlob.order import Order, BidOrder, AskOrder
 
 # Strategies for generating valid values
 valid_price = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)

@@ -1,9 +1,9 @@
 from decimal import Decimal
 
-from pylob.side import Side
-from pylob.order import Order
-from pylob.enums import OrderSide
-from pylob.orderbook.result import MarketResult
+from fastlob.side import Side
+from fastlob.order import Order
+from fastlob.enums import OrderSide
+from fastlob.orderbook.result import MarketResult
 
 '''The engine module is **only** responsible for executing market orders.'''
 

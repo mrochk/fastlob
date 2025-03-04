@@ -4,10 +4,10 @@ import threading
 from decimal import Decimal
 from sortedcollections import SortedDict
 
-from pylob.limit import Limit
-from pylob.order import Order
-from pylob.enums import OrderSide
-from pylob.utils import zero
+from fastlob.limit import Limit
+from fastlob.order import Order
+from fastlob.enums import OrderSide
+from fastlob.utils import zero
 
 class Side(abc.ABC):
     '''A side is a collection of limits, whose ordering by price depends if it is the bid or ask side.'''

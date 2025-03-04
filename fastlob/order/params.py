@@ -4,9 +4,9 @@ from typing import Optional
 import time
 from math import ceil
 
-from pylob.enums import OrderSide, OrderType
-from pylob.utils import todecimal
-from pylob.consts import MIN_VALUE, MAX_VALUE
+from fastlob.enums import OrderSide, OrderType
+from fastlob.utils import todecimal
+from fastlob.consts import MIN_VALUE, MAX_VALUE
 
 class OrderParams:
     '''This class is used for instantiating orders, it is necessary because we do not want to have the system 

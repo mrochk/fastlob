@@ -2,10 +2,10 @@ import unittest
 from hypothesis import given, strategies as st, settings
 import random
 
-from pylob import OrderBook, OrderSide, OrderParams
-from pylob.orderbook.result import LimitResult
-from pylob.enums import OrderStatus
-from pylob.consts import MIN_VALUE, MAX_VALUE
+from fastlob import OrderBook, OrderSide, OrderParams
+from fastlob.orderbook.result import LimitResult
+from fastlob.enums import OrderStatus
+from fastlob.consts import MIN_VALUE, MAX_VALUE
 
 n_orders = st.integers(min_value=1, max_value=100)
 
@@ -94,7 +94,7 @@ class TestLimitOrders(unittest.TestCase):
 
         ordersparams = list()
 
-        from pylob import todecimal
+        from fastlob import todecimal
 
         pbid = price - todecimal('0.01')
         pask = price

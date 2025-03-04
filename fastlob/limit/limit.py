@@ -1,9 +1,9 @@
 from decimal import Decimal
 from collections import deque
 
-from pylob.order import Order
-from pylob.enums import OrderStatus
-from pylob.utils import zero
+from fastlob.order import Order
+from fastlob.enums import OrderStatus
+from fastlob.utils import zero
 
 class Limit:
     '''

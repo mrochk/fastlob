@@ -3,11 +3,11 @@ from decimal import Decimal
 from hypothesis import given, strategies as st
 import secrets
 
-from pylob.limit import Limit
-from pylob.enums import OrderSide, OrderStatus
-from pylob.order import OrderParams, BidOrder, AskOrder
-from pylob.consts import MIN_VALUE, MAX_VALUE
-from pylob.utils import todecimal
+from fastlob.limit import Limit
+from fastlob.enums import OrderSide, OrderStatus
+from fastlob.order import OrderParams, BidOrder, AskOrder
+from fastlob.consts import MIN_VALUE, MAX_VALUE
+from fastlob.utils import todecimal
 
 valid_price = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
 valid_side = st.sampled_from(OrderSide)

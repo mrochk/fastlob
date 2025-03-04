@@ -1,5 +1,5 @@
 import time
-from pylob import OrderBook, OrderParams, OrderSide, OrderType
+from fastlob import OrderBook, OrderParams, OrderSide, OrderType
 
 if __name__ == '__main__':
 

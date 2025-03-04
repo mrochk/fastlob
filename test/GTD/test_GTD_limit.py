@@ -2,11 +2,11 @@ import unittest
 from hypothesis import given, strategies as st, settings
 import time
 
-from pylob import OrderBook, OrderSide, OrderParams, OrderType
-from pylob.orderbook.result import LimitResult
-from pylob.enums import OrderStatus
-from pylob.consts import MIN_VALUE, MAX_VALUE
-from pylob.utils import time_asint
+from fastlob import OrderBook, OrderSide, OrderParams, OrderType
+from fastlob.orderbook.result import LimitResult
+from fastlob.enums import OrderStatus
+from fastlob.consts import MIN_VALUE, MAX_VALUE
+from fastlob.utils import time_asint
 
 n_orders = st.integers(min_value=1, max_value=100)
 

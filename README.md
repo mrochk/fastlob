@@ -1,7 +1,7 @@
-# `pylob` | Python Limit-Order-Book
+# fastlob | Python Limit-Order-Book
 **Fast &amp; minimalist fixed decimal precision limit-order-book (LOB) implementation in pure Python.**
 
-<img src="logo.jpg" width=800>
+<img src="https://github.com/mrochk/pylob/raw/main/logo.jpg" width=800>
 
 *Package currently in development, bugs are expected.*
 
@@ -9,7 +9,7 @@ The goal is to build an efficient easy to use package with a clean and comprehen
 
 We aim to keep the it minimalist and simple, while having reasonable performances (for a pure Python implementation). We intend the final project to contain no more than ~1000 lines of code.
 
-<!-- <img src="ss.png" width=400> -->
+<img src="https://github.com/mrochk/pylob/raw/main/ss.png" width=450>
 
 We implement three types of orders: *FOK*, *GTC* and *GTD*. Every order is defined as a limit order, but will be executed as a market order if its price matches the best (bid or ask) limit price in the book.
 

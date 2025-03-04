@@ -4,8 +4,8 @@ from typing import Optional
 from decimal import Decimal
 from dataclasses import dataclass
 
-from pylob.enums import OrderSide, OrderType, OrderStatus
-from pylob.consts import ORDERS_ID_SIZE
+from fastlob.enums import OrderSide, OrderType, OrderStatus
+from fastlob.consts import ORDERS_ID_SIZE
 from .params import OrderParams
 
 @dataclass

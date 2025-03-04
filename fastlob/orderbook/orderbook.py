@@ -5,13 +5,13 @@ from decimal import Decimal
 from termcolor import colored
 import threading
 
-from pylob import engine
-from pylob.side import AskSide, BidSide
-from pylob.limit import Limit
-from pylob.order import OrderParams, Order, AskOrder, BidOrder
-from pylob.enums import OrderSide, OrderStatus, OrderType
-from pylob.utils import zero, time_asint
-from pylob.consts import DEFAULT_LIMITS_VIEW
+from fastlob import engine
+from fastlob.side import AskSide, BidSide
+from fastlob.limit import Limit
+from fastlob.order import OrderParams, Order, AskOrder, BidOrder
+from fastlob.enums import OrderSide, OrderStatus, OrderType
+from fastlob.utils import zero, time_asint
+from fastlob.consts import DEFAULT_LIMITS_VIEW
 from .result import ExecutionResult, MarketResult, LimitResult, CancelResult
 
 class OrderBook:

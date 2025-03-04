@@ -22,10 +22,10 @@ test-GTD:
 	@python3 -m unittest discover test/GTD -vvv
 
 typecheck: 
-	@mypy pylob
+	@mypy fastlob
 
 lines:
-	@find pylob -name "*.py" | xargs wc -l
+	@find fastlob -name "*.py" | xargs wc -l
 
 clean:
 	@rm -rf build .hypothesis .mypy_cache __pycache__ pylob.egg-info
