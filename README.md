@@ -1,6 +1,8 @@
 # `pylob` | Python Limit-Order-Book
 **Fast &amp; minimalist fixed decimal precision limit-order-book (LOB) implementation in pure Python.**
 
+<img src="logo.jpg" width=800>
+
 *Package currently in development, bugs are expected.*
 
 The goal is to build an efficient, clean and easy to use package for whoever needs a limit-order-book in their project. 

@@ -186,11 +186,12 @@ class OrderBook:
             self._orders[order.id()] = order
 
             if order.otype() == OrderType.GTD: 
-                if order.expiry() not in self._expirymap.keys(): self._expirymap[order.expiry()] = list()
+                if order.expiry() not in self._expirymap.keys(): 
+                    self._expirymap[order.expiry()] = list()
                 self._expirymap[order.expiry()].append(order)
 
         if order.status() == OrderStatus.PARTIAL:
-            msg = f"<orderbook>: order partially filled by engine, {order.quantity()} " f"placed at {order.price()}"
+            msg = f'<orderbook>: order partially filled by engine, {order.quantity()} placed at {order.price()}'
             result.add_message(msg)
 
         return result
