@@ -1,7 +1,7 @@
-# fastlob | Python Limit-Order-Book
+# *fast*lob | Python Limit-Order-Book
 **Fast &amp; minimalist fixed decimal precision limit-order-book (LOB) implementation in pure Python.**
 
-<img src="https://github.com/mrochk/pylob/raw/main/logo.jpg" width=800>
+<img src="https://github.com/mrochk/pylob/raw/main/logo.png" width=800>
 
 *Package currently in development, bugs are expected.*
 
