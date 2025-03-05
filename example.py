@@ -4,7 +4,7 @@ import logging
 
 if __name__ == '__main__':
 
-    book = lob.OrderBook(
+    book = lob.Orderbook(
         name='My Order-Book',
         log_level=logging.WARNING # default logging level, change to INFO or WARNING to increase or reduce
     )
@@ -30,6 +30,6 @@ if __name__ == '__main__':
     status, quantity_left = book.get_order_status(order_id)
     print(f'Current status of the order: {status.name}, quantity left: {quantity_left}.\n')
 
-    print(book.view()) # pretty-print the book
+    book.render() # pretty-print the book
 
     book.stop()
