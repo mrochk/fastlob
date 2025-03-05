@@ -33,8 +33,6 @@ class Order(abc.ABC):
         self._status = OrderStatus.CREATED
         self._id = secrets.token_urlsafe(nbytes=ORDERS_ID_SIZE)
 
-    ## GETTERS #####################################################################
-
     def id(self) -> str:
         '''Getter for order identifier.
 
@@ -99,8 +97,6 @@ class Order(abc.ABC):
             status (OrderStatus): The status to set.
         '''
         self._status = status
-
-    ################################################################################
 
     def fill(self, quantity: Decimal):
         '''Decrease the quantity of the order by some numerical value. If

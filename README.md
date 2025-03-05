@@ -1,4 +1,4 @@
-# fastlob | Fast Python Limit-Order-Book
+# fastlob | Fast Limit-Order-Book in Python
 **Fast &amp; minimalist fixed decimal precision limit-order-book (LOB) implementation in pure Python with almost no dependencies.**
 
 <br>
