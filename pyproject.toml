@@ -5,15 +5,18 @@ build-backend = "hatchling.build"
 [project]
 name = "fastlob"
 version = "0.0.5"
-description = "Fast & minimalist fixed decimal precision limit-order-book (LOB) implementation in pure Python."
-authors = [
-    {name = "Maxime Rochkoulets", email = "mrochkoulets@gmail.com"}
-]
+description = "Fast & minimalist fixed decimal precision limit-order-book (LOB) implementation in pure Python with almost no dependencies."
+authors = [{name = "Maxime Rochkoulets", email = "mrochkoulets@gmail.com"}]
+maintainers = [{name = "Maxime Rochkoulets", email = "mrochkoulets@gmail.com"}]
+keywords = ["limit-order-book", "order-book", "trading", "finance", "market", "exchange"]
 readme = "README.md"
+license = "MIT" 
+license-files = ["LICEN[CS]E.*"]
 requires-python = ">=3.6"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
+    "Development Status :: 3 - Alpha",
 ]
 dependencies = [
     "sortedcollections==2.1.0",
@@ -21,4 +24,5 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/mrochk/fastlob"
+Homepage = "https://github.com/mrochk/fastlob"
+Repository = "https://github.com/mrochk/fastlob"

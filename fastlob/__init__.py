@@ -1,4 +1,4 @@
-from .orderbook import Orderbook
+from .lob import Orderbook
 from .order import OrderParams
 from .result import ExecutionResult
 from .enums import OrderSide, OrderType, OrderStatus
