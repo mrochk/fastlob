@@ -1,1 +1,1 @@
-from .consts import *
+from .consts import DECIMAL_PRECISION, MIN_VALUE, MAX_VALUE, ORDERS_ID_SIZE, DEFAULT_LIMITS_VIEW

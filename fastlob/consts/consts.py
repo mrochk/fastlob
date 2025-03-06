@@ -5,11 +5,11 @@ DECIMAL_PRECISION_ENV_VARNAME: str = 'PYLOB_DECIMAL_PRECISION'
 
 DEFAULT_DECIMAL_PRECISION: int = 2
 
-def get_precision() -> int:
+def _get_precision() -> int:
     precision = os.environ.get(DECIMAL_PRECISION_ENV_VARNAME)
     return int(precision) if precision else DEFAULT_DECIMAL_PRECISION
 
-DECIMAL_PRECISION: int = get_precision()
+DECIMAL_PRECISION: int = _get_precision()
 
 MIN_VALUE = UNIT = Decimal('0.' + ('0' * (DECIMAL_PRECISION - 1)) + '1')
 

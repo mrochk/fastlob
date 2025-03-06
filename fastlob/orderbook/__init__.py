@@ -1,1 +1,1 @@
-from .orderbook import Orderbook, OrderParams, ExecutionResult
+from .orderbook import Orderbook, OrderParams
