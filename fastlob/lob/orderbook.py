@@ -14,7 +14,7 @@ from fastlob.utils import zero, time_asint
 from fastlob.consts import DEFAULT_LIMITS_VIEW
 
 class Orderbook:
-    '''The `OrderBook` is a collection of bid and ask limits. It is reponsible for calling the matching engine, placing
+    '''The `Orderbook` is a collection of bid and ask limits. It is reponsible for calling the matching engine, placing
     limit orders, and safety checking.'''
 
     _NAME: str
@@ -117,10 +117,10 @@ class Orderbook:
                 result = self._process_bid_order(order)
 
         if result.success(): 
-            self._logger.info(f'order {order.id()} was executed successfully')
+            self._logger.info(f'order {order.id()} was processed successfully')
             self._save_order(order)
 
-        else: self._logger.warning(f'order was not successfully executed')
+        else: self._logger.warning(f'order was not successfully processed')
 
         if order.status() == OrderStatus.PARTIAL:
             msg = f'order {order.id()} partially filled by engine, {order.quantity()} placed at {order.price()}'
@@ -242,6 +242,7 @@ class Orderbook:
             return None
 
     def _save_order(self, order):
+        self._logger.info(f'adding order to dict')
         self._orders[order.id()] = order
 
         if order.otype() == OrderType.GTD: 

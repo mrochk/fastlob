@@ -1,36 +1,26 @@
-import time
-import logging
+import time, logging
 
-import fastlob as lob
+from fastlob import Orderbook, OrderParams, OrderSide, OrderType
 
 if __name__ == '__main__':
+    lob = Orderbook(name='ABCD', log_level=logging.INFO)
 
-    book = lob.Orderbook(
-        name='My Order-Book',
-        log_level=logging.WARNING # default logging level, change to INFO or WARNING to increase or reduce
-    )
+    lob.start()
 
-    book.start()
-
-    # every order must be created this way 
-    order_params = lob.OrderParams(
-        side=lob.OrderSide.BID,
-        price=123.32, # by default runs at 2 digits decimal precision
+    params = OrderParams(
+        side=OrderSide.BID,
+        price=123.32, 
         quantity=3.4,
-        otype=lob.OrderType.GTD, # good-till-date order
-        expiry=time.time() + 120 # expires in two minutes
+        otype=OrderType.GTD, 
+        expiry=time.time() + 120 
     )
 
-    # -> at this point an exception will be raised if invalid attributes are provided
+    result = lob(params)
+    assert result.success()
 
-    result = book(order_params) # let the book process the order
+    status, quantity_left = lob.get_order_status(result.orderid())
+    print(f'Current order status: {status.name}, quantity left: {quantity_left}.\n')
 
-    assert result.success() # result object can be used to see various infos about the order execution
+    lob.render()
 
-    order_id = result.orderid() # unique id is used to query our order after it's been placed
-    status, quantity_left = book.get_order_status(order_id)
-    print(f'Current status of the order: {status.name}, quantity left: {quantity_left}.\n')
-
-    book.render() # pretty-print the book
-
-    book.stop()
+    lob.stop() 

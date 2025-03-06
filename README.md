@@ -30,7 +30,7 @@ pip install -r requirements.txt
 pip install .
 ```
 
-To run tests and check that everything is okay, run `make test` or `python3 -m unittest discover test`.
+To run the tests and check that everything is okay, run `make test` or `python3 -m unittest discover test`.
 
 ## Usage
 
@@ -39,38 +39,35 @@ This book runs at a fixed decimal precision through the Python `decimal` package
 ```python
 # example.py
 
-import time
-import fastlob as lob
+import time, logging
 
-book = lob.OrderBook(
-    name='My Order-Book',
-    log_level=logging.WARNING # default logging level, change to INFO or WARNING to increase or reduce
-)
+from fastlob import Orderbook, OrderParams, OrderSide, OrderType
 
-book.start()
+lob = Orderbook(name='ABCD', log_level=logging.INFO) # init lob
+
+lob.start() # start background processes
 
 # every order must be created this way 
-order_params = lob.OrderParams(
-    side=lob.OrderSide.BID,
-    price=123.32, # by default runs at 2 digits decimal precision
-    quantity=3.4,
-    otype=lob.OrderType.GTD, # good-till-date order
-    expiry=time.time() + 120 # expires in two minutes
+params = OrderParams(
+    side=OrderSide.BID, # is it a buy or sell order
+    price=123.32, quantity=3.42, # by default runs at 2 digits decimal precision
+    otype=OrderType.GTD, # good-till-date order
+    expiry=time.time() + 120 # order will expire in two minutes
+    # since order is GTD, expiry must be set to some future timestamp
 )
 
 # -> at this point an exception will be raised if invalid attributes are provided
 
-result = book(order_params) # let the book process the order
-
+result = lob(params) # let the book process the order
 assert result.success() # result object can be used to see various infos about the order execution
 
-order_id = result.order_id() # unique id is used to query our order after it's been placed
-status, quantity_left = book.get_order_status(order_id)
-print(f'Current status of the order: {status.name}, quantity left: {quantity_left}.\n')
+# order uuid is used to query our order after it's been placed
+status, quantity_left = lob.get_order_status(result.orderid())
+print(f'Current order status: {status.name}, quantity left: {quantity_left}.\n')
 
-print(book.view()) # pretty-print the book
+lob.render() # pretty-print the book
 
-book.stop()
+lob.stop() # stop the background processes
 ```
 
 ## TODO
@@ -82,30 +79,29 @@ The main tasks that have to be done are:
 - **Benchmarking / profiling to have an idea of the performance, and see where is the bottleneck.**
 - **Some parts probably need to be completely rewritten in a cleaner way, such as the orderbook module.**
 
-
 ***
 
 **Lines count:**
 ```
-   94 fastlob/engine/engine.py
-    1 fastlob/engine/__init__.py
-   18 fastlob/utils/utils.py
-    1 fastlob/utils/__init__.py
-   65 fastlob/order/params.py
-    1 fastlob/order/__init__.py
-  161 fastlob/order/order.py
-   52 fastlob/enums/enums.py
-    1 fastlob/enums/__init__.py
-   64 fastlob/orderbook/result.py
-  484 fastlob/orderbook/orderbook.py
-    0 fastlob/orderbook/__init__.py
-   19 fastlob/consts/consts.py
-    1 fastlob/consts/__init__.py
-  140 fastlob/limit/limit.py
-    1 fastlob/limit/__init__.py
-  162 fastlob/side/side.py
-    1 fastlob/side/__init__.py
-    4 fastlob/__init__.py
- 1270 total
+  93 fastlob/engine/engine.py
+  1 fastlob/engine/__init__.py
+  18 fastlob/utils/utils.py
+  1 fastlob/utils/__init__.py
+  61 fastlob/result/result.py
+  0 fastlob/result/__init__.py
+  81 fastlob/order/params.py
+  1 fastlob/order/__init__.py
+  95 fastlob/order/order.py
+  47 fastlob/enums/enums.py
+  1 fastlob/enums/__init__.py
+  19 fastlob/consts/consts.py
+  0 fastlob/consts/__init__.py
+  99 fastlob/limit/limit.py
+  1 fastlob/limit/__init__.py
+127 fastlob/side/side.py
+  1 fastlob/side/__init__.py
+  4 fastlob/__init__.py
+471 fastlob/lob/orderbook.py
+  0 fastlob/lob/__init__.py
+1121 total
 ```
-
