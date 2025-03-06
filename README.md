@@ -70,14 +70,13 @@ lob.render() # pretty-print the book
 lob.stop() # stop the background processes
 ```
 
-## TODO
+## Contribute
 
 As mentioned earlier, this package is still in early development, and contributions are more than welcome.
 
-The main tasks that have to be done are:
-- **More and better testing for edge cases. In fact, most tests have to be rewritten too.**
-- **Benchmarking / profiling to have an idea of the performance, and see where is the bottleneck.**
-- **Some parts probably need to be completely rewritten in a cleaner way, such as the orderbook module.**
+**The main tasks that have to be done are:**
+- More and better testing for edge cases. Tests for the 3 types of orders have to be written.
+- Benchmarking / profiling.
 
 ***
 

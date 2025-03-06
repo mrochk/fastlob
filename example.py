@@ -18,7 +18,7 @@ if __name__ == '__main__':
     result = lob(params)
     assert result.success()
 
-    status, quantity_left = lob.get_order_status(result.orderid())
+    status, quantity_left = lob.get_status(result.orderid())
     print(f'Current order status: {status.name}, quantity left: {quantity_left}.\n')
 
     lob.render()

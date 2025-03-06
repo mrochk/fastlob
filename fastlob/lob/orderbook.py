@@ -48,7 +48,7 @@ class Orderbook:
     def start(self):
         '''Properly start the limit-order-book.'''
 
-        def loop():
+        def clean_expired_orders():
             while self._alive: 
                 self._cancel_expired_orders()
                 time.sleep(0.9)
@@ -56,7 +56,7 @@ class Orderbook:
         self._alive = True
         self._start_time = time_asint()
         self._logger.info('starting background GTD orders manager')
-        threading.Thread(target=loop).start()
+        threading.Thread(target=clean_expired_orders).start()
         self._logger.info('ob started properly')
 
     def stop(self): 
@@ -129,7 +129,7 @@ class Orderbook:
 
         return result
 
-    def cancel_order(self, order_id: str) -> ExecutionResult:
+    def cancel(self, order_id: str) -> ExecutionResult:
         if not self._alive: 
             errmsg = f'{self._NAME} is not running (start() must be called before it can be used)'
             self._logger.error(errmsg)
@@ -236,7 +236,7 @@ class Orderbook:
             self._logger.error('calling ob.spread() but book does not contain limits on both sides')
             return None
 
-    def get_order_status(self, order_id: str) -> Optional[tuple[OrderStatus, Decimal]]:
+    def get_status(self, order_id: str) -> Optional[tuple[OrderStatus, Decimal]]:
         '''Get the status and the quantity left for a given order or None if order was not accepted by the lob.'''
 
         try: 
@@ -246,16 +246,7 @@ class Orderbook:
         except KeyError: 
             self._logger.warning(f'order {order_id} not found in book')
             return None
-
-    def _save_order(self, order):
-        self._logger.info(f'adding order to dict')
-        self._orders[order.id()] = order
-
-        if order.otype() == OrderType.GTD: 
-            self._logger.info(f'order is GTD, adding order to expiry map')
-            if order.expiry() not in self._expirymap.keys(): self._expirymap[order.expiry()] = list()
-            self._expirymap[order.expiry()].append(order)
-
+    
     def _process_bid_order(self, order: BidOrder) -> ExecutionResult:
         self._logger.info(f'processing bid order {order.id()}')
 
@@ -346,6 +337,15 @@ class Orderbook:
             self._logger.info(f'order {order.id()} successfully placed')
             result.set_success(True)
             return result
+
+    def _save_order(self, order):
+        self._logger.info(f'adding order to dict')
+        self._orders[order.id()] = order
+
+        if order.otype() == OrderType.GTD: 
+            self._logger.info(f'order is GTD, adding order to expiry map')
+            if order.expiry() not in self._expirymap.keys(): self._expirymap[order.expiry()] = list()
+            self._expirymap[order.expiry()].append(order)
 
     def _is_market_ask(self, order: AskOrder) -> bool:
         if self._bid_side.empty(): return False
