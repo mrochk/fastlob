@@ -257,6 +257,7 @@ class Orderbook:
 
             if (error := self._check_bid_market_order(order)) is not None: 
                 order.set_status(OrderStatus.ERROR)
+                result = ExecutionResult.new_market(order.id())
                 result.set_success(False)
                 result.add_message(error)
                 return result
