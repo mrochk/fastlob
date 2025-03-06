@@ -6,15 +6,14 @@ import hypothesis.strategies as st
 from fastlob import OrderParams
 from fastlob.consts import MIN_VALUE, MAX_VALUE
 from fastlob.enums import OrderSide, OrderType
-from fastlob.utils import todecimal, time_asint
+from fastlob.utils import todecimal
 
-# Strategies for generating valid values
 valid_side = st.sampled_from(OrderSide)
-valid_price = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
-valid_qty = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
+valid_price = st.floats(min_value=float(MIN_VALUE), max_value=float(MAX_VALUE), allow_nan=False, allow_infinity=False)
+valid_qty = st.floats(min_value=float(MIN_VALUE), max_value=float(MAX_VALUE), allow_nan=False, allow_infinity=False)
 valid_otype = st.sampled_from(OrderType)
 valid_otype_noGTD = st.sampled_from([OrderType.FOK, OrderType.GTC])
-valid_expiry = st.one_of(st.floats(min_value=time_asint()+5, allow_nan=False, allow_infinity=False))
+valid_expiry = st.one_of(st.floats(min_value=time.time()+5, allow_nan=False, allow_infinity=False))
 valid_expiry_noGTD = st.one_of(st.none(), st.floats(min_value=time.time()+5, allow_nan=False, allow_infinity=False))
 
 class TestOrderParams(unittest.TestCase):
