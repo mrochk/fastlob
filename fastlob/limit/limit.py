@@ -89,7 +89,7 @@ class Limit:
 
     def _prune_canceled(self):
         '''Pop the next order while it is a canceled one.'''
-        while not self.deepempty() and self._orderqueue[0].canceled(): 
+        while not self.deepempty() and self._orderqueue[0].status() == OrderStatus.CANCELED: 
             self._orderqueue.popleft()
 
     def view(self) -> str:

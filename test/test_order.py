@@ -10,7 +10,6 @@ from fastlob.enums import OrderSide, OrderType, OrderStatus
 from fastlob.utils import todecimal
 from fastlob.order import Order, BidOrder, AskOrder
 
-# Strategies for generating valid values
 valid_price = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
 valid_quantity = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
 valid_fill = st.decimals(min_value=MIN_VALUE*2, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
@@ -57,4 +56,4 @@ class TestOrder(unittest.TestCase):
         order1 = BidOrder(params1)
         order2 = BidOrder(params2)
 
-        self.assertNotEqual(order1, order2)  # Different unique IDs
+        self.assertNotEqual(order1, order2)

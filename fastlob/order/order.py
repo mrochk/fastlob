@@ -71,10 +71,6 @@ class Order(abc.ABC):
         '''True if order is valid (can be matched).'''
         return self.status() in OrderStatus.valid_states()
 
-    def canceled(self) -> bool:
-        '''True if the order has been canceled.'''
-        return self.status() == OrderStatus.CANCELED
-
     def __eq__(self, other):
         '''Two orders are equal if they're (unique) ids are equal.'''
         return self.id() == other.id()
