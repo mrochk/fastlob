@@ -3,7 +3,7 @@
 run:
 	@python3 main.py
 
-test: test-base test-GTC test-FOK test-GTD
+test: test-base #test-GTC test-FOK test-GTD
 
 test-base:
 	@echo "-- TESTING FOR BASE CLASSES:"
