@@ -1,11 +1,11 @@
+'''The engine module is **only** responsible for executing market orders.'''
+
 from decimal import Decimal
 
 from fastlob.side import Side
 from fastlob.order import Order
 from fastlob.enums import OrderSide
 from fastlob.result import ExecutionResult
-
-'''The engine module is **only** responsible for executing market orders.'''
 
 def execute(order: Order, side: Side) -> ExecutionResult:
     '''Execute a market order in a given side.'''
@@ -91,4 +91,4 @@ def _oop(order: Order, lim_price: Decimal) -> bool:
         case OrderSide.BID: return order.price() < lim_price
         case OrderSide.ASK: return order.price() > lim_price
 
-_oop_msg = lambda p, q: f'<engine>: order out of price at ({p}), quantity left: ({q})'
+_oop_msg = lambda p, q: f'<matching engine>: order out of price at ({p}), quantity left: ({q})'

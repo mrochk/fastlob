@@ -1,6 +1,7 @@
 import time
-import fastlob as lob
 import logging
+
+import fastlob as lob
 
 if __name__ == '__main__':
 
@@ -26,7 +27,7 @@ if __name__ == '__main__':
 
     assert result.success() # result object can be used to see various infos about the order execution
 
-    order_id = result.order_id() # unique id is used to query our order after it's been placed
+    order_id = result.orderid() # unique id is used to query our order after it's been placed
     status, quantity_left = book.get_order_status(order_id)
     print(f'Current status of the order: {status.name}, quantity left: {quantity_left}.\n')
 

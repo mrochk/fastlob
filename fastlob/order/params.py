@@ -1,8 +1,8 @@
-from numbers import Number
-from decimal import Decimal
-from typing import Optional
 import time
 from math import ceil
+from decimal import Decimal
+from numbers import Number
+from typing import Optional
 
 from fastlob.enums import OrderSide, OrderType
 from fastlob.utils import todecimal
@@ -16,8 +16,8 @@ class OrderParams:
     side: OrderSide
     price: Decimal
     quantity: Decimal
-    otype: OrderType = OrderType.GTC
-    expiry: Optional[int] = None
+    otype: OrderType
+    expiry: Optional[int]
 
     def __init__(self, side: OrderSide, price: Number, quantity: Number, otype: OrderType = OrderType.GTC,
                  expiry: Optional[Number] = None):

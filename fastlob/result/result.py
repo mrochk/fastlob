@@ -4,21 +4,22 @@ from typing import Optional
 from collections import defaultdict
 
 class ResultType(enum.Enum):
-    LIMIT = 0
+    LIMIT  = 0
     MARKET = 1
     CANCEL = 2
+    ERROR  = 3
 
 class ExecutionResult:
-    _kind: ResultType
+    _KIND: ResultType
     _success: bool
-    _orderid: str
+    _ORDERID: str
     _messages: list[str]
     _orders_matched: int
     _execprices: Optional[defaultdict[Decimal, Decimal]]
 
     def __init__(self, kind: ResultType, orderid: str):
-        self._kind = kind
-        self._orderid = orderid
+        self._KIND = kind
+        self._ORDERID = orderid
         self._messages = list()
         self._orders_matched = 0
         self._execprices = defaultdict(Decimal) if kind == ResultType.MARKET else None
@@ -32,11 +33,17 @@ class ExecutionResult:
     @staticmethod
     def new_cancel(orderid: str): return ExecutionResult(ResultType.CANCEL, orderid)
 
-    def kind(self) -> ResultType: return self._kind
+    @staticmethod
+    def new_error(): 
+        result = ExecutionResult(ResultType.ERROR, None)
+        result.set_success(False)
+        return result
+
+    def kind(self) -> ResultType: return self._KIND
 
     def success(self) -> bool: return self._success
 
-    def orderid(self) -> str: return self._orderid
+    def orderid(self) -> str: return self._ORDERID
 
     def messages(self) -> list[str]: return self._messages.copy()
 

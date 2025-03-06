@@ -1,13 +1,11 @@
-import io
-import abc
-import threading
+import io, abc, threading
 from decimal import Decimal
 from sortedcollections import SortedDict
 
 from fastlob.limit import Limit
 from fastlob.order import Order
-from fastlob.enums import OrderSide
 from fastlob.utils import zero
+from fastlob.enums import OrderSide
 
 class Side(abc.ABC):
     '''A side is a collection of limits, whose ordering by price depends if it is the bid or ask side.'''
@@ -15,73 +13,44 @@ class Side(abc.ABC):
     _side: OrderSide
     _volume: Decimal
     _limits: SortedDict[Decimal, Limit]
-    _mutex: threading.Lock # the role of this mutex is to prevent a limit order being canceled meanwhile we are matching a market order
+    _mutex: threading.Lock 
+    # ^ the role of this mutex is to prevent a limit order being canceled meanwhile we are matching a market order
+    # it must be locked by any other class before it can execute or canel an order in the side 
 
     def __init__(self): 
         self._volume = zero()
         self._mutex = threading.Lock()
 
     def side(self) -> OrderSide:
-        '''Get the side of the limit.
-
-        Returns:
-            OrderSide: The side of the limit.
-        '''
+        '''Get the side of the limit.'''
         return self._side
 
     def volume(self) -> Decimal:
-        '''Getter for side volume, that is the sum of the volume of all limits.
-
-        Returns:
-            Decimal: The side volume.
-        '''
+        '''Getter for side volume, that is the sum of the volume of all limits.'''
         return self._volume
 
     def size(self) -> int:
-        '''Get number of limits in the side.
-
-        Returns:
-            int: The number of limits.
-        '''
+        '''Get number of limits in the side.'''
         return len(self._limits)
 
     def empty(self) -> bool:
-        '''Check if side is empty (does not contain any limit).
-
-        Returns:
-            bool: True is side is empty.
-        '''
+        '''Check if side is empty (does not contain any limit).'''
         return self.size() == 0
 
     def best(self) -> Limit:
-        '''Get the best limit of the side.
-
-        Returns:
-            Limit: The best limit.
-        '''
+        '''Get the best limit of the side.'''
         return self._limits.peekitem(0)[1]
 
     def place(self, order: Order) -> None:
-        '''Place an order in the side at its corresponding limit.
-
-        Args:
-            order (Order): The order to place.
-        '''
+        '''Place an order in the side at its corresponding limit.'''
         price = order.price()
-
         self._new_price_if_not_exists(price)
-
         self._get_limit(price).enqueue(order)
         self._volume += order.quantity()
 
     def cancel_order(self, order: Order) -> None:
-        '''Cancel an order sitting in the side.
-
-        Args:
-            order (Order): The order to cancel.
-        '''
+        '''Cancel an order sitting in the side.'''
         self._volume -= order.quantity()
-
         lim = self._get_limit(order.price())
         lim.cancel_order(order)
         if lim.empty(): del self._limits[lim.price()]
@@ -103,11 +72,8 @@ class Side(abc.ABC):
         if not self._price_exists(price): self._new_price(price)
 
     def __repr__(self) -> str:
-        try:
-            return f'{self.side().name}Side(size={self.size()}, volume={self.volume()}, best={self.best()})'
-        except:
-            return f'{self.side().name}Side(size={self.size()}, volume={self.volume()})'
-
+        if self.empty(): return f'{self.side().name}Side(size={self.size()}, volume={self.volume()})'
+        return f'{self.side().name}Side(size={self.size()}, volume={self.volume()}, best={self.best()})'
 
     @abc.abstractmethod
     def view(self, n : int) -> str: pass
@@ -124,7 +90,6 @@ class BidSide(Side):
         if self.empty(): return str()
 
         buffer = io.StringIO()
-
         count = 0
         for bidlim in self._limits.values():
             if count >= n:
@@ -148,9 +113,7 @@ class AskSide(Side):
         if self.empty(): return str()
 
         buffer = io.StringIO()
-
         if self.size() > n: buffer.write(f"   ...({self.size() - n} more asks)\n")
-
         count = 0
         l = list()
         for asklim in self._limits.values():

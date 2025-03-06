@@ -1,6 +1,6 @@
+import time
 from decimal import Decimal
 from numbers import Number
-import time
 
 from fastlob.consts import DECIMAL_PRECISION
 
