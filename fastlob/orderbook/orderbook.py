@@ -160,12 +160,12 @@ class Orderbook:
 
         match order.side():
             case OrderSide.BID: 
-                with self._bid_side._mutex: 
+                with self._bid_side.lock(): 
                     self._logger.info(f'cancelling bid order {order_id}')
                     self._bid_side.cancel_order(order)
 
             case OrderSide.ASK: 
-                with self._ask_side._mutex: 
+                with self._ask_side.lock(): 
                     self._logger.info(f'cancelling ask order {order_id}')
                     self._ask_side.cancel_order(order)
 
@@ -261,7 +261,7 @@ class Orderbook:
                 result.add_message(error)
                 return result
 
-            with self._ask_side._mutex:
+            with self._ask_side.lock():
                 result = engine.execute(order, self._ask_side)
 
             if not result.success():
@@ -269,7 +269,7 @@ class Orderbook:
                 return result
 
             if order.status() == OrderStatus.PARTIAL: 
-                with self._bid_side._mutex: 
+                with self._bid_side.lock(): 
                     self._bid_side.place(order)
                     msg = f'order {order.id()} partially executed, rest was placed as a bid limit order'
                     self._logger.info(msg)
@@ -290,7 +290,7 @@ class Orderbook:
                 self._logger.error(error)
                 return result
 
-            with self._bid_side._mutex: self._bid_side.place(order)
+            with self._bid_side.lock(): self._bid_side.place(order)
 
             result.set_success(True)
             self._logger.info(f'order {order.id()} successfully placed')
@@ -310,11 +310,11 @@ class Orderbook:
                 return result
 
             # execute the order
-            with self._bid_side._mutex:
+            with self._bid_side.lock():
                 result = engine.execute(order, self._bid_side)
 
             if order.status() == OrderStatus.PARTIAL: 
-                with self._ask_side._mutex: self._ask_side.place(order)
+                with self._ask_side.lock(): self._ask_side.place(order)
                 self._logger.info(f'order {order.id()} partially executed, rest was placed as limit order')
 
             self._logger.info(f'executed ask market order {order.id()}')
@@ -333,7 +333,7 @@ class Orderbook:
                 return error
 
             # place the order in the side
-            with self._ask_side._mutex: self._ask_side.place(order)
+            with self._ask_side.lock(): self._ask_side.place(order)
 
             self._logger.info(f'order {order.id()} successfully placed')
             result.set_success(True)
@@ -420,10 +420,10 @@ class Orderbook:
 
                 match order.side():
                     case OrderSide.ASK: 
-                        with self._ask_side._mutex: self._ask_side.cancel_order(order)
+                        with self._ask_side.lock(): self._ask_side.cancel_order(order)
 
                     case OrderSide.BID: 
-                        with self._bid_side._mutex: self._bid_side.cancel_order(order)
+                        with self._bid_side.lock(): self._bid_side.cancel_order(order)
 
             del self._expirymap[key]
 

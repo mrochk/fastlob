@@ -21,6 +21,8 @@ class Side(abc.ABC):
         self._volume = zero()
         self._mutex = threading.Lock()
 
+    def lock(self): return self._mutex
+
     def side(self) -> OrderSide:
         '''Get the side of the limit.'''
         return self._side
