@@ -77,6 +77,7 @@ As mentioned earlier, this package is still in early development, and contributi
 **The main tasks that have to be done are:**
 - More and better testing for edge cases. Tests for the 3 types of orders have to be written.
 - Benchmarking / profiling.
+- Add a lot of comments.
 
 ***
 
