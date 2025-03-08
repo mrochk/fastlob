@@ -76,8 +76,8 @@ class Order(abc.ABC):
         return self.id() == other.id()
 
     def __repr__(self) -> str:
-        return f'{self._side.name}Order(id={self.id()}, s={self.status()}, p={self.price()}, ' + \
-            'q={self.quantity()}, t={self.otype()})'
+        return f'{self._side.name}Order(id={self.id()}, status={self.status()}, price={self.price()}, ' + \
+            f'quantity={self.quantity()}, type={self.otype()})'
 
 @dataclass
 class BidOrder(Order):

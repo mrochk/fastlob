@@ -78,4 +78,4 @@ class OrderParams:
 
     def __repr__(self) -> str:
         return f'OrderParams(side={self.side.name}, price={self.price}, qty={self.quantity}, ' + \
-            'type={self.otype}, expiry={self.expiry})'
+            f'type={self.otype}, expiry={self.expiry})'

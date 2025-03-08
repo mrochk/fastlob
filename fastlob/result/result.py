@@ -56,6 +56,5 @@ class ExecutionResult:
     def set_orders_matched(self, orders_matched: int): self._orders_matched = orders_matched
 
     def __repr__(self) -> str:
-        res =  f'ExecutionResult(type={self.kind().name}, '
-        res += f'success={self.success()}, orderid={self.orderid()}, messages={self.messages()})'
-        return res
+        return f'ExecutionResult(type={self.kind().name}, success={self.success()}, ' + \
+            f'orderid={self.orderid()}, messages={self.messages()})'
