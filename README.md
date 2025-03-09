@@ -43,7 +43,9 @@ import time, logging
 
 from fastlob import Orderbook, OrderParams, OrderSide, OrderType
 
-lob = Orderbook(name='ABCD', log_level=logging.INFO) # init lob
+logging.basicConfig(level=logging.INFO) # maximum logging
+
+lob = Orderbook(name='ABCD') # init lob
 
 lob.start() # start background processes
 

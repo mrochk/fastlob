@@ -26,11 +26,10 @@ class Orderbook:
     _alive: bool
     _logger: logging.Logger
 
-    def __init__(self, name: Optional[str] = 'LOB-1', log_level: int = logging.WARNING):
+    def __init__(self, name: Optional[str] = 'LOB-1'):
         '''
         Args:
             name (Optional[str]): Name of the LOB. Defaults to "LOB-1".
-            log_level (int): One of logging.[INFO, WARNING, ERROR]. Defaults to WARNING.
         '''
         self._NAME       = name
         self._ask_side   = AskSide()
@@ -40,9 +39,7 @@ class Orderbook:
         self._start_time = None
         self._alive      = False
 
-        logging.basicConfig(level=log_level)
         self._logger = logging.getLogger(f'orderbook[{name}]')
-        self._logger.level = log_level
         self._logger.info('initialized, ready to be started (using ob.start())')
 
     def start(self):

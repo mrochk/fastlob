@@ -3,9 +3,9 @@ import time, logging
 from fastlob import Orderbook, OrderParams, OrderSide, OrderType
 
 if __name__ == '__main__':
-    lob = Orderbook(name='ABCD', log_level=logging.INFO)
+    logging.basicConfig(level=logging.INFO)
 
-    lob.start()
+    lob = Orderbook(name='ABCD'); lob.start()
 
     params = OrderParams(
         side=OrderSide.BID,
@@ -15,11 +15,10 @@ if __name__ == '__main__':
         expiry=time.time() + 120 
     )
 
-    result = lob(params)
-    assert result.success()
+    result = lob(params); assert result.success()
 
-    status, quantity_left = lob.get_status(result.orderid())
-    print(f'Current order status: {status.name}, quantity left: {quantity_left}.\n')
+    status, qty_left = lob.get_status(result.orderid())
+    print(f'Current order status: {status.name}, quantity left: {qty_left}.\n')
 
     lob.render()
 
