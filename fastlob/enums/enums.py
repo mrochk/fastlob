@@ -45,3 +45,14 @@ class OrderStatus(Enum):
 
     @staticmethod
     def valid_states() -> set: return {OrderStatus.CREATED, OrderStatus.PENDING, OrderStatus.PARTIAL}
+
+class ResultType(Enum):
+    '''The type of execution result.'''
+    LIMIT  = 0
+    '''If the order was placed in a limit.'''
+    MARKET = 1
+    '''If the order was executed as market.'''
+    CANCEL = 2
+    '''If the operation was an order cancellation.'''
+    ERROR  = 3
+    '''If the query could not be processed.'''

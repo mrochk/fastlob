@@ -11,7 +11,7 @@ test-base:
 
 test-GTC:
 	@echo "-- TESTING FOR GTC ORDERS:"
-	@python3 -m unittest discover test/GTC -vvv
+	@python3 -m unittest discover test/good-till-canceled -vvv
 
 test-FOK:
 	@echo "-- TESTING FOR FOK ORDERS:"

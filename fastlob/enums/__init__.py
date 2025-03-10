@@ -1,1 +1,1 @@
-from .enums import OrderSide, OrderType, OrderStatus
+from .enums import OrderSide, OrderType, OrderStatus, ResultType

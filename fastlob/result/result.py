@@ -1,13 +1,8 @@
-import enum
 from decimal import Decimal
 from typing import Optional
 from collections import defaultdict
 
-class ResultType(enum.Enum):
-    LIMIT  = 0
-    MARKET = 1
-    CANCEL = 2
-    ERROR  = 3
+from fastlob.enums import ResultType
 
 class ResultBuilder:
     '''The object constructed by the lob during order processing.'''
@@ -50,7 +45,7 @@ class ResultBuilder:
     def build(self): return ExecutionResult(self)
 
     def __repr__(self) -> str:
-        return f'ExecutionResult(type={self.kind().name}, success={self.success()}, ' + \
+        return f'ResultBuilder(type={self.kind().name}, success={self.success()}, ' + \
             f'orderid={self.orderid()}, messages={self.messages()})'
 
 class ExecutionResult:
@@ -77,6 +72,8 @@ class ExecutionResult:
     def orderid(self) -> str: return self._ORDERID
 
     def messages(self) -> list[str]: return self._messages.copy()
+
+    def n_orders_matched(self) -> int: return self._orders_matched
 
     def execprices(self) -> Optional[defaultdict[Decimal, Decimal]]: return self._execprices.copy()
 

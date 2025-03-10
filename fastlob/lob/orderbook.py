@@ -172,12 +172,6 @@ class Orderbook:
         self._logger.info(msg)
         return result.build()
 
-    def log_level(self) -> int: return self._logger.level
-
-    def set_log_level(self, log_level: int) -> None: 
-        logging.basicConfig(level=log_level)
-        self._logger.level = log_level
-
     def running_since(self) -> int: 
         '''Get time since order-book is running.'''
 
