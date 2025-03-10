@@ -11,7 +11,7 @@ from fastlob.consts import MIN_VALUE, MAX_VALUE
 class OrderParams:
     '''This class is used for instantiating orders, it is necessary because we do not want to have the system 
     performing any safety checks, or at least it should have to do as few as possible. Therefore this class is used to 
-    enforce the user to provide valid order parameters.'''
+    force the user to provide valid order attributes.'''
 
     side: OrderSide
     price: Decimal

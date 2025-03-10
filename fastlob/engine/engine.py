@@ -5,12 +5,12 @@ from decimal import Decimal
 from fastlob.side import Side
 from fastlob.order import Order
 from fastlob.enums import OrderSide
-from fastlob.result import ExecutionResult
+from fastlob.result import ResultBuilder
 
-def execute(order: Order, side: Side) -> ExecutionResult:
+def execute(order: Order, side: Side) -> ResultBuilder:
     '''Execute a market order at a given side.'''
 
-    result = ExecutionResult.new_market(order.id())
+    result = ResultBuilder.new_market(order.id())
 
     if _fill_whole_limits(side, order, result):
         result.set_success(True); return result
@@ -22,7 +22,7 @@ def execute(order: Order, side: Side) -> ExecutionResult:
 
     result.set_success(True); return result
 
-def _fill_whole_limits(side: Side, order: Order, result: ExecutionResult) -> bool:
+def _fill_whole_limits(side: Side, order: Order, result: ResultBuilder) -> bool:
     '''While the order to execute is larger than entire limits, fill them.'''
     while order.quantity() > 0 and not side.empty():
         lim = side.best()
@@ -44,7 +44,7 @@ def _fill_whole_limits(side: Side, order: Order, result: ExecutionResult) -> boo
 
     return False
 
-def _fill_whole_orders(side: Side, order: Order, result: ExecutionResult) -> bool:
+def _fill_whole_orders(side: Side, order: Order, result: ResultBuilder) -> bool:
     '''While the order to execute is larger than whole orders, fill them.'''
     if side.empty(): return False
 
@@ -68,7 +68,7 @@ def _fill_whole_orders(side: Side, order: Order, result: ExecutionResult) -> boo
 
     return False
 
-def _fill_last_order(side: Side, order: Order, result: ExecutionResult):
+def _fill_last_order(side: Side, order: Order, result: ResultBuilder):
     '''**Partially** fill the last order left with what's left of our order.'''
     if side.empty(): return
 

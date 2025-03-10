@@ -9,7 +9,7 @@ from fastlob.side import AskSide, BidSide
 from fastlob.limit import Limit
 from fastlob.order import OrderParams, Order, AskOrder, BidOrder
 from fastlob.enums import OrderSide, OrderStatus, OrderType
-from fastlob.result import ExecutionResult
+from fastlob.result import ResultBuilder, ExecutionResult
 from fastlob.utils import zero, time_asint
 from fastlob.consts import DEFAULT_LIMITS_VIEW
 
@@ -91,16 +91,16 @@ class Orderbook:
         '''Creates and processes the order corresponding to the corresponding order params.'''
 
         if not self._alive: 
-            result = ExecutionResult.new_error()
+            result = ResultBuilder.new_error()
             errmsg = f'{self._NAME} is not running (ob.start() must be called before it can be used)'
             result.add_message(errmsg); self._logger.error(errmsg)
-            return result
+            return result.build()
 
         if not isinstance(order_params, OrderParams):
-            result = ExecutionResult.new_error()
+            result = ResultBuilder.new_error()
             errmsg = 'order_params is not an instance of fastlob.OrderParams'
             result.add_message(errmsg); self._logger.error(errmsg)
-            return result
+            return result.build()
 
         self._logger.info('processing order params')
 
@@ -113,7 +113,7 @@ class Orderbook:
                 order = BidOrder(order_params)
                 result = self._process_bid_order(order)
 
-        if result.success(): 
+        if result._success: 
             self._logger.info(f'order {order.id()} was processed successfully')
             self._save_order(order)
 
@@ -124,19 +124,19 @@ class Orderbook:
             self._logger.info(msg)
             result.add_message(msg)
 
-        return result
+        return result.build()
 
-    def cancel(self, order_id: str) -> ExecutionResult:
+    def cancel(self, order_id: str) -> ResultBuilder:
         if not self._alive: 
             errmsg = f'{self._NAME} is not running (start() must be called before it can be used)'
             self._logger.error(errmsg)
-            result = ExecutionResult.new_error()
+            result = ResultBuilder.new_error()
             result.add_message(errmsg)
-            return result
+            return result.build()
 
         self._logger.info(f'attempting to cancel order with id {order_id}')
 
-        result = ExecutionResult.new_cancel(order_id)
+        result = ResultBuilder.new_cancel(order_id)
 
         try: order = self._orders[order_id]
         except KeyError: 
@@ -144,14 +144,14 @@ class Orderbook:
             errmsg = f'order {order_id} not in lob'
             result.add_message(errmsg)
             self._logger.error(errmsg)
-            return result
+            return result.build()
 
         if not order.valid(): 
             result.set_success(False)
             errmsg = f'order {order_id} can not be canceled (status={order.status()})'
             result.add_message(errmsg)
             self._logger.warning(errmsg)
-            return result
+            return result.build()
 
         self._logger.info(f'order {order_id} can be canceled')
 
@@ -170,7 +170,7 @@ class Orderbook:
         result.set_success(True)
         result.add_message(msg)
         self._logger.info(msg)
-        return result
+        return result.build()
 
     def log_level(self) -> int: return self._logger.level
 
@@ -244,7 +244,7 @@ class Orderbook:
             self._logger.warning(f'order {order_id} not found in book')
             return None
     
-    def _process_bid_order(self, order: BidOrder) -> ExecutionResult:
+    def _process_bid_order(self, order: BidOrder) -> ResultBuilder:
         self._logger.info(f'processing bid order {order.id()}')
 
         if self._is_market_bid(order):
@@ -252,7 +252,7 @@ class Orderbook:
 
             if (error := self._check_bid_market_order(order)) is not None: 
                 order.set_status(OrderStatus.ERROR)
-                result = ExecutionResult.new_market(order.id())
+                result = ResultBuilder.new_market(order.id())
                 result.set_success(False)
                 result.add_message(error)
                 return result
@@ -260,7 +260,7 @@ class Orderbook:
             with self._ask_side.lock():
                 result = engine.execute(order, self._ask_side)
 
-            if not result.success():
+            if not result._success:
                 self._logger.error(f'bid market order {order.id()} could not be executed by engine')
                 return result
 
@@ -277,7 +277,7 @@ class Orderbook:
         else:
             self._logger.info(f'bid order {order.id()} is limit')
 
-            result = ExecutionResult.new_limit(order.id())
+            result = ResultBuilder.new_limit(order.id())
 
             if (error := self._check_limit_order(order)) is not None: 
                 order.set_status(OrderStatus.ERROR)
@@ -292,7 +292,7 @@ class Orderbook:
             self._logger.info(f'order {order.id()} successfully placed')
             return result
 
-    def _process_ask_order(self, order: AskOrder) -> ExecutionResult:
+    def _process_ask_order(self, order: AskOrder) -> ResultBuilder:
         self._logger.info(f'processing ask order {order.id()}')
 
         if self._is_market_ask(order):
@@ -300,7 +300,7 @@ class Orderbook:
 
             if (error := self._check_ask_market_order(order)) is not None: 
                 order.set_status(OrderStatus.ERROR)
-                result = ExecutionResult.new_market(order.id())
+                result = ResultBuilder.new_market(order.id())
                 result.set_success(False)
                 result.add_message(error)
                 return result
@@ -319,7 +319,7 @@ class Orderbook:
         else: # is limit order
             self._logger.info(f'order {order.id()} is limit order')
 
-            result = ExecutionResult.new_limit(order.id())
+            result = ResultBuilder.new_limit(order.id())
 
             if (error := self._check_limit_order(order)) is not None: 
                 order.set_status(OrderStatus.ERROR)
