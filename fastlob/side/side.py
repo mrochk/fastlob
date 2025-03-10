@@ -15,7 +15,7 @@ class Side(abc.ABC):
     _limits: SortedDict[Decimal, Limit]
     _mutex: threading.Lock 
     # ^ the role of this mutex is to prevent a limit order being canceled meanwhile we are matching a market order
-    # it must be locked by any other class before it can execute or canel an order in the side 
+    # it must be locked by any other class before it can execute or cancel an order in the side 
 
     def __init__(self): 
         self._volume = zero()

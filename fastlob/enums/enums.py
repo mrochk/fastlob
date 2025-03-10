@@ -29,19 +29,19 @@ class OrderStatus(Enum):
     '''The status of an order.'''
 
     CREATED = (1,)
-    '''Order created but not in a limit queue yet, or executed.'''
+    '''Order created but not in a limit queue or executed yet.'''
     PENDING = (2,)
-    '''Order in line to be filled but not modified in any ways yet.'''
-    PARTIAL = (3,)
-    '''Order partially filled.'''
-    FILLED = (4,)
-    '''Order entirely filled, removed from the limit.'''
+    '''Order in line in limit to be filled but not modified in any ways yet.'''
+    FILLED = (3,)
+    '''Order in limit entirely filled, removed from the limit.'''
+    PARTIAL = (4,)
+    '''Order in limit partially filled.'''
     CANCELED = (5,)
     '''Order canceled, can not be fully or partially filled anymore.'''
     EXPIRED = (6,)
     '''Order expired, can not be fully or partially filled anymore.'''
     ERROR = (7,)
-    '''Set by order-book if the order can not be processed.'''
+    '''Set by the lob if the order can not be processed.'''
 
     @staticmethod
     def valid_states() -> set: return {OrderStatus.CREATED, OrderStatus.PENDING, OrderStatus.PARTIAL}

@@ -267,7 +267,7 @@ class Orderbook:
             if order.status() == OrderStatus.PARTIAL: 
                 with self._bid_side.lock(): 
                     self._bid_side.place(order)
-                    msg = f'order {order.id()} partially executed, rest was placed as a bid limit order'
+                    msg = f'order {order.id()} partially executed, {order.quantity()} was placed as a bid limit order'
                     self._logger.info(msg)
                     result.add_message(msg)
 

@@ -8,21 +8,19 @@ from fastlob.enums import OrderSide
 from fastlob.result import ExecutionResult
 
 def execute(order: Order, side: Side) -> ExecutionResult:
-    '''Execute a market order in a given side.'''
+    '''Execute a market order at a given side.'''
+
     result = ExecutionResult.new_market(order.id())
 
     if _fill_whole_limits(side, order, result):
-        result.set_success(True)
-        return result
+        result.set_success(True); return result
 
     if _fill_whole_orders(side, order, result):
-        result.set_success(True)
-        return result
+        result.set_success(True); return result
 
     _fill_last_order(side, order, result)
 
-    result.set_success(True)
-    return result
+    result.set_success(True); return result
 
 def _fill_whole_limits(side: Side, order: Order, result: ExecutionResult) -> bool:
     '''While the order to execute is larger than entire limits, fill them.'''
