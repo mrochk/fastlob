@@ -8,8 +8,8 @@ class ResultBuilder:
     '''The object constructed by the lob during order processing.'''
 
     _KIND: ResultType
-    _success: bool
     _ORDERID: str
+    _success: bool
     _messages: list[str]
     _orders_matched: int
     _execprices: Optional[defaultdict[Decimal, Decimal]]
@@ -51,8 +51,8 @@ class ResultBuilder:
 class ExecutionResult:
     '''The object returned to the client.'''
     _KIND: ResultType
-    _success: bool
     _ORDERID: str
+    _success: bool
     _messages: list[str]
     _orders_matched: int
     _execprices: Optional[defaultdict[Decimal, Decimal]]
@@ -67,9 +67,9 @@ class ExecutionResult:
 
     def kind(self) -> ResultType: return self._KIND
 
-    def success(self) -> bool: return self._success
-
     def orderid(self) -> str: return self._ORDERID
+
+    def success(self) -> bool: return self._success
 
     def messages(self) -> list[str]: return self._messages.copy()
 

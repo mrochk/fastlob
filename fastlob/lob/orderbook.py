@@ -85,6 +85,12 @@ class Orderbook:
         Args:
             orders_params (Iterable[OrderParams]): Orders to create and process.
         '''
+        if not self._alive: 
+            result = ResultBuilder.new_error()
+            errmsg = f'{self._NAME} is not running (ob.start() must be called before it can be used)'
+            result.add_message(errmsg); self._logger.error(errmsg)
+            return [result.build() for _ in orders_params]
+
         return [self.process_one(params) for params in orders_params]
 
     def process_one(self, order_params: OrderParams) -> ExecutionResult:
@@ -126,7 +132,7 @@ class Orderbook:
 
         return result.build()
 
-    def cancel(self, order_id: str) -> ResultBuilder:
+    def cancel(self, order_id: str) -> ExecutionResult:
         if not self._alive: 
             errmsg = f'{self._NAME} is not running (start() must be called before it can be used)'
             self._logger.error(errmsg)
@@ -143,7 +149,7 @@ class Orderbook:
             result.set_success(False)
             errmsg = f'order {order_id} not in lob'
             result.add_message(errmsg)
-            self._logger.error(errmsg)
+            self._logger.warning(errmsg)
             return result.build()
 
         if not order.valid(): 
@@ -183,7 +189,7 @@ class Orderbook:
 
         try: return self._ask_side.best().price()
         except: 
-            self._logger.error('calling ob.best_ask() but book does not contain ask limits')
+            self._logger.warning('calling ob.best_ask() but book does not contain ask limits')
             return None
 
     def best_bid(self) -> Optional[Decimal]:
@@ -191,7 +197,7 @@ class Orderbook:
 
         try: return self._bid_side.best().price()
         except: 
-            self._logger.error('calling ob.best_bid() but book does not contain bid limits')
+            self._logger.warning('calling ob.best_bid() but book does not contain bid limits')
             return None
 
     def n_bids(self) -> int:
@@ -216,7 +222,7 @@ class Orderbook:
             best_ask, best_bid = self.best_ask(), self.best_bid()
             return Decimal(0.5) * (best_ask + best_bid)
         except:
-            self._logger.error('calling ob.midprice() but book does not contain limits on both sides')
+            self._logger.warning('calling ob.midprice() but book does not contain limits on both sides')
             return None
 
     def spread(self) -> Decimal:
@@ -224,7 +230,7 @@ class Orderbook:
 
         try: return self.best_ask() - self.best_bid()
         except:
-            self._logger.error('calling ob.spread() but book does not contain limits on both sides')
+            self._logger.warning('calling ob.spread() but book does not contain limits on both sides')
             return None
 
     def get_status(self, order_id: str) -> Optional[tuple[OrderStatus, Decimal]]:
@@ -277,7 +283,7 @@ class Orderbook:
                 order.set_status(OrderStatus.ERROR)
                 result.set_success(False)
                 result.add_message(error)
-                self._logger.error(error)
+                self._logger.warning(error)
                 return result
 
             with self._bid_side.lock(): self._bid_side.place(order)
@@ -319,7 +325,7 @@ class Orderbook:
                 order.set_status(OrderStatus.ERROR)
                 result.set_success(False)
                 result.add_message(error)
-                self._logger.error(error)
+                self._logger.warning(error)
                 return error
 
             # place the order in the side
@@ -351,7 +357,6 @@ class Orderbook:
     def _check_limit_order(self, order: Order) -> Optional[str]:
         match order.otype():
             case OrderType.FOK: # FOK order can not be a limit order by definition
-                self._logger.error(f'FOK order {order.id()} is not immediately matchable')
                 return 'FOK order is not immediately matchable'
 
         return None
