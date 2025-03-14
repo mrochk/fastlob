@@ -3,7 +3,7 @@
 run:
 	@python3 main.py
 
-test: test-base test-GTC test-FOK # test-GTD
+test: test-base test-GTC test-FOK test-GTD
 
 test-base:
 	@echo "-- TESTING FOR BASE CLASSES:"
@@ -19,7 +19,7 @@ test-FOK:
 
 test-GTD:
 	@echo "-- TESTING FOR GTD ORDERS:"
-	@python3 -m unittest discover test/GTD -vvv
+	@python3 -m unittest discover test/good-till-date -vvv
 
 typecheck: 
 	@mypy fastlob

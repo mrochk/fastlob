@@ -72,16 +72,14 @@ lob.render() # pretty-print the book
 lob.stop() # stop the background processes
 ```
 
-## Contribute
+## Contributing
 
 As mentioned earlier, this package is still in early development, and contributions are more than welcome.
 
 **The main tasks that have to be done are:**
 - More and better testing for edge cases. Tests for the 3 types of orders have to be written.
 - Benchmarking / profiling.
-- Add a lot of comments.
-
-***
+- Adding comments where relevant.
 
 **Lines count:**
 ```

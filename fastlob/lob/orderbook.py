@@ -8,7 +8,7 @@ from fastlob import engine
 from fastlob.side import AskSide, BidSide
 from fastlob.limit import Limit
 from fastlob.order import OrderParams, Order, AskOrder, BidOrder
-from fastlob.enums import OrderSide, OrderStatus, OrderType
+from fastlob.enums import OrderSide, OrderStatus, OrderType, ResultType
 from fastlob.result import ResultBuilder, ExecutionResult
 from fastlob.utils import zero, time_asint
 from fastlob.consts import DEFAULT_LIMITS_VIEW
@@ -48,7 +48,7 @@ class Orderbook:
         def clean_expired_orders():
             while self._alive: 
                 self._cancel_expired_orders()
-                time.sleep(0.9)
+                time.sleep(0.1) # what value to set here ? maybe it should depend on the size of the book
 
         self._alive = True
         self._start_time = time_asint()
@@ -121,7 +121,7 @@ class Orderbook:
         
         if result._success: 
             self._logger.info(f'order {order.id()} was processed successfully')
-            self._save_order(order)
+            self._save_order(order, result)
 
         else: self._logger.warning(f'order was not successfully processed')
 
@@ -335,12 +335,12 @@ class Orderbook:
             result.set_success(True)
             return result
 
-    def _save_order(self, order):
+    def _save_order(self, order: Order, result: ExecutionResult):
         self._logger.info(f'adding order to dict')
         self._orders[order.id()] = order
 
-        if order.otype() == OrderType.GTD: 
-            self._logger.info(f'order is GTD, adding order to expiry map')
+        if order.otype() == OrderType.GTD and result.kind() == ResultType.LIMIT: 
+            self._logger.info(f'order is a limit GTD order, adding order to expiry map')
             if order.expiry() not in self._expirymap.keys(): self._expirymap[order.expiry()] = list()
             self._expirymap[order.expiry()].append(order)
 
