@@ -188,8 +188,6 @@ class TestOrdersGTD(unittest.TestCase):
 
         time.sleep(3)
 
-        # check that order is not canceled if it is filled
-
         s, _ = lob.get_status(r.orderid())
         self.assertEqual(s, OrderStatus.CANCELED)
 

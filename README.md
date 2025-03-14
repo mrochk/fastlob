@@ -76,12 +76,9 @@ lob.stop() # stop the background processes
 
 As mentioned earlier, this package is still in early development, and contributions are more than welcome.
 
-**The main tasks that have to be done are:**
-- More and better testing for edge cases. Tests for the 3 types of orders have to be written.
-- Benchmarking / profiling.
-- Adding comments where relevant.
+Please do not hesitate to contact me, or directly submit a pull request if you'd like to contribute.
 
-**Lines count:**
+## Lines Count
 ```
   91 fastlob/engine/engine.py
    1 fastlob/engine/__init__.py
