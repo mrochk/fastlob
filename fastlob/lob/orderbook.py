@@ -339,7 +339,7 @@ class Orderbook:
         self._logger.info(f'adding order to dict')
         self._orders[order.id()] = order
 
-        if order.otype() == OrderType.GTD and result._KIND == ResultType.LIMIT: 
+        if order.otype() == OrderType.GTD: # and result._KIND == ResultType.LIMIT: <- doesnt work in the case where the order is a partially filling market (then placed in limit), but how to not add market orders then ?  
             self._logger.info(f'order is a limit GTD order, adding order to expiry map')
             if order.expiry() not in self._expirymap.keys(): self._expirymap[order.expiry()] = list()
             self._expirymap[order.expiry()].append(order)
