@@ -335,11 +335,11 @@ class Orderbook:
             result.set_success(True)
             return result
 
-    def _save_order(self, order: Order, result: ExecutionResult):
+    def _save_order(self, order: Order, result: ResultBuilder):
         self._logger.info(f'adding order to dict')
         self._orders[order.id()] = order
 
-        if order.otype() == OrderType.GTD and result.kind() == ResultType.LIMIT: 
+        if order.otype() == OrderType.GTD and result._KIND == ResultType.LIMIT: 
             self._logger.info(f'order is a limit GTD order, adding order to expiry map')
             if order.expiry() not in self._expirymap.keys(): self._expirymap[order.expiry()] = list()
             self._expirymap[order.expiry()].append(order)
