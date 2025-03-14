@@ -118,7 +118,7 @@ class Orderbook:
             case OrderSide.BID: 
                 order = BidOrder(order_params)
                 result = self._process_bid_order(order)
-
+        
         if result._success: 
             self._logger.info(f'order {order.id()} was processed successfully')
             self._save_order(order)
@@ -326,7 +326,7 @@ class Orderbook:
                 result.set_success(False)
                 result.add_message(error)
                 self._logger.warning(error)
-                return error
+                return result
 
             # place the order in the side
             with self._ask_side.lock(): self._ask_side.place(order)

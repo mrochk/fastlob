@@ -3,7 +3,7 @@
 run:
 	@python3 main.py
 
-test: test-base test-GTC # test-FOK test-GTD
+test: test-base test-GTC test-FOK # test-GTD
 
 test-base:
 	@echo "-- TESTING FOR BASE CLASSES:"
@@ -15,7 +15,7 @@ test-GTC:
 
 test-FOK:
 	@echo "-- TESTING FOR FOK ORDERS:"
-	@python3 -m unittest discover test/FOK -vvv
+	@python3 -m unittest discover test/fill-or-kill -vvv
 
 test-GTD:
 	@echo "-- TESTING FOR GTD ORDERS:"
