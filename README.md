@@ -85,25 +85,25 @@ As mentioned earlier, this package is still in early development, and contributi
 
 **Lines count:**
 ```
-  93 fastlob/engine/engine.py
-  1 fastlob/engine/__init__.py
+  91 fastlob/engine/engine.py
+   1 fastlob/engine/__init__.py
   18 fastlob/utils/utils.py
-  1 fastlob/utils/__init__.py
-  61 fastlob/result/result.py
-  0 fastlob/result/__init__.py
+   1 fastlob/utils/__init__.py
+  82 fastlob/result/result.py
+   0 fastlob/result/__init__.py
   81 fastlob/order/params.py
-  1 fastlob/order/__init__.py
+   1 fastlob/order/__init__.py
   95 fastlob/order/order.py
-  47 fastlob/enums/enums.py
-  1 fastlob/enums/__init__.py
+  58 fastlob/enums/enums.py
+   1 fastlob/enums/__init__.py
   19 fastlob/consts/consts.py
-  0 fastlob/consts/__init__.py
+   0 fastlob/consts/__init__.py
   99 fastlob/limit/limit.py
-  1 fastlob/limit/__init__.py
-127 fastlob/side/side.py
-  1 fastlob/side/__init__.py
-  4 fastlob/__init__.py
-471 fastlob/lob/orderbook.py
-  0 fastlob/lob/__init__.py
-1121 total
+   1 fastlob/limit/__init__.py
+ 127 fastlob/side/side.py
+   1 fastlob/side/__init__.py
+   4 fastlob/__init__.py
+ 475 fastlob/lob/orderbook.py
+   0 fastlob/lob/__init__.py
+1155 total
 ```
