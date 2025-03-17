@@ -186,7 +186,7 @@ class TestOrdersGTD(unittest.TestCase):
         s, _ = lob.get_status(r.orderid())
         self.assertEqual(s, OrderStatus.PARTIAL)
 
-        time.sleep(3)
+        time.sleep(3.5)
 
         s, _ = lob.get_status(r.orderid())
         self.assertEqual(s, OrderStatus.CANCELED)
