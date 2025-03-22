@@ -10,15 +10,15 @@ test-base:
 	@python3 -m unittest discover test -vvv
 
 test-GTC:
-	@echo "-- TESTING FOR GTC ORDERS:"
+	@echo "\n-- TESTING FOR GTC ORDERS:"
 	@python3 -m unittest discover test/good-till-canceled -vvv
 
 test-FOK:
-	@echo "-- TESTING FOR FOK ORDERS:"
+	@echo "\n-- TESTING FOR FOK ORDERS:"
 	@python3 -m unittest discover test/fill-or-kill -vvv
 
 test-GTD:
-	@echo "-- TESTING FOR GTD ORDERS:"
+	@echo "\n-- TESTING FOR GTD ORDERS:"
 	@python3 -m unittest discover test/good-till-date -vvv
 
 typecheck: 

@@ -1,5 +1,8 @@
-import io, abc, threading
+import io
+import abc
+import threading
 from decimal import Decimal
+from collections.abc import Sequence
 from sortedcollections import SortedDict
 
 from fastlob.limit import Limit
@@ -13,11 +16,11 @@ class Side(abc.ABC):
     _side: OrderSide
     _volume: Decimal
     _price2limits: SortedDict[Decimal, Limit]
-    _mutex: threading.Lock 
+    _mutex: threading.Lock
     # ^ the role of this mutex is to prevent a limit order being canceled meanwhile we are matching a market order
-    # it must be locked by any other class before it can execute or cancel an order in the side 
+    # it must be locked by any other class before it can execute or cancel an order in the side
 
-    def __init__(self): 
+    def __init__(self):
         self._volume = zero()
         self._mutex = threading.Lock()
 
@@ -31,6 +34,9 @@ class Side(abc.ABC):
         '''Getter for side volume, that is the sum of the volume of all limits.'''
         return self._volume
 
+    def update_volume(self, update: Decimal) -> None:
+        self._volume += update
+
     def size(self) -> int:
         '''Get number of limits in the side.'''
         return len(self._price2limits)
@@ -43,23 +49,30 @@ class Side(abc.ABC):
         '''Get the best limit of the side.'''
         return self._price2limits.peekitem(0)[1]
 
+    def limits(self) -> Sequence:
+        '''Get all limits (sorted).'''
+        return self._price2limits.values()
+
     def place(self, order: Order) -> None:
         '''Place an order in the side at its corresponding limit.'''
         price = order.price()
         self._new_price_if_not_exists(price)
-        self._get_limit(price).enqueue(order)
+        self.get_limit(price).enqueue(order)
         self._volume += order.quantity()
 
     def cancel_order(self, order: Order) -> None:
         '''Cancel an order sitting in the side.'''
         self._volume -= order.quantity()
-        lim = self._get_limit(order.price())
+        lim = self.get_limit(order.price())
         lim.cancel_order(order)
         if lim.empty(): del self._price2limits[lim.price()]
 
-    def _get_limit(self, price: Decimal) -> Limit:
+    def get_limit(self, price: Decimal) -> Limit:
         '''Get the limit sitting at a certain price.'''
         return self._price2limits[price]
+
+    def pop_limit(self, price) -> None:
+        self._price2limits.pop(price) # remove limit from side
 
     def _price_exists(self, price: Decimal) -> bool:
         '''Check there is a limit at a certain price.'''

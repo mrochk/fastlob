@@ -1,4 +1,5 @@
-import abc, secrets
+import abc
+import secrets
 from typing import Optional
 from decimal import Decimal
 from dataclasses import dataclass

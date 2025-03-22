@@ -43,7 +43,7 @@ class Limit:
         '''Check if limit contains zero **valid** orders, not if the limit queue is empty.'''
         return self.valid_orders() == 0
 
-    def deepempty(self): 
+    def deepempty(self):
         '''Check if limit contains zero orders.'''
         return len(self._orderqueue) == 0
 
@@ -89,7 +89,7 @@ class Limit:
 
     def _prune_canceled(self):
         '''Pop the next order while it is a canceled one.'''
-        while not self.deepempty() and self._orderqueue[0].status() == OrderStatus.CANCELED: 
+        while not self.deepempty() and self._orderqueue[0].status() == OrderStatus.CANCELED:
             self._orderqueue.popleft()
 
     def view(self) -> str:

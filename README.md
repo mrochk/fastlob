@@ -80,25 +80,25 @@ Please do not hesitate to contact me, or directly submit a pull request if you'd
 
 ## Lines Count
 ```
-  91 fastlob/engine/engine.py
-   1 fastlob/engine/__init__.py
-  18 fastlob/utils/utils.py
-   1 fastlob/utils/__init__.py
-  82 fastlob/result/result.py
-   0 fastlob/result/__init__.py
-  81 fastlob/order/params.py
-   1 fastlob/order/__init__.py
-  95 fastlob/order/order.py
-  58 fastlob/enums/enums.py
-   1 fastlob/enums/__init__.py
-  19 fastlob/consts/consts.py
-   0 fastlob/consts/__init__.py
-  99 fastlob/limit/limit.py
-   1 fastlob/limit/__init__.py
- 127 fastlob/side/side.py
-   1 fastlob/side/__init__.py
-   4 fastlob/__init__.py
- 475 fastlob/lob/orderbook.py
-   0 fastlob/lob/__init__.py
-1155 total
+   92 fastlob/engine/engine.py
+    3 fastlob/engine/__init__.py
+   18 fastlob/utils/utils.py
+    1 fastlob/utils/__init__.py
+   82 fastlob/result/result.py
+    1 fastlob/result/__init__.py
+   79 fastlob/order/params.py
+    1 fastlob/order/__init__.py
+   97 fastlob/order/order.py
+   56 fastlob/enums/enums.py
+    1 fastlob/enums/__init__.py
+   20 fastlob/consts/consts.py
+    1 fastlob/consts/__init__.py
+   99 fastlob/limit/limit.py
+    1 fastlob/limit/__init__.py
+  140 fastlob/side/side.py
+    1 fastlob/side/__init__.py
+    5 fastlob/__init__.py
+  521 fastlob/lob/orderbook.py
+    1 fastlob/lob/__init__.py
+ 1220 total
 ```

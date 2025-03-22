@@ -13,7 +13,7 @@ class TestSide(unittest.TestCase):
     def test_init(self, name):
         lob = Orderbook(name)
 
-        self.assertEqual(lob._NAME, name)
+        self.assertEqual(lob._name, name)
 
         self.assertEqual(lob.best_ask(), None)
         self.assertEqual(lob.best_bid(), None)
