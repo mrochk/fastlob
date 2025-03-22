@@ -30,10 +30,10 @@ class TestOrdersGTC(unittest.TestCase):
 
         if side == OrderSide.ASK:
             self.assertEqual(self.lob.n_asks(), 1)
-            self.assertEqual(self.lob.best_ask(), params.price)
+            self.assertTupleEqual(self.lob.best_ask(), (params.price, params.quantity, 1))
         else:
             self.assertEqual(self.lob.n_bids(), 1)
-            self.assertEqual(self.lob.best_bid(), params.price)
+            self.assertTupleEqual(self.lob.best_bid(), (params.price, params.quantity, 1))
 
         s, q = self.lob.get_status(r.orderid())
 

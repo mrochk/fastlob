@@ -5,7 +5,7 @@ from typing import Optional, Iterable
 from termcolor import colored
 
 from fastlob import engine
-from fastlob.side import AskSide, BidSide
+from fastlob.side import Side, AskSide, BidSide
 from fastlob.limit import Limit
 from fastlob.order import OrderParams, Order, AskOrder, BidOrder
 from fastlob.enums import OrderSide, OrderStatus, OrderType, ResultType
@@ -39,7 +39,7 @@ class Orderbook:
         self._start_time = None
         self._alive      = False
 
-        self._logger = logging.getLogger(f'orderbook[{name}]')
+        self._logger = logging.getLogger(f'[{name}]')
         self._logger.info('initialized, ready to be started (using ob.start())')
 
     def start(self):
@@ -54,14 +54,14 @@ class Orderbook:
         self._start_time = time_asint()
         self._logger.info('starting background GTD orders manager')
         threading.Thread(target=clean_expired_orders).start()
-        self._logger.info('ob started properly')
+        self._logger.info('lob started properly')
 
     def stop(self): 
         '''Stop the limit-order-book.'''
 
         self._alive = False
         self._start_time = None
-        self._logger.info('ob stopped properly')
+        self._logger.info('lob stopped properly')
 
     def reset(self) -> None: 
         '''Reset the limit-order-book.'''
@@ -178,27 +178,57 @@ class Orderbook:
         self._logger.info(msg)
         return result.build()
 
-    def running_since(self) -> int: 
+    def running_time(self) -> int: 
         '''Get time since order-book is running.'''
 
         if not self._alive: return 0
         return time_asint() - self._start_time
 
-    def best_ask(self) -> Optional[Decimal]:
-        '''Get the best ask price in the book.'''
+    def _best_limits(self, n: int, side: Side) -> list[tuple[Decimal, Decimal, int]]:
+        result = list()
 
-        try: return self._ask_side.best().price()
-        except: 
-            self._logger.warning('calling ob.best_ask() but book does not contain ask limits')
+        for i, lim in enumerate(side._price2limits.values()):
+            if i >= n: break 
+            t = (lim.price(), lim.volume(), lim.valid_orders())
+            result.append(t)
+
+        return result
+
+    def best_asks(self, n: int) -> list[tuple[Decimal, Decimal, int]]:
+        '''Return best `n` asks (price, volume, #orders) triplets. If `n > #asks`, returns `#asks` elements.'''
+
+        if (nasks := self.n_asks()) < n:
+            self._logger.warning(f'asking for {n} limits in <ob.best_asks> but book only contains {nasks}')
+
+        return self._best_limits(n, self._ask_side)
+
+    def best_bids(self, n: int) -> list[tuple[Decimal, Decimal, int]]:
+        '''Return best `n` bids (price, volume, #orders) triplets. If `n > #bids`, returns `#bids` elements.'''
+
+        if (nbids := self.n_bids()) < n:
+            self._logger.warning(f'asking for {n} limits in <ob.best_bids> but book only contains {nbids}')
+
+        return self._best_limits(n, self._bid_side)
+
+    def best_ask(self) -> Optional[tuple[Decimal, Decimal, int]]:
+        '''Get the best ask limit=(price, volume, #orders) in the lob.'''
+
+        if self._ask_side.empty(): 
+            self._logger.warning('calling <ob.best_ask> but lob does not contain ask limits')
             return None
 
-    def best_bid(self) -> Optional[Decimal]:
-        '''Get the best bid price in the book.'''
+        lim = self._ask_side.best()
+        return lim.price(), lim.volume(), lim.valid_orders()
 
-        try: return self._bid_side.best().price()
-        except: 
-            self._logger.warning('calling ob.best_bid() but book does not contain bid limits')
+    def best_bid(self) -> Optional[tuple[Decimal, Decimal, int]]:
+        '''Get the best bid limit=(price, volume, #orders) in the lob.'''
+
+        if self._bid_side.empty(): 
+            self._logger.warning('calling <ob.best_bid> but lob does not contain ask limits')
             return None
+
+        lim = self._bid_side.best()
+        return lim.price(), lim.volume(), lim.valid_orders()
 
     def n_bids(self) -> int:
         '''Get the number of bids limits.'''
@@ -216,22 +246,24 @@ class Orderbook:
         return self.n_asks() + self.n_bids()
 
     def midprice(self) -> Optional[Decimal]:
-        '''Get the mid-price.'''
+        '''Get the lob midprice.'''
 
-        try:
-            best_ask, best_bid = self.best_ask(), self.best_bid()
-            return Decimal(0.5) * (best_ask + best_bid)
-        except:
-            self._logger.warning('calling ob.midprice() but book does not contain limits on both sides')
+        if self._ask_side.empty() or self._bid_side.empty(): 
+            self._logger.warning('calling <ob.midprice> but lob does not contain limits on both sides')
             return None
+
+        askprice, bidprice = self.best_ask()[0], self.best_bid()[0]
+        return Decimal(0.5) * (askprice + bidprice)
 
     def spread(self) -> Decimal:
-        '''Get the spread.'''
+        '''Get the lob spread.'''
 
-        try: return self.best_ask() - self.best_bid()
-        except:
-            self._logger.warning('calling ob.spread() but book does not contain limits on both sides')
+        if self._ask_side.empty() or self._bid_side.empty(): 
+            self._logger.warning('calling <ob.spread> but lob does not contain limits on both sides')
             return None
+
+        askprice, bidprice = self.best_ask()[0], self.best_bid()[0]
+        return askprice - bidprice
 
     def get_status(self, order_id: str) -> Optional[tuple[OrderStatus, Decimal]]:
         '''Get the status and the quantity left for a given order or None if order was not accepted by the lob.'''
@@ -346,12 +378,12 @@ class Orderbook:
 
     def _is_market_ask(self, order: AskOrder) -> bool:
         if self._bid_side.empty(): return False
-        if self.best_bid() >= order.price(): return True
+        if self.best_bid()[0] >= order.price(): return True
         return False
 
     def _is_market_bid(self, order: BidOrder) -> bool:
         if self._ask_side.empty(): return False
-        if self.best_ask() <= order.price(): return True
+        if self.best_ask()[0] <= order.price(): return True
         return False
 
     def _check_limit_order(self, order: Order) -> Optional[str]:
@@ -380,7 +412,7 @@ class Orderbook:
     def _immediately_matchable_bid(self, order: BidOrder) -> bool:
         # we want the limit volume down to the order price to be >= order quantity
         volume = zero()
-        limits = self._ask_side._limits.values()
+        limits = self._ask_side._price2limits.values()
 
         lim : Limit
         for lim in limits:
@@ -394,7 +426,7 @@ class Orderbook:
     def _immediately_matchable_ask(self, order: AskOrder) -> bool:
         # we want the limit volume down to the order price to be >= order quantity
         volume = zero()
-        limits = self._bid_side._limits.values()
+        limits = self._bid_side._price2limits.values()
 
         lim : Limit
         for lim in limits:
@@ -468,7 +500,7 @@ class Orderbook:
         buffer = io.StringIO()
         buffer.write(f'Order-Book {self._NAME}\n')
         buffer.write(f'- started={self._alive}\n')
-        buffer.write(f'- running_time={self.running_since()}s\n')
+        buffer.write(f'- running_time={self.running_time()}s\n')
         buffer.write(f'- #prices={self.n_prices()}\n')
         buffer.write(f'- #asks={self.n_asks()}\n')
         buffer.write(f'- #bids={self.n_bids()}')

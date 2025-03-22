@@ -17,7 +17,7 @@ We implement three types of orders: *FOK*, *GTC* and *GTD*. Every order is defin
 
 ## Installation
 
-The package is now available on PyPI, you can simply install it using
+The package is now available on [PyPI](https://pypi.org/project/fastlob/), you can simply install it using
 ```
 pip install fastlob
 ```

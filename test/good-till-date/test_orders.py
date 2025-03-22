@@ -84,7 +84,7 @@ class TestOrdersGTD(unittest.TestCase):
         s, _ = lob.get_status(r.orderid())
         self.assertEqual(s, OrderStatus.FILLED)
 
-        time.sleep(3)
+        time.sleep(3.11)
 
         # check that order is not canceled if it is filled
 
@@ -94,6 +94,7 @@ class TestOrdersGTD(unittest.TestCase):
         lob.stop()
 
     def test_expiration(self):
+        self.setUp()
         lob = Orderbook('TestOrdersGTD'); lob.start()
 
         p = OrderParams(OrderSide.ASK, 100, 10, OrderType.GTD, expiry=valid_expiry(2))
@@ -105,7 +106,7 @@ class TestOrdersGTD(unittest.TestCase):
         s, _ = lob.get_status(r.orderid())
         self.assertEqual(s, OrderStatus.PENDING)
 
-        time.sleep(3)
+        time.sleep(3.11)
 
         s, _ = lob.get_status(r.orderid())
         self.assertEqual(s, OrderStatus.CANCELED)
@@ -130,7 +131,7 @@ class TestOrdersGTD(unittest.TestCase):
         s, _ = lob.get_status(rgtd.orderid())
         self.assertEqual(s, OrderStatus.FILLED)
 
-        time.sleep(3)
+        time.sleep(3.11)
 
         s, _ = lob.get_status(rgtd.orderid())
         self.assertEqual(s, OrderStatus.FILLED)
@@ -155,7 +156,7 @@ class TestOrdersGTD(unittest.TestCase):
         s, _ = lob.get_status(rgtd.orderid())
         self.assertEqual(s, OrderStatus.PENDING)
 
-        time.sleep(3)
+        time.sleep(3.11)
 
         s, q = lob.get_status(rgtd.orderid())
         self.assertEqual(s, OrderStatus.CANCELED)
@@ -186,7 +187,7 @@ class TestOrdersGTD(unittest.TestCase):
         s, _ = lob.get_status(r.orderid())
         self.assertEqual(s, OrderStatus.PARTIAL)
 
-        time.sleep(3.5)
+        time.sleep(3.11)
 
         s, _ = lob.get_status(r.orderid())
         self.assertEqual(s, OrderStatus.CANCELED)

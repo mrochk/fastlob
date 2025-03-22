@@ -12,7 +12,7 @@ class Side(abc.ABC):
 
     _side: OrderSide
     _volume: Decimal
-    _limits: SortedDict[Decimal, Limit]
+    _price2limits: SortedDict[Decimal, Limit]
     _mutex: threading.Lock 
     # ^ the role of this mutex is to prevent a limit order being canceled meanwhile we are matching a market order
     # it must be locked by any other class before it can execute or cancel an order in the side 
@@ -33,7 +33,7 @@ class Side(abc.ABC):
 
     def size(self) -> int:
         '''Get number of limits in the side.'''
-        return len(self._limits)
+        return len(self._price2limits)
 
     def empty(self) -> bool:
         '''Check if side is empty (does not contain any limit).'''
@@ -41,7 +41,7 @@ class Side(abc.ABC):
 
     def best(self) -> Limit:
         '''Get the best limit of the side.'''
-        return self._limits.peekitem(0)[1]
+        return self._price2limits.peekitem(0)[1]
 
     def place(self, order: Order) -> None:
         '''Place an order in the side at its corresponding limit.'''
@@ -55,19 +55,19 @@ class Side(abc.ABC):
         self._volume -= order.quantity()
         lim = self._get_limit(order.price())
         lim.cancel_order(order)
-        if lim.empty(): del self._limits[lim.price()]
+        if lim.empty(): del self._price2limits[lim.price()]
 
     def _get_limit(self, price: Decimal) -> Limit:
         '''Get the limit sitting at a certain price.'''
-        return self._limits[price]
+        return self._price2limits[price]
 
     def _price_exists(self, price: Decimal) -> bool:
         '''Check there is a limit at a certain price.'''
-        return price in self._limits.keys()
+        return price in self._price2limits.keys()
 
     def _new_price(self, price: Decimal) -> None:
         '''Add a limit to the side.'''
-        self._limits[price] = Limit(price)
+        self._price2limits[price] = Limit(price)
 
     def _new_price_if_not_exists(self, price: Decimal) -> None:
         '''Create price level if not exists.'''
@@ -86,14 +86,14 @@ class BidSide(Side):
     def __init__(self):
         super().__init__()
         self._side = OrderSide.BID
-        self._limits = SortedDict(lambda x: -x)
+        self._price2limits = SortedDict(lambda x: -x)
 
     def view(self, n : int = 10) -> str:
         if self.empty(): return str()
 
         buffer = io.StringIO()
         count = 0
-        for bidlim in self._limits.values():
+        for bidlim in self._price2limits.values():
             if count >= n:
                 if count < self.size():
                     buffer.write(f"   ...({self.size() - n} more bids)\n")
@@ -109,7 +109,7 @@ class AskSide(Side):
     def __init__(self):
         super().__init__()
         self._side = OrderSide.ASK
-        self._limits = SortedDict()
+        self._price2limits = SortedDict()
 
     def view(self, n : int = 10) -> str:
         if self.empty(): return str()
@@ -118,7 +118,7 @@ class AskSide(Side):
         if self.size() > n: buffer.write(f"   ...({self.size() - n} more asks)\n")
         count = 0
         l = list()
-        for asklim in self._limits.values():
+        for asklim in self._price2limits.values():
             if count >= n: break
             l.append(f" - {asklim.view()}\n")
             count += 1

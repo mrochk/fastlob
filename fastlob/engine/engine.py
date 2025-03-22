@@ -40,7 +40,7 @@ def _fill_whole_limits(side: Side, order: Order, result: ResultBuilder) -> bool:
         order.fill(lim.volume()) # partially fill order with limit volume
         side._volume -= lim.volume() # substract limit volume from side volume before filling all orders in limit
         lim.fill_all() # set all orders to filled
-        side._limits.pop(lim.price()) # remove limit from side
+        side._price2limits.pop(lim.price()) # remove limit from side
 
     return False
 
