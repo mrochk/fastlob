@@ -30,6 +30,8 @@ pip install -r requirements.txt
 pip install .
 ```
 
+## Testing
+
 To run the tests and check that everything is okay, run `make test` or `python3 -m unittest discover test`.
 
 ## Usage
@@ -71,6 +73,8 @@ lob.render() # pretty-print the book
 
 lob.stop() # stop the background processes
 ```
+
+In the notebook [`simulate.ipynb`](simulate.ipynb) you will find an example of simulating the arrival of many orders using different distributions.
 
 ## Contributing
 

@@ -501,8 +501,8 @@ class Orderbook:
 
         if self._ask_side.empty() or self._bid_side.empty(): return buffer.getvalue()
 
-        buffer.write(colored(f"\n    Spread = {self.spread()}", color="blue"))
-        buffer.write(colored(f", Mid-price = {self.midprice()}", color="blue"))
+        buffer.write(colored(f"\n    spread = {self.spread()}", color="blue"))
+        buffer.write(colored(f", midprice = {self.midprice()}", color="blue"))
 
         return buffer.getvalue()
 
