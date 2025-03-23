@@ -116,6 +116,13 @@ class Orderbook:
             result.add_message(errmsg); self._logger.error(errmsg)
             return result.build()
 
+        #                                         (params const already checks that expiry is set)
+        if order_params.otype == OrderType.GTD and order_params.expiry <= (t := time_asint()):
+            result = ResultBuilder.new_error()
+            errmsg = f'GTD order must expire in the future (but {order_params.expiry} <= {t})'
+            result.add_message(errmsg); self._logger.error(errmsg)
+            return result.build()
+
         self._logger.info('processing order params')
 
         match order_params.side:
