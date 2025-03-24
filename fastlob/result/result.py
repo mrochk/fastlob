@@ -78,5 +78,5 @@ class ExecutionResult:
     def execprices(self) -> Optional[defaultdict[Decimal, Decimal]]: return self._execprices.copy()
 
     def __repr__(self) -> str:
-        return f'ClientResult(type={self.kind().name}, success={self.success()}, ' + \
+        return f'ExecutionResult(type={self.kind().name}, success={self.success()}, ' + \
             f'orderid={self.orderid()}, messages={self.messages()})'
