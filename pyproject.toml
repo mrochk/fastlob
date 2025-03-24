@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fastlob"
-version = "0.0.10"
+version = "0.0.11"
 description = "Fast & minimalist fixed decimal precision limit-order-book (LOB) implementation in pure Python with almost no dependencies."
 authors = [{name = "Maxime Rochkoulets", email = "mrochkoulets@gmail.com"}]
 maintainers = [{name = "Maxime Rochkoulets", email = "mrochkoulets@gmail.com"}]
