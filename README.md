@@ -39,7 +39,7 @@ To run the tests and check that everything is okay, run `make test` or `python3 
 This book runs at a fixed decimal precision through the Python `decimal` package. The precision can be set via the `PYLOB_DECIMAL_PRECISION` environment variable, the default value is 2.
 
 ```python
-# example.py
+# examples/basics.py
 
 import time, logging
 
@@ -74,7 +74,7 @@ lob.render() # pretty-print the book
 lob.stop() # stop the background processes
 ```
 
-In the notebook [`simulate.ipynb`](simulate.ipynb) you will find an example of simulating the arrival of many orders using different distributions.
+In the notebook [`simulate.ipynb`](examples/simulate.ipynb) you will find an example of simulating the arrival of many orders using different distributions.
 
 ## Contributing
 
