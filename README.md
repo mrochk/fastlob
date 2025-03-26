@@ -6,7 +6,7 @@
 <img src="https://github.com/mrochk/pylob/raw/main/logo.png" width=800>
 
 ***
-Welcome to the multithreading branch: here we are concerned with making our initial implementation much faster.
+**Welcome to the multithreading branch: here we are concerned with making our initial implementation much faster.**
 
 The idea: create `AskThread` and `BidThread` classes such that each side gets assigned $N$ threads that process the arriving orders/requests concurrently.
 ***
