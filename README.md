@@ -7,6 +7,8 @@
 
 *Package currently in development, bugs are expected.*
 
+*The main branch does not implement multi-threaded order processing because it is still being developed on the `multthreading` branch, check out this branch for more infos.*
+
 The goal is to build an efficient easy to use package with a clean and comprehensible API. 
 
 We aim to keep it minimalist and simple, while keeping reasonable performances (for a pure Python implementation). We intend the final project to contain no more than ~1000 lines of code.
