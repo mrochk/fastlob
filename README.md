@@ -7,7 +7,7 @@
 
 *Package currently in development, bugs are expected.*
 
-*The main branch does not implement multi-threaded order processing because it is still being developed on the `multthreading` branch, check out this branch for more infos.*
+*The main branch does not implement multi-threaded order processing because it is still being developed on the `multithreading` branch, check out this branch, or the corresponding issue for more infos.*
 
 The goal is to build an efficient easy to use package with a clean and comprehensible API. 
 
@@ -38,7 +38,7 @@ To run the tests and check that everything is okay, run `make test` or `python3 
 
 ## Usage
 
-This book runs at a fixed decimal precision through the Python `decimal` package. The precision can be set via the `PYLOB_DECIMAL_PRECISION` environment variable, the default value is 2.
+This book runs at a fixed decimal precision through the Python `decimal` package. The precision (also called *Tick Size*) can be set via the `PYLOB_DECIMAL_PRECISION` environment variable, the default value is 2.
 
 ```python
 # examples/basics.py
