@@ -35,7 +35,7 @@ class Orderbook:
     _alive: bool
     _logger: logging.Logger
 
-    def __init__(self, name: Optional[str] = 'LOB'):
+    def __init__(self, name: Optional[str] = 'LOB', start: Optional[bool] = False):
         '''
         Args:
             name (Optional[str]): Defaults to "LOB".
@@ -51,6 +51,8 @@ class Orderbook:
         self._logger = logging.getLogger(f'[{name}]')
         self._logger.info('lob initialized, ready to be started using <ob.start>')
 
+        if start: self.start()
+
     def start(self):
         '''Start the lob.'''
 
@@ -63,7 +65,7 @@ class Orderbook:
         self._start_time = time_asint()
         self._logger.info('starting background GTD orders manager..')
         threading.Thread(target=clean_expired_orders).start()
-        self._logger.info('lob started properly')
+        self._logger.info('lob started properly, ready to receive orders')
 
     def stop(self):
         '''Stop the lob.'''
