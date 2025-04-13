@@ -55,116 +55,7 @@ class Orderbook:
         self._logger.info('lob initialized, ready to be started using <ob.start>')
 
         if start: self.start()
-
-    #### SNAPSHOT RELATED FUNCS
     
-    @staticmethod
-    def from_snapshot(snapshot: dict, name: Optional[str] = 'LOB', start: Optional[bool] = False):
-        '''
-        Instantiate a new LOB from a given snapshot. A "snapshot" is a dictionary of the following 
-        form `{"bids": <list_of_(price, volume)_pairs>, "asks": <list_of_(price, volume)_pairs>}`.
-
-        It does so by placing a "fake" order. These orders are also not added to the history. 
-        They are simply added to each price level.
-
-        Returns:
-            Orderbook: A new LOB initialized with `snapshot`.
-        '''
-
-        if not isinstance(snapshot, dict) or snapshot.keys() != {'bids', 'asks'}:
-            raise ValueError('snapshot must be a dictionary containing "bids" and "asks" keys')
-
-        if not isinstance(snapshot['bids'], Iterable) or not isinstance(snapshot['asks'], Iterable):
-            raise ValueError('snapshot[bids|asks] must be an iterable of (price, volume) pairs')
-
-        lob = Orderbook(name=name, start=False)
-
-        asks, bids = snapshot['asks'], snapshot['bids']
-
-        lob.apply_snapshot(asks, bids)
-
-        if start: lob.start()
-        return lob
-
-    def apply_snapshot(self, asks: Iterable[tuple[Number, Number]], bids: Iterable[tuple[Number, Number]]):
-        '''Init bid side with `bids` and ask side with `asks`. 
-
-        Args:
-            asks|bids (list): Iterables of (price, volume) pairs.
-        '''
-        for pair in asks:
-            check_snapshot_pair(pair)
-            price, volume = pair
-
-            params = OrderParams(OrderSide.ASK, price, volume, OrderType.FAKE)
-            order  = AskOrder(params)
-            self._askside.place_fakeorder(order)
-
-        for pair in bids:
-            check_snapshot_pair(pair)
-            price, volume = pair
-
-            params = OrderParams(OrderSide.BID, price, volume, OrderType.FAKE)
-            order  = BidOrder(params)
-            self._bidside.place_fakeorder(order)
-
-    #### UPDATES RELATED FUNCS
-
-    def load_updates(self, updates: Iterable[dict]):
-        if not isinstance(updates, Iterable):
-            raise ValueError(
-                'updates must be an Iterable of dicts of the form ' + 
-                '{"bids|asks": <iterable_of_(price, volume)_pairs>}')
-
-        self._updates = iter(updates)
-
-    def step(self): 
-        if self._updates is None: 
-            self._logger.warning('calling <ob.step> but nothing was loaded using <ob.load_updates>')
-            return
-
-        try: updates = next(self._updates)
-        except StopIteration:
-            self._logger.warning('calling <ob.step> but iterator is exhausted')
-            return
-
-        if not isinstance(updates, dict) or updates.keys() != {'bids', 'asks'}:
-            raise ValueError('updates must be a dictionary containing "bids" and "asks" keys')
-
-        bids, asks = updates['bids'], updates['asks']
-
-        self.apply_updates(asks, bids)
-
-    def apply_updates(self, asks: Iterable[tuple[Number, Number]], bids: Iterable[tuple[Number, Number]]):
-        # lock all
-        with self._askside.lock(), self._bidside.lock():
-
-            # apply updates to ask side
-            for pair in asks:
-                check_update_pair(pair)
-                price, volume = pair
-
-                if volume == 0:
-                    self._askside.delete_fakeorder(price)
-                    continue
-
-                params = OrderParams(OrderSide.ASK, price, volume, OrderType.FAKE)
-                order  = AskOrder(params)
-                self._askside.place_fakeorder(order)
-
-            # apply updates to bid side
-            for pair in bids:
-                check_update_pair(pair)
-                price, volume = pair
-
-                if volume == 0:
-                    self._bidside.delete_fakeorder(price)
-                    continue
-
-                params = OrderParams(OrderSide.BID, price, volume, OrderType.FAKE)
-                order  = BidOrder(params)
-                self._bidside.place_fakeorder(order)
-
     #### MAIN FUNCS
 
     def start(self):
@@ -441,6 +332,115 @@ class Orderbook:
         buffer.write(f'- #asks={self.n_asks()}\n')
         buffer.write(f'- #bids={self.n_bids()}')
         return buffer.getvalue()
+
+    #### SNAPSHOT RELATED FUNCS
+    
+    @staticmethod
+    def from_snapshot(snapshot: dict, name: Optional[str] = 'LOB', start: Optional[bool] = False):
+        '''
+        Instantiate a new LOB from a given snapshot. A "snapshot" is a dictionary of the following 
+        form `{"bids": <list_of_(price, volume)_pairs>, "asks": <list_of_(price, volume)_pairs>}`.
+
+        It does so by placing a "fake" order. These orders are also not added to the history. 
+        They are simply added to each price level.
+
+        Returns:
+            Orderbook: A new LOB initialized with `snapshot`.
+        '''
+
+        if not isinstance(snapshot, dict) or snapshot.keys() != {'bids', 'asks'}:
+            raise ValueError('snapshot must be a dictionary containing "bids" and "asks" keys')
+
+        if not isinstance(snapshot['bids'], Iterable) or not isinstance(snapshot['asks'], Iterable):
+            raise ValueError('snapshot[bids|asks] must be an iterable of (price, volume) pairs')
+
+        lob = Orderbook(name=name, start=False)
+
+        asks, bids = snapshot['asks'], snapshot['bids']
+
+        lob._apply_snapshot(asks, bids)
+
+        if start: lob.start()
+        return lob
+
+    def _apply_snapshot(self, asks: Iterable[tuple[Number, Number]], bids: Iterable[tuple[Number, Number]]):
+        '''Init bid side with `bids` and ask side with `asks`. 
+
+        Args:
+            asks|bids (list): Iterables of (price, volume) pairs.
+        '''
+        for pair in asks:
+            check_snapshot_pair(pair)
+            price, volume = pair
+
+            params = OrderParams(OrderSide.ASK, price, volume, OrderType.FAKE)
+            order  = AskOrder(params)
+            self._askside.place_fakeorder(order)
+
+        for pair in bids:
+            check_snapshot_pair(pair)
+            price, volume = pair
+
+            params = OrderParams(OrderSide.BID, price, volume, OrderType.FAKE)
+            order  = BidOrder(params)
+            self._bidside.place_fakeorder(order)
+
+    #### UPDATES RELATED FUNCS
+
+    def load_updates(self, updates: Iterable[dict]):
+        if not isinstance(updates, Iterable):
+            raise ValueError(
+                'updates must be an Iterable of dicts of the form ' + 
+                '{"bids|asks": <iterable_of_(price, volume)_pairs>}')
+
+        self._updates = iter(updates)
+
+    def step(self): 
+        if self._updates is None: 
+            self._logger.warning('calling <ob.step> but nothing was loaded using <ob.load_updates>')
+            return
+
+        try: updates = next(self._updates)
+        except StopIteration:
+            self._logger.warning('calling <ob.step> but iterator is exhausted')
+            return
+
+        if not isinstance(updates, dict) or updates.keys() != {'bids', 'asks'}:
+            raise ValueError('updates must be a dictionary containing "bids" and "asks" keys')
+
+        bids, asks = updates['bids'], updates['asks']
+
+        self._apply_updates(asks, bids)
+
+    def _apply_updates(self, asks: Iterable[tuple[Number, Number]], bids: Iterable[tuple[Number, Number]]):
+        # lock all
+        with self._askside.lock(), self._bidside.lock():
+
+            # apply updates to ask side
+            for pair in asks:
+                check_update_pair(pair)
+                price, volume = pair
+
+                if volume == 0:
+                    self._askside.delete_fakeorder(price)
+                    continue
+
+                params = OrderParams(OrderSide.ASK, price, volume, OrderType.FAKE)
+                order  = AskOrder(params)
+                self._askside.place_fakeorder(order)
+
+            # apply updates to bid side
+            for pair in bids:
+                check_update_pair(pair)
+                price, volume = pair
+
+                if volume == 0:
+                    self._bidside.delete_fakeorder(price)
+                    continue
+
+                params = OrderParams(OrderSide.BID, price, volume, OrderType.FAKE)
+                order  = BidOrder(params)
+                self._bidside.place_fakeorder(order)
 
     #### AUXILIARY FUNCS (where most of the work happens)
 
