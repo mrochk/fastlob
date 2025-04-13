@@ -12,6 +12,7 @@ class Limit:
     _volume: Decimal
     _valid_orders: int
     _orderqueue: deque[Order]
+    _fakeorder: Order
 
     def __init__(self, price: Decimal):
         '''
@@ -22,6 +23,7 @@ class Limit:
         self._volume       = zero()
         self._valid_orders = 0
         self._orderqueue   = deque()
+        self._fakeorder    = None
 
     def price(self) -> Decimal:
         '''Getter for limit price.'''
@@ -86,6 +88,22 @@ class Limit:
         self._volume -= order.quantity()
         self._valid_orders -= 1
         order.set_status(OrderStatus.CANCELED)
+
+    def fakeorder_exists(self):
+        return self._fakeorder is not None
+
+    def set_fakeorder(self, order: Order):
+        if self._fakeorder is not None: 
+            self.delete_fakeorder()
+
+        self._fakeorder = order
+        self.enqueue(self._fakeorder)
+
+    def delete_fakeorder(self):
+        if self._fakeorder is None: return
+
+        self.cancel_order(self._fakeorder)
+        self._fakeorder = None
 
     def _prune_canceled(self):
         '''Pop the next order while it is a canceled one.'''

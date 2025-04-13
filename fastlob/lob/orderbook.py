@@ -35,6 +35,7 @@ class Orderbook:
     _start_time: int
     _alive: bool
     _logger: logging.Logger
+    _updates: Iterable[dict]
 
     def __init__(self, name: Optional[str] = 'LOB', start: Optional[bool] = False):
         '''
@@ -48,19 +49,20 @@ class Orderbook:
         self._expirymap  = SortedDict()
         self._start_time = None
         self._alive      = False
+        self._updates    = None
 
         self._logger = logging.getLogger(f'[{name}]')
         self._logger.info('lob initialized, ready to be started using <ob.start>')
 
         if start: self.start()
-
+    
     @staticmethod
     def from_snapshot(snapshot: dict, name: Optional[str] = 'LOB', start: Optional[bool] = False):
         '''
         Instantiate a new LOB from a given snapshot. A "snapshot" is a dictionary of the following 
         form `{"bids": <list_of_(price, volume)_pairs>, "asks": <list_of_(price, volume)_pairs>}`.
 
-        It does so by placing orders with OrderType.FAKE. These orders are also not added to the history. 
+        It does so by placing a "fake" order. These orders are also not added to the history. 
         They are simply added to each price level.
 
         Returns:
@@ -77,42 +79,113 @@ class Orderbook:
 
         asks, bids = snapshot['asks'], snapshot['bids']
 
-        lob.load_snapshot(asks, bids)
+        lob.apply_snapshot(asks, bids)
 
         if start: lob.start()
         return lob
 
-    def load_snapshot(self, asks: Iterable[tuple[Number, Number]], bids: Iterable[tuple[Number, Number]]):
+    def check_update_pair(self, pair):
+        if not isinstance(pair, tuple) or len(pair) != 2:
+            raise ValueError('must be pairs of (price, volume)')
+
+        price, volume = pair
+
+        if not isinstance(price, Number) or not isinstance(volume, Number):
+            raise ValueError('(price, volume) must be both instances of Number')
+
+        if price <= 0: raise ValueError(f'price must be strictly positive but is {price}')
+
+    def check_snapshot_pair(self, pair):
+        self.check_update_pair(pair)
+        _, volume = pair
+        if volume <= 0: raise ValueError(f'volume must be strictly positive but is {volume}')
+
+    def apply_snapshot(self, asks: Iterable[tuple[Number, Number]], bids: Iterable[tuple[Number, Number]]):
         '''Init bid side with `bids` and ask side with `asks`. 
 
         Args:
             asks|bids (list): Iterables of (price, volume) pairs.
         '''
         for pair in asks:
-            if not isinstance(pair, tuple) or len(pair) != 2:
-                raise ValueError('asks must be pairs of (price, volume)')
-
+            self.check_snapshot_pair(pair)
             price, volume = pair
-
-            if not isinstance(price, Number) or not isinstance(volume, Number):
-                raise ValueError('asks: (price, volume) must be both instances of Number')
-
             params = OrderParams(OrderSide.ASK, price, volume, OrderType.FAKE)
             order = AskOrder(params)
-            self._ask_side.place(order)
+            self.place_fakeorder(self._ask_side, order)
 
         for pair in bids:
-            if not isinstance(pair, tuple) or len(pair) != 2:
-                raise ValueError('bids must be pairs of (price, volume)')
-
+            self.check_snapshot_pair(pair)
             price, volume = pair
-
-            if not isinstance(price, Number) or not isinstance(volume, Number):
-                raise ValueError('bids: (price, volume) must be both instances of Number')
-
             params = OrderParams(OrderSide.BID, price, volume, OrderType.FAKE)
             order = BidOrder(params)
-            self._bid_side.place(order)
+            self.place_fakeorder(self._bid_side, order)
+
+    def load_updates(self, updates: Iterable[dict]):
+        if not isinstance(updates, Iterable):
+            raise ValueError(
+                'updates must be an Iterable of dicts of the form ' + 
+                '{"bids|asks": <iterable_of_(price, volume)_pairs>}')
+
+        self._updates = iter(updates)
+
+    def step(self): 
+        if self._updates is None: 
+            self._logger.warning('calling <ob.step> but nothing was loaded using <ob.load_updates>')
+            return
+
+        try: updates = next(self._updates)
+        except StopIteration:
+            self._logger.warning('calling <ob.step> but iterator is exhausted')
+            return
+
+        if not isinstance(updates, dict) or updates.keys() != {'bids', 'asks'}:
+            raise ValueError('updates must be a dictionary containing "bids" and "asks" keys')
+
+        bids, asks = updates['bids'], updates['asks']
+
+        self.apply_updates(asks, bids)
+
+    def place_fakeorder(self, side: Side, order: Order):
+        if not side._price_exists(order.price()):
+            side._new_price(order.price())
+
+        limit = side.get_limit(order.price())
+        prev_limit_volume = limit.volume()
+
+        limit.set_fakeorder(order)
+        side.update_volume(limit.volume() - prev_limit_volume)
+
+    def delete_fakeorder(self, side: Side, price):
+        if not side._price_exists(price): return 
+
+        limit = side.get_limit(price)
+        if not limit.fakeorder_exists(): return
+
+        limit.delete_fakeorder()
+        if limit.volume() == 0.0: side.pop_limit(price)
+
+    def apply_updates(self, asks: Iterable[tuple[Number, Number]], bids: Iterable[tuple[Number, Number]]):
+        for pair in asks:
+            self.check_update_pair(pair)
+            price, volume = pair
+
+            if volume == 0:
+                self.delete_fakeorder(self._ask_side, price)
+                continue
+
+            params = OrderParams(OrderSide.ASK, price, volume, OrderType.FAKE)
+            self.place_fakeorder(self._ask_side, AskOrder(params))
+
+        for pair in bids:
+            self.check_update_pair(pair)
+            price, volume = pair
+
+            if volume == 0:
+                self.delete_fakeorder(self._bid_side, price)
+                continue
+
+            params = OrderParams(OrderSide.BID, price, volume, OrderType.FAKE)
+            self.place_fakeorder(self._bid_side, BidOrder(params))
 
     def start(self):
         '''Start the lob.'''
@@ -315,6 +388,12 @@ class Orderbook:
 
         return self.n_asks() + self.n_bids()
 
+    def bids_volume(self) -> Decimal:
+        return self._bid_side.volume()
+
+    def asks_volume(self) -> Decimal:
+        return self._ask_side.volume()
+
     def midprice(self) -> Optional[Decimal]:
         '''Get the lob midprice.'''
 
@@ -506,6 +585,7 @@ class Orderbook:
 
         buffer.write(colored(f"\n - spread = {self.spread()}", color="blue"))
         buffer.write(colored(f" | mid-price = {self.midprice()}", color="blue"))
+        buffer.write(colored(f"\n - asks volume = {self.asks_volume()} | bids volume = {self.bids_volume()}", color="blue"))
 
         return buffer.getvalue()
 
