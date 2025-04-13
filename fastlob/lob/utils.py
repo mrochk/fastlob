@@ -1,13 +1,12 @@
 import logging
-from decimal import Decimal
 from typing import Optional
+from numbers import Number
 
-from fastlob.side import Side, AskSide, BidSide
-from fastlob.limit import Limit
-from fastlob.order import Order, AskOrder, BidOrder
+from fastlob.order import Order
 from fastlob.result import ResultBuilder
 from fastlob.enums import OrderType
-from fastlob.utils import zero
+
+# mostly safety checking
 
 def not_running_error(logger: logging.Logger) -> ResultBuilder:
     result = ResultBuilder.new_error()
@@ -15,70 +14,25 @@ def not_running_error(logger: logging.Logger) -> ResultBuilder:
     result.add_message(errmsg); logger.error(errmsg)
     return result
 
-def best_limits(n: int, side: Side) -> list[tuple[Decimal, Decimal, int]]:
-    result = list()
-
-    for i, lim in enumerate(side.limits()):
-        if i >= n: break
-        t = (lim.price(), lim.volume(), lim.valid_orders())
-        result.append(t)
-
-    return result
-
-def is_market_ask(bid_side : BidSide, order: AskOrder) -> bool:
-    if bid_side.empty(): return False
-    if bid_side.best().price() >= order.price(): return True
-    return False
-
-def is_market_bid(ask_side : AskSide, order: BidOrder) -> bool:
-    if ask_side.empty(): return False
-    if ask_side.best().price() <= order.price(): return True
-    return False
-
 def check_limit_order(order: Order) -> Optional[str]:
     match order.otype():
         case OrderType.FOK: # FOK order can not be a limit order by definition
             return 'FOK order is not immediately matchable'
     return None
 
-def check_bid_market_order(ask_side: AskSide, order: BidOrder) -> Optional[str]:
-    match order.otype():
-        case OrderType.FOK: # check that order quantity can be filled
-            if not immediately_matchable_bid(ask_side, order):
-                return 'FOK bid order is not immediately matchable'
-    return None
+def check_update_pair(pair):
+    if not isinstance(pair, tuple) or len(pair) != 2:
+        raise ValueError('must be pairs of (price, volume)')
 
-def check_ask_market_order(bid_side: BidSide, order: AskOrder) -> Optional[str]:
-    match order.otype():
-        case OrderType.FOK: # check that order quantity can be filled
-            if not immediately_matchable_ask(bid_side, order):
-                return 'FOK ask order is not immediately matchable'
-    return None
+    price, volume = pair
 
-def immediately_matchable_bid(ask_side: AskSide, order: BidOrder) -> bool:
-    # we want the limit volume down to the order price to be >= order quantity
-    volume = zero()
-    limits = ask_side.limits()
+    if not isinstance(price, Number) or not isinstance(volume, Number):
+        raise ValueError('(price, volume) must be both instances of Number')
 
-    lim : Limit
-    for lim in limits:
-        if lim.price() > order.price(): break
-        if volume >= order.quantity(): break
-        volume += lim.volume()
+    if price <= 0: raise ValueError(f'price must be strictly positive but is {price}')
 
-    if volume < order.quantity(): return False
-    return True
+def check_snapshot_pair(pair):
+    check_update_pair(pair)
 
-def immediately_matchable_ask(bid_side: BidSide, order: AskOrder) -> bool:
-    # we want the limit volume down to the order price to be >= order quantity
-    volume = zero()
-    limits = bid_side.limits()
-
-    lim : Limit
-    for lim in limits:
-        if lim.price() < order.price(): break
-        if volume >= order.quantity(): break
-        volume += lim.volume()
-
-    if volume < order.quantity(): return False
-    return True
+    _, volume = pair
+    if volume <= 0: raise ValueError(f'volume must be strictly positive but is {volume}')

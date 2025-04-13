@@ -1,6 +1,7 @@
 import io
 import abc
 import threading
+from typing import Optional
 from decimal import Decimal
 from collections.abc import Sequence
 from sortedcollections import SortedDict
@@ -8,7 +9,7 @@ from sortedcollections import SortedDict
 from fastlob.limit import Limit
 from fastlob.order import Order, BidOrder, AskOrder
 from fastlob.utils import zero
-from fastlob.enums import OrderSide
+from fastlob.enums import OrderSide, OrderType
 
 class Side(abc.ABC):
     '''A side is a collection of limits, whose ordering by price depends if it is the bid or ask side.'''
@@ -49,6 +50,16 @@ class Side(abc.ABC):
         '''Get the best limit of the side.'''
         return self._price2limits.peekitem(0)[1]
 
+    def best_limits(self, n: int) -> list[tuple[Decimal, Decimal, int]]:
+        result = list()
+
+        for i, lim in enumerate(self.limits()):
+            if i >= n: break
+            t = (lim.price(), lim.volume(), lim.valid_orders())
+            result.append(t)
+
+        return result
+
     def limits(self) -> Sequence:
         '''Get all limits (sorted).'''
         return self._price2limits.values()
@@ -74,6 +85,13 @@ class Side(abc.ABC):
     def pop_limit(self, price) -> None:
         self._price2limits.pop(price) # remove limit from side
 
+    def check_market_order(self, order: Order) -> Optional[str]:
+        match order.otype():
+            case OrderType.FOK: # check that order quantity can be filled
+                if not self.immediately_matched(order): 
+                    return 'FOK bid order is not immediately matchable'
+        return None
+
     def _price_exists(self, price: Decimal) -> bool:
         '''Check there is a limit at a certain price.'''
         return price in self._price2limits.keys()
@@ -91,7 +109,39 @@ class Side(abc.ABC):
         return f'{self.side().name}Side(size={self.size()}, volume={self.volume()}, best={self.best()})'
 
     @abc.abstractmethod
+    def is_market(self, order: Order) -> bool:
+        '''Check if an order of the opposite side is market.'''
+        pass
+
+    @abc.abstractmethod
+    def immediately_matched(self, order: Order) -> bool: 
+        '''Check that a market order (of the opposite side) can be immediately matched. This function is useful
+        when checking that a FOK order is valid.'''
+        pass
+
+    @abc.abstractmethod
     def view(self, n : int) -> str: pass
+
+    #### RELATED TO FAKE ORDERS
+
+    def place_fakeorder(self, order: Order):
+        if not self._price_exists(order.price()):
+            self._new_price(order.price())
+
+        limit = self.get_limit(order.price())
+        prev_limit_volume = limit.volume()
+
+        limit.set_fakeorder(order)
+        self.update_volume(limit.volume() - prev_limit_volume)
+
+    def delete_fakeorder(self, price: Decimal):
+        if not self._price_exists(price): return 
+
+        limit = self.get_limit(price)
+        if not limit.fakeorder_exists(): return
+
+        limit.delete_fakeorder()
+        if limit.volume() == 0.0: self.pop_limit(price)
 
 class BidSide(Side):
     '''The bid side, where the best price level is the highest.'''
@@ -103,6 +153,24 @@ class BidSide(Side):
 
     def place(self, order: BidOrder):
         return super().place(order)
+
+    def is_market(self, order: AskOrder) -> bool:
+        if self.empty(): return False
+        if self.best().price() >= order.price(): return True
+        return False
+
+    def immediately_matched(self, order: AskOrder) -> bool:
+        # we want the limit volume down to the order price to be >= order quantity
+        volume = zero()
+
+        lim : Limit
+        for lim in self.limits():
+            if lim.price() < order.price(): break
+            if volume >= order.quantity(): break
+            volume += lim.volume()
+
+        if volume < order.quantity(): return False
+        return True
 
     def view(self, n : int = 10) -> str:
         if self.empty(): return str()
@@ -129,6 +197,25 @@ class AskSide(Side):
 
     def place(self, order: AskOrder):
         return super().place(order)
+
+    def is_market(self, order: BidOrder) -> bool:
+        if self.empty(): return False
+        if self.best().price() <= order.price(): return True
+        return False
+
+    def immediately_matched(self, order: BidOrder) -> bool:
+        # we want the limit volume down to the order price to be >= order quantity
+        volume = zero()
+        limits = self.limits()
+
+        lim : Limit
+        for lim in limits:
+            if lim.price() > order.price(): break
+            if volume >= order.quantity(): break
+            volume += lim.volume()
+
+        if volume < order.quantity(): return False
+        return True
 
     def view(self, n : int = 10) -> str:
         if self.empty(): return str()

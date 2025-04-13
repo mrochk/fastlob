@@ -28,8 +28,8 @@ class Orderbook:
     '''
 
     _name: str
-    _ask_side: AskSide
-    _bid_side: BidSide
+    _askside: AskSide
+    _bidside: BidSide
     _orders: dict[str, Order]
     _expirymap: SortedDict
     _start_time: int
@@ -43,8 +43,8 @@ class Orderbook:
             name (Optional[str]): Defaults to "LOB".
         '''
         self._name       = name
-        self._ask_side   = AskSide()
-        self._bid_side   = BidSide()
+        self._askside    = AskSide()
+        self._bidside    = BidSide()
         self._orders     = dict()
         self._expirymap  = SortedDict()
         self._start_time = None
@@ -55,6 +55,8 @@ class Orderbook:
         self._logger.info('lob initialized, ready to be started using <ob.start>')
 
         if start: self.start()
+
+    #### SNAPSHOT RELATED FUNCS
     
     @staticmethod
     def from_snapshot(snapshot: dict, name: Optional[str] = 'LOB', start: Optional[bool] = False):
@@ -84,22 +86,6 @@ class Orderbook:
         if start: lob.start()
         return lob
 
-    def check_update_pair(self, pair):
-        if not isinstance(pair, tuple) or len(pair) != 2:
-            raise ValueError('must be pairs of (price, volume)')
-
-        price, volume = pair
-
-        if not isinstance(price, Number) or not isinstance(volume, Number):
-            raise ValueError('(price, volume) must be both instances of Number')
-
-        if price <= 0: raise ValueError(f'price must be strictly positive but is {price}')
-
-    def check_snapshot_pair(self, pair):
-        self.check_update_pair(pair)
-        _, volume = pair
-        if volume <= 0: raise ValueError(f'volume must be strictly positive but is {volume}')
-
     def apply_snapshot(self, asks: Iterable[tuple[Number, Number]], bids: Iterable[tuple[Number, Number]]):
         '''Init bid side with `bids` and ask side with `asks`. 
 
@@ -107,18 +93,22 @@ class Orderbook:
             asks|bids (list): Iterables of (price, volume) pairs.
         '''
         for pair in asks:
-            self.check_snapshot_pair(pair)
+            check_snapshot_pair(pair)
             price, volume = pair
+
             params = OrderParams(OrderSide.ASK, price, volume, OrderType.FAKE)
-            order = AskOrder(params)
-            self.place_fakeorder(self._ask_side, order)
+            order  = AskOrder(params)
+            self._askside.place_fakeorder(order)
 
         for pair in bids:
-            self.check_snapshot_pair(pair)
+            check_snapshot_pair(pair)
             price, volume = pair
+
             params = OrderParams(OrderSide.BID, price, volume, OrderType.FAKE)
-            order = BidOrder(params)
-            self.place_fakeorder(self._bid_side, order)
+            order  = BidOrder(params)
+            self._bidside.place_fakeorder(order)
+
+    #### UPDATES RELATED FUNCS
 
     def load_updates(self, updates: Iterable[dict]):
         if not isinstance(updates, Iterable):
@@ -145,47 +135,37 @@ class Orderbook:
 
         self.apply_updates(asks, bids)
 
-    def place_fakeorder(self, side: Side, order: Order):
-        if not side._price_exists(order.price()):
-            side._new_price(order.price())
-
-        limit = side.get_limit(order.price())
-        prev_limit_volume = limit.volume()
-
-        limit.set_fakeorder(order)
-        side.update_volume(limit.volume() - prev_limit_volume)
-
-    def delete_fakeorder(self, side: Side, price):
-        if not side._price_exists(price): return 
-
-        limit = side.get_limit(price)
-        if not limit.fakeorder_exists(): return
-
-        limit.delete_fakeorder()
-        if limit.volume() == 0.0: side.pop_limit(price)
-
     def apply_updates(self, asks: Iterable[tuple[Number, Number]], bids: Iterable[tuple[Number, Number]]):
-        for pair in asks:
-            self.check_update_pair(pair)
-            price, volume = pair
+        # lock all
+        with self._askside.lock(), self._bidside.lock():
 
-            if volume == 0:
-                self.delete_fakeorder(self._ask_side, price)
-                continue
+            # apply updates to ask side
+            for pair in asks:
+                check_update_pair(pair)
+                price, volume = pair
 
-            params = OrderParams(OrderSide.ASK, price, volume, OrderType.FAKE)
-            self.place_fakeorder(self._ask_side, AskOrder(params))
+                if volume == 0:
+                    self._askside.delete_fakeorder(price)
+                    continue
 
-        for pair in bids:
-            self.check_update_pair(pair)
-            price, volume = pair
+                params = OrderParams(OrderSide.ASK, price, volume, OrderType.FAKE)
+                order  = AskOrder(params)
+                self._askside.place_fakeorder(order)
 
-            if volume == 0:
-                self.delete_fakeorder(self._bid_side, price)
-                continue
+            # apply updates to bid side
+            for pair in bids:
+                check_update_pair(pair)
+                price, volume = pair
 
-            params = OrderParams(OrderSide.BID, price, volume, OrderType.FAKE)
-            self.place_fakeorder(self._bid_side, BidOrder(params))
+                if volume == 0:
+                    self._bidside.delete_fakeorder(price)
+                    continue
+
+                params = OrderParams(OrderSide.BID, price, volume, OrderType.FAKE)
+                order  = BidOrder(params)
+                self._bidside.place_fakeorder(order)
+
+    #### MAIN FUNCS
 
     def start(self):
         '''Start the lob.'''
@@ -226,12 +206,6 @@ class Orderbook:
 
         if not isinstance(order_params, list): return self.process_one(order_params)
         return self.process_many(order_params)
-
-    def _not_running_error(self):
-        result = ResultBuilder.new_error()
-        errmsg = 'lob is not running (<ob.start> must be called before it can be used)'
-        result.add_message(errmsg); self._logger.error(errmsg)
-        return result
 
     def process_many(self, orders_params: Iterable[OrderParams]) -> list[ExecutionResult]:
         '''Process many orders at once.
@@ -316,14 +290,14 @@ class Orderbook:
 
         match order.side():
             case OrderSide.BID:
-                with self._bid_side.lock():
+                with self._bidside.lock():
                     self._logger.info(f'cancelling bid order %s', orderid)
-                    self._bid_side.cancel_order(order)
+                    self._bidside.cancel_order(order)
 
             case OrderSide.ASK:
-                with self._ask_side.lock():
+                with self._askside.lock():
                     self._logger.info(f'cancelling ask order %s', orderid)
-                    self._ask_side.cancel_order(order)
+                    self._askside.cancel_order(order)
 
         msg = f'order {order.id()} canceled properly'
         result.set_success(True)
@@ -343,7 +317,7 @@ class Orderbook:
         if (nasks := self.n_asks()) < n:
             self._logger.warning(f'asking for %s limits in <ob.best_asks> but lob only contains %s', n, nasks)
 
-        return best_limits(n, self._ask_side)
+        return self._askside.best_limits(n)
 
     def best_bids(self, n: int) -> list[tuple[Decimal, Decimal, int]]:
         '''Return best `n` bids (price, volume, #orders) triplets. If `n > #bids`, returns `#bids` elements.'''
@@ -351,37 +325,37 @@ class Orderbook:
         if (nbids := self.n_bids()) < n:
             self._logger.warning(f'asking for %s limits in <ob.best_bids> but lob only contains %s', n, nbids)
 
-        return best_limits(n, self._bid_side)
+        return self._bidside.best_limits(n)
 
     def best_ask(self) -> Optional[tuple[Decimal, Decimal, int]]:
         '''Get the best ask limit=(price, volume, #orders) in the lob.'''
 
-        if self._ask_side.empty():
+        if self._askside.empty():
             self._logger.warning('calling <ob.best_ask> but lob does not contain ask limits')
             return None
 
-        lim = self._ask_side.best()
+        lim = self._askside.best()
         return lim.price(), lim.volume(), lim.valid_orders()
 
     def best_bid(self) -> Optional[tuple[Decimal, Decimal, int]]:
         '''Get the best bid limit=(price, volume, #orders) in the lob.'''
 
-        if self._bid_side.empty():
+        if self._bidside.empty():
             self._logger.warning('calling <ob.best_bid> but lob does not contain ask limits')
             return None
 
-        lim = self._bid_side.best()
+        lim = self._bidside.best()
         return lim.price(), lim.volume(), lim.valid_orders()
 
     def n_bids(self) -> int:
         '''Get the number of bids limits.'''
 
-        return self._bid_side.size()
+        return self._bidside.size()
 
     def n_asks(self) -> int:
         '''Get the number of asks limits.'''
 
-        return self._ask_side.size()
+        return self._askside.size()
 
     def n_prices(self) -> int:
         '''Get the total number of limits (price levels).'''
@@ -389,15 +363,15 @@ class Orderbook:
         return self.n_asks() + self.n_bids()
 
     def bids_volume(self) -> Decimal:
-        return self._bid_side.volume()
+        return self._bidside.volume()
 
     def asks_volume(self) -> Decimal:
-        return self._ask_side.volume()
+        return self._askside.volume()
 
     def midprice(self) -> Optional[Decimal]:
         '''Get the lob midprice.'''
 
-        if self._ask_side.empty() or self._bid_side.empty():
+        if self._askside.empty() or self._bidside.empty():
             self._logger.warning('calling <ob.midprice> but lob does not contain limits on both sides')
             return None
 
@@ -407,7 +381,7 @@ class Orderbook:
     def spread(self) -> Decimal:
         '''Get the lob spread.'''
 
-        if self._ask_side.empty() or self._bid_side.empty():
+        if self._askside.empty() or self._bidside.empty():
             self._logger.warning('calling <ob.spread> but lob does not contain limits on both sides')
             return None
 
@@ -425,13 +399,58 @@ class Orderbook:
             self._logger.warning(f'order %s not found in lob', orderid)
             return None
 
+    def view(self, n : int = DEFAULT_LIMITS_VIEW) -> str:
+        '''Output a view of the lob state in the following format:\n
+
+        - ...
+        - AskLimit(price=.., size=.., vol=..)
+        -------------------------------------
+        - BidLimit(price=.., size=.., vol=..)
+        - ...
+
+        where `n` controls the number of limits to show on each side
+        '''
+        length = 40
+        if not self._bidside.empty(): length = len(self._bidside.best().view()) + 2
+        elif not self._askside.empty(): length = len(self._askside.best().view()) + 2
+
+        buffer = io.StringIO()
+        buffer.write(f"   [ORDER-BOOK {self._name.upper()}]\n\n")
+        buffer.write(colored(self._askside.view(n), "red"))
+        buffer.write(' ' + '~'*length + '\n')
+        buffer.write(colored(self._bidside.view(n), "green"))
+
+        if self._askside.empty() or self._bidside.empty(): return buffer.getvalue()
+
+        buffer.write(colored(f"\n - spread = {self.spread()}", color="blue"))
+        buffer.write(colored(f" | mid-price = {self.midprice()}", color="blue"))
+        buffer.write(colored(f"\n - asks volume = {self.asks_volume()} | bids volume = {self.bids_volume()}", color="blue"))
+
+        return buffer.getvalue()
+
+    def render(self) -> None:
+        '''Pretty-print.'''
+        print(self.view(), flush=True)
+
+    def __repr__(self) -> str:
+        buffer = io.StringIO()
+        buffer.write(f'Order-book {self._name}\n')
+        buffer.write(f'- started={self._alive}\n')
+        buffer.write(f'- running-time={self.running_time()}s\n')
+        buffer.write(f'- #prices={self.n_prices()}\n')
+        buffer.write(f'- #asks={self.n_asks()}\n')
+        buffer.write(f'- #bids={self.n_bids()}')
+        return buffer.getvalue()
+
+    #### AUXILIARY FUNCS (where most of the work happens)
+
     def _process_bid_order(self, order: BidOrder) -> ResultBuilder:
         self._logger.info(f'processing bid order %s', order.id())
 
-        if is_market_bid(self._ask_side, order):
+        if self._askside.is_market(order):
             self._logger.info(f'bid order %s is market', order.id())
 
-            if (error := check_bid_market_order(self._ask_side, order)) is not None:
+            if (error := self._askside.check_market_order(order)) is not None:
                 order.set_status(OrderStatus.ERROR)
                 result = ResultBuilder.new_market(order.id())
                 result.set_success(False)
@@ -439,16 +458,16 @@ class Orderbook:
                 return result
 
             # execute the order
-            with self._ask_side.lock():
-                result = engine.execute(order, self._ask_side)
+            with self._askside.lock():
+                result = engine.execute(order, self._askside)
 
             if not result.success():
                 self._logger.error(f'bid market order %s could not be executed by engine', order.id())
                 return result
 
             if order.status() == OrderStatus.PARTIAL:
-                with self._bid_side.lock():
-                    self._bid_side.place(order)
+                with self._bidside.lock():
+                    self._bidside.place(order)
                     msg = f'order {order.id()} partially executed, {order.quantity()} was placed as a bid limit order'
                     self._logger.info(msg)
                     result.add_message(msg)
@@ -469,7 +488,7 @@ class Orderbook:
             return result
 
         # place the order in the side
-        with self._bid_side.lock(): self._bid_side.place(order)
+        with self._bidside.lock(): self._bidside.place(order)
 
         result.set_success(True)
         self._logger.info(f'order %s successfully placed', order.id())
@@ -478,10 +497,10 @@ class Orderbook:
     def _process_ask_order(self, order: AskOrder) -> ResultBuilder:
         self._logger.info(f'processing ask order %s', order.id())
 
-        if is_market_ask(self._bid_side, order):
+        if self._bidside.is_market(order):
             self._logger.info(f'ask order %s is market', order.id())
 
-            if (error := check_ask_market_order(self._bid_side, order)) is not None:
+            if (error := self._bidside.check_market_order(order)) is not None:
                 order.set_status(OrderStatus.ERROR)
                 result = ResultBuilder.new_market(order.id())
                 result.set_success(False)
@@ -489,16 +508,16 @@ class Orderbook:
                 return result
 
             # execute the order
-            with self._bid_side.lock():
-                result = engine.execute(order, self._bid_side)
+            with self._bidside.lock():
+                result = engine.execute(order, self._bidside)
 
             if not result.success():
                 self._logger.error(f'ask market order %s could not be executed by engine', order.id())
                 return result
 
             if order.status() == OrderStatus.PARTIAL:
-                with self._ask_side.lock():
-                    self._ask_side.place(order)
+                with self._askside.lock():
+                    self._askside.place(order)
                     msg = f'order {order.id()} partially executed, {order.quantity()} was placed as an ask limit order'
                     self._logger.info(msg)
                     result.add_message(msg)
@@ -519,7 +538,7 @@ class Orderbook:
             return result
 
         # place the order in the side
-        with self._ask_side.lock(): self._ask_side.place(order)
+        with self._askside.lock(): self._askside.place(order)
 
         result.set_success(True)
         self._logger.info(f'order %s successfully placed', order.id())
@@ -553,52 +572,9 @@ class Orderbook:
 
                 match order.side():
                     case OrderSide.ASK:
-                        with self._ask_side.lock(): self._ask_side.cancel_order(order)
+                        with self._askside.lock(): self._askside.cancel_order(order)
 
                     case OrderSide.BID:
-                        with self._bid_side.lock(): self._bid_side.cancel_order(order)
+                        with self._bidside.lock(): self._bidside.cancel_order(order)
 
             del self._expirymap[key]
-
-    def view(self, n : int = DEFAULT_LIMITS_VIEW) -> str:
-        '''Output a view of the lob state in the following format:\n
-
-        - ...
-        - AskLimit(price=.., size=.., vol=..)
-        -------------------------------------
-        - BidLimit(price=.., size=.., vol=..)
-        - ...
-
-        where `n` controls the number of limits to show on each side
-        '''
-        length = 40
-        if not self._bid_side.empty(): length = len(self._bid_side.best().view()) + 2
-        elif not self._ask_side.empty(): length = len(self._ask_side.best().view()) + 2
-
-        buffer = io.StringIO()
-        buffer.write(f"   [ORDER-BOOK {self._name.upper()}]\n\n")
-        buffer.write(colored(self._ask_side.view(n), "red"))
-        buffer.write(' ' + '~'*length + '\n')
-        buffer.write(colored(self._bid_side.view(n), "green"))
-
-        if self._ask_side.empty() or self._bid_side.empty(): return buffer.getvalue()
-
-        buffer.write(colored(f"\n - spread = {self.spread()}", color="blue"))
-        buffer.write(colored(f" | mid-price = {self.midprice()}", color="blue"))
-        buffer.write(colored(f"\n - asks volume = {self.asks_volume()} | bids volume = {self.bids_volume()}", color="blue"))
-
-        return buffer.getvalue()
-
-    def render(self) -> None:
-        '''Pretty-print.'''
-        print(self.view(), flush=True)
-
-    def __repr__(self) -> str:
-        buffer = io.StringIO()
-        buffer.write(f'Order-book {self._name}\n')
-        buffer.write(f'- started={self._alive}\n')
-        buffer.write(f'- running-time={self.running_time()}s\n')
-        buffer.write(f'- #prices={self.n_prices()}\n')
-        buffer.write(f'- #asks={self.n_asks()}\n')
-        buffer.write(f'- #bids={self.n_bids()}')
-        return buffer.getvalue()

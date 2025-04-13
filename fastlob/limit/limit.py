@@ -89,22 +89,6 @@ class Limit:
         self._valid_orders -= 1
         order.set_status(OrderStatus.CANCELED)
 
-    def fakeorder_exists(self):
-        return self._fakeorder is not None
-
-    def set_fakeorder(self, order: Order):
-        if self._fakeorder is not None: 
-            self.delete_fakeorder()
-
-        self._fakeorder = order
-        self.enqueue(self._fakeorder)
-
-    def delete_fakeorder(self):
-        if self._fakeorder is None: return
-
-        self.cancel_order(self._fakeorder)
-        self._fakeorder = None
-
     def _prune_canceled(self):
         '''Pop the next order while it is a canceled one.'''
         while not self.deepempty() and self._orderqueue[0].status() == OrderStatus.CANCELED:
@@ -115,3 +99,18 @@ class Limit:
 
     def __repr__(self) -> str:
         return f'Limit(price={self.price()}, n_orders={self.valid_orders()}, notional={self.notional()})'
+
+    #### RELATED TO FAKE ORDERS
+
+    def fakeorder_exists(self):
+        return self._fakeorder is not None
+
+    def set_fakeorder(self, order: Order):
+        self.delete_fakeorder()
+        self._fakeorder = order
+        self.enqueue(self._fakeorder)
+
+    def delete_fakeorder(self):
+        if self._fakeorder is None: return
+        self.cancel_order(self._fakeorder)
+        self._fakeorder = None
