@@ -3,6 +3,7 @@ import time
 import logging
 import threading
 from decimal import Decimal
+from numbers import Number
 from typing import Optional, Iterable
 from sortedcollections import SortedDict
 from termcolor import colored
@@ -52,6 +53,66 @@ class Orderbook:
         self._logger.info('lob initialized, ready to be started using <ob.start>')
 
         if start: self.start()
+
+    @staticmethod
+    def from_snapshot(snapshot: dict, name: Optional[str] = 'LOB', start: Optional[bool] = False):
+        '''
+        Instantiate a new LOB from a given snapshot. A "snapshot" is a dictionary of the following 
+        form `{"bids": <list_of_(price, volume)_pairs>, "asks": <list_of_(price, volume)_pairs>}`.
+
+        It does so by placing orders with OrderType.FAKE. These orders are also not added to the history. 
+        They are simply added to each price level.
+
+        Returns:
+            Orderbook: A new LOB initialized with `snapshot`.
+        '''
+
+        if not isinstance(snapshot, dict) or snapshot.keys() != {'bids', 'asks'}:
+            raise ValueError('snapshot must be a dictionary containing "bids" and "asks" keys')
+
+        if not isinstance(snapshot['bids'], Iterable) or not isinstance(snapshot['asks'], Iterable):
+            raise ValueError('snapshot[bids|asks] must be an iterable of (price, volume) pairs')
+
+        lob = Orderbook(name=name, start=False)
+
+        asks, bids = snapshot['asks'], snapshot['bids']
+
+        lob.load_snapshot(asks, bids)
+
+        if start: lob.start()
+        return lob
+
+    def load_snapshot(self, asks: Iterable[tuple[Number, Number]], bids: Iterable[tuple[Number, Number]]):
+        '''Init bid side with `bids` and ask side with `asks`. 
+
+        Args:
+            asks|bids (list): Iterables of (price, volume) pairs.
+        '''
+        for pair in asks:
+            if not isinstance(pair, tuple) or len(pair) != 2:
+                raise ValueError('asks must be pairs of (price, volume)')
+
+            price, volume = pair
+
+            if not isinstance(price, Number) or not isinstance(volume, Number):
+                raise ValueError('asks: (price, volume) must be both instances of Number')
+
+            params = OrderParams(OrderSide.ASK, price, volume, OrderType.FAKE)
+            order = AskOrder(params)
+            self._ask_side.place(order)
+
+        for pair in bids:
+            if not isinstance(pair, tuple) or len(pair) != 2:
+                raise ValueError('bids must be pairs of (price, volume)')
+
+            price, volume = pair
+
+            if not isinstance(price, Number) or not isinstance(volume, Number):
+                raise ValueError('bids: (price, volume) must be both instances of Number')
+
+            params = OrderParams(OrderSide.BID, price, volume, OrderType.FAKE)
+            order = BidOrder(params)
+            self._bid_side.place(order)
 
     def start(self):
         '''Start the lob.'''
@@ -386,7 +447,7 @@ class Orderbook:
         return result
 
     def _save_order(self, order: Order, result: ResultBuilder):
-        self._logger.info('adding order to dict')
+        self._logger.info('adding order to history')
         self._orders[order.id()] = order
 
         if order.otype() == OrderType.GTD: # and result._KIND == ResultType.LIMIT: <- doesnt work in the case where the order is a partially filling market (then placed in limit), but how to not add market orders then ?
@@ -436,15 +497,15 @@ class Orderbook:
         elif not self._ask_side.empty(): length = len(self._ask_side.best().view()) + 2
 
         buffer = io.StringIO()
-        buffer.write(f"   [ORDER-BOOK {self._name}]\n\n")
+        buffer.write(f"   [ORDER-BOOK {self._name.upper()}]\n\n")
         buffer.write(colored(self._ask_side.view(n), "red"))
         buffer.write(' ' + '~'*length + '\n')
         buffer.write(colored(self._bid_side.view(n), "green"))
 
         if self._ask_side.empty() or self._bid_side.empty(): return buffer.getvalue()
 
-        buffer.write(colored(f"\n    spread = {self.spread()}", color="blue"))
-        buffer.write(colored(f", midprice = {self.midprice()}", color="blue"))
+        buffer.write(colored(f"\n - spread = {self.spread()}", color="blue"))
+        buffer.write(colored(f" | mid-price = {self.midprice()}", color="blue"))
 
         return buffer.getvalue()
 
@@ -454,9 +515,9 @@ class Orderbook:
 
     def __repr__(self) -> str:
         buffer = io.StringIO()
-        buffer.write(f'Order-Book {self._name}\n')
+        buffer.write(f'Order-book {self._name}\n')
         buffer.write(f'- started={self._alive}\n')
-        buffer.write(f'- running_time={self.running_time()}s\n')
+        buffer.write(f'- running-time={self.running_time()}s\n')
         buffer.write(f'- #prices={self.n_prices()}\n')
         buffer.write(f'- #asks={self.n_asks()}\n')
         buffer.write(f'- #bids={self.n_bids()}')

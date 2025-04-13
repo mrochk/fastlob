@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from sortedcollections import SortedDict
 
 from fastlob.limit import Limit
-from fastlob.order import Order
+from fastlob.order import Order, BidOrder, AskOrder
 from fastlob.utils import zero
 from fastlob.enums import OrderSide
 
@@ -101,6 +101,9 @@ class BidSide(Side):
         self._side = OrderSide.BID
         self._price2limits = SortedDict(lambda x: -x)
 
+    def place(self, order: BidOrder):
+        return super().place(order)
+
     def view(self, n : int = 10) -> str:
         if self.empty(): return str()
 
@@ -123,6 +126,9 @@ class AskSide(Side):
         super().__init__()
         self._side = OrderSide.ASK
         self._price2limits = SortedDict()
+
+    def place(self, order: AskOrder):
+        return super().place(order)
 
     def view(self, n : int = 10) -> str:
         if self.empty(): return str()
