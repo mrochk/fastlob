@@ -7,7 +7,7 @@
 
 *Package currently in development, bugs are expected.*
 
-*The main branch does not implement multi-threaded order processing because it is still being developed on the `multithreading` branch, check out this branch, or the corresponding issue for more infos.*
+*The main branch does not implement multi-threaded order processing because it will be developed on the `multithreading` branch, check out this branch, or the corresponding issue for more infos.*
 
 The goal is to build an efficient easy to use package with a clean and comprehensible API. 
 
