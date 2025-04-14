@@ -37,7 +37,7 @@ class Orderbook:
     _logger: logging.Logger
     _updates: Iterable[dict]
 
-    def __init__(self, name: Optional[str] = 'LOB', start: Optional[bool] = False):
+    def __init__(self, name: Optional[str] = 'LOB-1', start: Optional[bool] = False):
         '''
         Args:
             name (Optional[str]): Defaults to "LOB".
@@ -291,16 +291,7 @@ class Orderbook:
             return None
 
     def view(self, n : int = DEFAULT_LIMITS_VIEW) -> str:
-        '''Output a view of the lob state in the following format:\n
-
-        - ...
-        - AskLimit(price=.., size=.., vol=..)
-        -------------------------------------
-        - BidLimit(price=.., size=.., vol=..)
-        - ...
-
-        where `n` controls the number of limits to show on each side
-        '''
+        '''Output a view of the lob state.'''
         length = 40
         if not self._bidside.empty(): length = len(self._bidside.best().view()) + 2
         elif not self._askside.empty(): length = len(self._askside.best().view()) + 2
@@ -314,7 +305,7 @@ class Orderbook:
         if self._askside.empty() or self._bidside.empty(): return buffer.getvalue()
 
         buffer.write(colored(f"\n - spread = {self.spread()}", color="blue"))
-        buffer.write(colored(f" | mid-price = {self.midprice()}", color="blue"))
+        buffer.write(colored(f" | midprice = {self.midprice()}", color="blue"))
         buffer.write(colored(f"\n - asks volume = {self.asks_volume()} | bids volume = {self.bids_volume()}", color="blue"))
 
         return buffer.getvalue()
@@ -358,32 +349,11 @@ class Orderbook:
 
         asks, bids = snapshot['asks'], snapshot['bids']
 
-        lob._apply_snapshot(asks, bids)
+        lob._askside.apply_snapshot(asks)
+        lob._bidside.apply_snapshot(bids)
 
         if start: lob.start()
         return lob
-
-    def _apply_snapshot(self, asks: Iterable[tuple[Number, Number]], bids: Iterable[tuple[Number, Number]]):
-        '''Init bid side with `bids` and ask side with `asks`. 
-
-        Args:
-            asks|bids (list): Iterables of (price, volume) pairs.
-        '''
-        for pair in asks:
-            check_snapshot_pair(pair)
-            price, volume = pair
-
-            params = OrderParams(OrderSide.ASK, price, volume, OrderType.FAKE)
-            order  = AskOrder(params)
-            self._askside.place_fakeorder(order)
-
-        for pair in bids:
-            check_snapshot_pair(pair)
-            price, volume = pair
-
-            params = OrderParams(OrderSide.BID, price, volume, OrderType.FAKE)
-            order  = BidOrder(params)
-            self._bidside.place_fakeorder(order)
 
     #### UPDATES RELATED FUNCS
 
@@ -410,37 +380,14 @@ class Orderbook:
 
         bids, asks = updates['bids'], updates['asks']
 
-        self._apply_updates(asks, bids)
-
-    def _apply_updates(self, asks: Iterable[tuple[Number, Number]], bids: Iterable[tuple[Number, Number]]):
-        # lock all
+        # lock all to aply updates
         with self._askside.lock(), self._bidside.lock():
 
             # apply updates to ask side
-            for pair in asks:
-                check_update_pair(pair)
-                price, volume = pair
-
-                if volume == 0:
-                    self._askside.delete_fakeorder(price)
-                    continue
-
-                params = OrderParams(OrderSide.ASK, price, volume, OrderType.FAKE)
-                order  = AskOrder(params)
-                self._askside.place_fakeorder(order)
+            self._askside.apply_updates(asks)
 
             # apply updates to bid side
-            for pair in bids:
-                check_update_pair(pair)
-                price, volume = pair
-
-                if volume == 0:
-                    self._bidside.delete_fakeorder(price)
-                    continue
-
-                params = OrderParams(OrderSide.BID, price, volume, OrderType.FAKE)
-                order  = BidOrder(params)
-                self._bidside.place_fakeorder(order)
+            self._bidside.apply_updates(bids)
 
     #### AUXILIARY FUNCS (where most of the work happens)
 

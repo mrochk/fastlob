@@ -28,4 +28,4 @@ lines:
 	@find fastlob -name "*.py" | xargs wc -l
 
 clean:
-	@rm -rf build .hypothesis .mypy_cache __pycache__ pylob.egg-info
+	@rm -rf build .hypothesis .mypy_cache __pycache__ pylob.egg-info .vscode .ipynb_checkpoints

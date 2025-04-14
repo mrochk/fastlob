@@ -1,15 +1,18 @@
 import io
 import abc
 import threading
-from typing import Optional
+from numbers import Number
+from typing import Optional, Iterable
 from decimal import Decimal
 from collections.abc import Sequence
 from sortedcollections import SortedDict
 
 from fastlob.limit import Limit
-from fastlob.order import Order, BidOrder, AskOrder
-from fastlob.utils import zero
+from fastlob.order import Order, BidOrder, AskOrder, OrderParams
+from fastlob.utils import zero, todecimal
 from fastlob.enums import OrderSide, OrderType
+
+from .utils import check_snapshot_pair, check_update_pair
 
 class Side(abc.ABC):
     '''A side is a collection of limits, whose ordering by price depends if it is the bid or ask side.'''
@@ -120,6 +123,16 @@ class Side(abc.ABC):
         pass
 
     @abc.abstractmethod
+    def apply_snapshot(self, snapshot: Iterable[tuple[Number, Number]]): 
+        '''Initialize side with predefined volume for price levels.'''
+        pass
+
+    @abc.abstractmethod
+    def apply_updates(self, updates: Iterable[tuple[Number, Number]]): 
+        '''Apply price level updates to side.'''
+        pass
+
+    @abc.abstractmethod
     def view(self, n : int) -> str: pass
 
     #### RELATED TO FAKE ORDERS
@@ -135,7 +148,12 @@ class Side(abc.ABC):
         self.update_volume(limit.volume() - prev_limit_volume)
 
     def delete_fakeorder(self, price: Decimal):
-        if not self._price_exists(price): return 
+        if not self._price_exists(price): 
+            print('price does not exist in side')
+            print(Decimal(price), self._price2limits.keys()[0])
+            print(type(self._price2limits.keys()[0]))
+            print(Decimal(price) == self._price2limits.keys()[0])
+            return 
 
         limit = self.get_limit(price)
         if not limit.fakeorder_exists(): return
@@ -171,6 +189,33 @@ class BidSide(Side):
 
         if volume < order.quantity(): return False
         return True
+
+    def apply_snapshot(self, bids):
+        # apply snapshot (init side) to askside
+        for pair in bids:
+            check_snapshot_pair(pair)
+            price, volume = pair
+
+            params = OrderParams(OrderSide.BID, price, volume, OrderType.FAKE)
+            order  = BidOrder(params)
+            self.place_fakeorder(order)
+        
+    def apply_updates(self, bids):
+        # apply updates to bid side
+        for pair in bids:
+            check_update_pair(pair)
+            price, volume = pair
+
+            price  = todecimal(price)
+            volume = todecimal(volume)
+
+            if volume == 0:
+                self.delete_fakeorder(price)
+                continue
+
+            params = OrderParams(OrderSide.BID, price, volume, OrderType.FAKE)
+            order  = BidOrder(params)
+            self.place_fakeorder(order)
 
     def view(self, n : int = 10) -> str:
         if self.empty(): return str()
@@ -216,6 +261,33 @@ class AskSide(Side):
 
         if volume < order.quantity(): return False
         return True
+
+    def apply_snapshot(self, asks):
+        # apply snapshot (init side) to askside
+        for pair in asks:
+            check_snapshot_pair(pair)
+            price, volume = pair
+
+            params = OrderParams(OrderSide.ASK, price, volume, OrderType.FAKE)
+            order  = AskOrder(params)
+            self.place_fakeorder(order)
+
+    def apply_updates(self, asks):
+        # apply updates to ask side
+        for pair in asks:
+            check_update_pair(pair)
+            price, volume = pair
+
+            price  = todecimal(price)
+            volume = todecimal(volume)
+
+            if volume == 0:
+                self.delete_fakeorder(price)
+                continue
+
+            params = OrderParams(OrderSide.ASK, price, volume, OrderType.FAKE)
+            order  = AskOrder(params)
+            self.place_fakeorder(order)
 
     def view(self, n : int = 10) -> str:
         if self.empty(): return str()
