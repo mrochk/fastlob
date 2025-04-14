@@ -1,3 +1,5 @@
+'''Various constants and parameters used in the project.'''
+
 import os
 from decimal import Decimal
 

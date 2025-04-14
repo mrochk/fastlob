@@ -1,5 +1,7 @@
-# fastlob | Fast Limit-Order-Book in Python
-**Fast &amp; minimalist fixed decimal precision limit-order-book (LOB) implementation in pure Python with almost no dependencies.**
+# fastlob | Python Limit-Order-Book
+<br>
+
+**Fast & minimalist limit-order-book (LOB) implementation in Python, with almost no dependencies.**
 
 <br>
 
@@ -7,7 +9,14 @@
 
 *Package currently in development, bugs are expected.*
 
-*The main branch does not implement multi-threaded order processing because it will be developed on the `multithreading` branch, check out this branch, or the corresponding issue for more infos.*
+**Functionalities:**
+- Place limit orders.
+- Execute market orders.
+- Orders can be Good-Till-Cancel (GTC), Fill-or-Kill (FOK) or Good-Till-Date (GTD).
+- Cancel pending or partially filled orders.
+- Query order status (pending, filled, partially filled, canceled...).
+- Extract spread, midprice, volume, etc.
+- Simulate on historical data.
 
 The goal is to build an efficient easy to use package with a clean and comprehensible API. 
 
@@ -15,11 +24,13 @@ We aim to keep it minimalist and simple, while keeping reasonable performances (
 
 We implement three types of orders: *FOK*, *GTC* and *GTD*. Every order is defined as a limit order, but will be executed as a market order if its price matches the best (bid or ask) limit price in the book.
 
-*In the case of GTD orders, the book only supports whole seconds for the order expiry (order can not be set to expire in 3.8 seconds, it will be rounded to 4).*
+*In the case of GTD orders, the book only supports whole seconds for the order expiry (order can not be set to expire in 3.8 seconds, in this case it will be rounded to 4, nearest integer).*
+
+*We do not implement multi-threaded order processing yet, check out the corresponding issue for more infos.*
 
 ## Installation
 
-The package is now available on [PyPI](https://pypi.org/project/fastlob/), you can simply install it using
+The package available on [PyPI](https://pypi.org/project/fastlob/), you can simply install it using
 ```
 pip install fastlob
 ```
@@ -49,9 +60,7 @@ from fastlob import Orderbook, OrderParams, OrderSide, OrderType
 
 logging.basicConfig(level=logging.INFO) # maximum logging
 
-lob = Orderbook(name='ABCD') # init lob
-
-lob.start() # start background processes
+lob = Orderbook(name='MYLOB', start=True) # init and start lob
 
 # every order must be created this way 
 params = OrderParams(
@@ -76,36 +85,40 @@ lob.render() # pretty-print the book
 lob.stop() # stop the background processes
 ```
 
-In the notebook [`simulate.ipynb`](examples/simulate.ipynb) you will find an example of simulating the arrival of many orders using different distributions.
+In the notebook [`simulate`](examples/simulate.ipynb) you will find an example of simulating the arrival of many orders using different distributions.
+
+In [`load_snapshot_updates`](examples/load_snapshot_updates.ipynb) you'll find an example of running the lob on historical data.
 
 ## Contributing
 
 As mentioned earlier, this package is still in early development, and contributions are more than welcome.
 
-Please do not hesitate to contact me, or directly submit a pull request if you'd like to contribute.
+Please do not hesitate to contact me or directly submit a pull request if you'd like to contribute, there are also various issues open on Github.
 
 ## Lines Count
 ```
-  92 fastlob/engine/engine.py
+  96 fastlob/engine/engine.py
    3 fastlob/engine/__init__.py
-  18 fastlob/utils/utils.py
+  22 fastlob/utils/utils.py
    1 fastlob/utils/__init__.py
-  82 fastlob/result/result.py
+ 115 fastlob/result/result.py
    1 fastlob/result/__init__.py
-  79 fastlob/order/params.py
+  84 fastlob/order/params.py
    1 fastlob/order/__init__.py
-  97 fastlob/order/order.py
-  56 fastlob/enums/enums.py
+  99 fastlob/order/order.py
+  66 fastlob/enums/enums.py
    1 fastlob/enums/__init__.py
-  20 fastlob/consts/consts.py
+  22 fastlob/consts/consts.py
    1 fastlob/consts/__init__.py
-  99 fastlob/limit/limit.py
+ 122 fastlob/limit/limit.py
    1 fastlob/limit/__init__.py
- 140 fastlob/side/side.py
+  24 fastlob/side/utils.py
+ 320 fastlob/side/side.py
    1 fastlob/side/__init__.py
    5 fastlob/__init__.py
- 461 fastlob/lob/orderbook.py
-  83 fastlob/lob/utils.py
+ 546 fastlob/lob/orderbook.py
+  28 fastlob/lob/utils.py
    1 fastlob/lob/__init__.py
-1243 total
+
+1560 total
 ```
