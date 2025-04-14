@@ -1,3 +1,5 @@
+'''The order object manipulated by the lob.'''
+
 import abc
 import secrets
 from typing import Optional

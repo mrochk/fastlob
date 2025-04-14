@@ -1,13 +1,19 @@
+'''All the project enumerations are here.'''
+
 from enum import Enum
 
 class OrderSide(Enum):
     '''The side of an order/limit, can be BID or ASK.'''
 
     BID = False
+    '''The bid (buy) side.'''
     ASK = True
+    '''The ask (sell) side.'''
 
     @staticmethod
-    def invert(side): return OrderSide.BID if side == OrderSide.ASK else OrderSide.ASK
+    def invert(side):
+        '''Invert the side and return it.'''
+        return OrderSide.BID if side == OrderSide.ASK else OrderSide.ASK
 
 class OrderType(Enum):
     '''The type of the order, can be FOK, GTC or GTD.'''
@@ -44,7 +50,9 @@ class OrderStatus(Enum):
     '''Set by the lob if the order can not be accepted.'''
 
     @staticmethod
-    def valid_states() -> set: return {OrderStatus.CREATED, OrderStatus.PENDING, OrderStatus.PARTIAL}
+    def valid_states() -> set: 
+        '''Returns the set of states in which an order is considered valid.'''
+        return {OrderStatus.CREATED, OrderStatus.PENDING, OrderStatus.PARTIAL}
 
 class ResultType(Enum):
     '''The type of execution result.'''

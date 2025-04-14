@@ -1,9 +1,10 @@
+'''Main module containing the Orderbook class.'''
+
 import io
 import time
 import logging
 import threading
 from decimal import Decimal
-from numbers import Number
 from typing import Optional, Iterable
 from sortedcollections import SortedDict
 from termcolor import colored
@@ -16,7 +17,7 @@ from fastlob.result import ResultBuilder, ExecutionResult
 from fastlob.utils import time_asint
 from fastlob.consts import DEFAULT_LIMITS_VIEW
 
-from .utils import *
+from .utils import not_running_error, check_limit_order
 
 class Orderbook:
     '''
@@ -55,7 +56,7 @@ class Orderbook:
         self._logger.info('lob initialized, ready to be started using <ob.start>')
 
         if start: self.start()
-    
+
     #### MAIN FUNCS
 
     def start(self):
@@ -95,7 +96,9 @@ class Orderbook:
     def __call__(self, order_params: OrderParams | Iterable[OrderParams]) -> ExecutionResult | list[ExecutionResult]:
         '''Process one or many orders: equivalent to calling `process_one` or `process_many`.'''
 
-        if not isinstance(order_params, list): return self.process_one(order_params)
+        if not isinstance(order_params, Iterable):
+            return self.process_one(order_params)
+
         return self.process_many(order_params)
 
     def process_many(self, orders_params: Iterable[OrderParams]) -> list[ExecutionResult]:
@@ -140,7 +143,7 @@ class Orderbook:
                 result = self._process_bid_order(order)
 
         if result.success():
-            self._logger.info(f'order %s was processed successfully', order.id())
+            self._logger.info('order %s was processed successfully', order.id())
             self._save_order(order, result)
 
         else: self._logger.warning('order was not successfully processed')
@@ -158,7 +161,7 @@ class Orderbook:
         if not self._alive:
             return not_running_error(self._logger).build()
 
-        self._logger.info(f'attempting to cancel order with id %s', orderid)
+        self._logger.info('attempting to cancel order with id %s', orderid)
 
         result = ResultBuilder.new_cancel(orderid)
 
@@ -177,17 +180,17 @@ class Orderbook:
             self._logger.warning(errmsg)
             return result.build()
 
-        self._logger.info(f'order %s can be canceled', orderid)
+        self._logger.info('order %s can be canceled', orderid)
 
         match order.side():
             case OrderSide.BID:
                 with self._bidside.lock():
-                    self._logger.info(f'cancelling bid order %s', orderid)
+                    self._logger.info('cancelling bid order %s', orderid)
                     self._bidside.cancel_order(order)
 
             case OrderSide.ASK:
                 with self._askside.lock():
-                    self._logger.info(f'cancelling ask order %s', orderid)
+                    self._logger.info('cancelling ask order %s', orderid)
                     self._askside.cancel_order(order)
 
         msg = f'order {order.id()} canceled properly'
@@ -206,7 +209,7 @@ class Orderbook:
         '''Return best `n` asks (price, volume, #orders) triplets. If `n > #asks`, returns `#asks` elements.'''
 
         if (nasks := self.n_asks()) < n:
-            self._logger.warning(f'asking for %s limits in <ob.best_asks> but lob only contains %s', n, nasks)
+            self._logger.warning('asking for %s limits in <ob.best_asks> but lob only contains %s', n, nasks)
 
         return self._askside.best_limits(n)
 
@@ -214,7 +217,7 @@ class Orderbook:
         '''Return best `n` bids (price, volume, #orders) triplets. If `n > #bids`, returns `#bids` elements.'''
 
         if (nbids := self.n_bids()) < n:
-            self._logger.warning(f'asking for %s limits in <ob.best_bids> but lob only contains %s', n, nbids)
+            self._logger.warning('asking for %s limits in <ob.best_bids> but lob only contains %s', n, nbids)
 
         return self._bidside.best_limits(n)
 
@@ -254,9 +257,13 @@ class Orderbook:
         return self.n_asks() + self.n_bids()
 
     def bids_volume(self) -> Decimal:
+        '''Total volume on the bid side.'''
+
         return self._bidside.volume()
 
     def asks_volume(self) -> Decimal:
+        '''Total volume on the ask side.'''
+
         return self._askside.volume()
 
     def midprice(self) -> Optional[Decimal]:
@@ -284,14 +291,15 @@ class Orderbook:
 
         try:
             order = self._orders[orderid]
-            self._logger.info(f'order %s found in lob', orderid)
+            self._logger.info('order %s found in lob', orderid)
             return order.status(), order.quantity()
         except KeyError:
-            self._logger.warning(f'order %s not found in lob', orderid)
+            self._logger.warning('order %s not found in lob', orderid)
             return None
 
     def view(self, n : int = DEFAULT_LIMITS_VIEW) -> str:
-        '''Output a view of the lob state.'''
+        '''Get a pretty-printed view of the lob state.'''
+
         length = 40
         if not self._bidside.empty(): length = len(self._bidside.best().view()) + 2
         elif not self._askside.empty(): length = len(self._askside.best().view()) + 2
@@ -302,16 +310,21 @@ class Orderbook:
         buffer.write(' ' + '~'*length + '\n')
         buffer.write(colored(self._bidside.view(n), "green"))
 
-        if self._askside.empty() or self._bidside.empty(): return buffer.getvalue()
+        if self._askside.empty() or self._bidside.empty():
+            return buffer.getvalue()
 
-        buffer.write(colored(f"\n - spread = {self.spread()}", color="blue"))
-        buffer.write(colored(f" | midprice = {self.midprice()}", color="blue"))
-        buffer.write(colored(f"\n - asks volume = {self.asks_volume()} | bids volume = {self.bids_volume()}", color="blue"))
+        footer =  f'\n - spread = {self.spread()}'
+        footer += f' | midprice = {self.midprice()}'
+        footer += f'\n - asks volume = {self.asks_volume()}'
+        footer += f' | bids volume = {self.bids_volume()}'
+
+        buffer.write(colored(footer, color='blue'))
 
         return buffer.getvalue()
 
     def render(self) -> None:
-        '''Pretty-print.'''
+        '''Pretty-print the lob.'''
+
         print(self.view(), flush=True)
 
     def __repr__(self) -> str:
@@ -325,7 +338,7 @@ class Orderbook:
         return buffer.getvalue()
 
     #### SNAPSHOT RELATED FUNCS
-    
+
     @staticmethod
     def from_snapshot(snapshot: dict, name: Optional[str] = 'LOB', start: Optional[bool] = False):
         '''
@@ -358,6 +371,8 @@ class Orderbook:
     #### UPDATES RELATED FUNCS
 
     def load_updates(self, updates: Iterable[dict]):
+        '''Load `updates` so that every time `step` is called, the lob gets updated (using fake orders).'''
+
         if not isinstance(updates, Iterable):
             raise ValueError(
                 'updates must be an Iterable of dicts of the form ' + 
@@ -365,8 +380,10 @@ class Orderbook:
 
         self._updates = iter(updates)
 
-    def step(self): 
-        if self._updates is None: 
+    def step(self):
+        '''Apply the updates in `next(updates)` to the lob.'''
+
+        if self._updates is None:
             self._logger.warning('calling <ob.step> but nothing was loaded using <ob.load_updates>')
             return
 
@@ -392,10 +409,10 @@ class Orderbook:
     #### AUXILIARY FUNCS (where most of the work happens)
 
     def _process_bid_order(self, order: BidOrder) -> ResultBuilder:
-        self._logger.info(f'processing bid order %s', order.id())
+        self._logger.info('processing bid order %s', order.id())
 
         if self._askside.is_market(order):
-            self._logger.info(f'bid order %s is market', order.id())
+            self._logger.info('bid order %s is market', order.id())
 
             if (error := self._askside.check_market_order(order)) is not None:
                 order.set_status(OrderStatus.ERROR)
@@ -409,7 +426,7 @@ class Orderbook:
                 result = engine.execute(order, self._askside)
 
             if not result.success():
-                self._logger.error(f'bid market order %s could not be executed by engine', order.id())
+                self._logger.error('bid market order %s could not be executed by engine', order.id())
                 return result
 
             if order.status() == OrderStatus.PARTIAL:
@@ -419,11 +436,11 @@ class Orderbook:
                     self._logger.info(msg)
                     result.add_message(msg)
 
-            self._logger.info(f'executed bid market order %s', order.id())
+            self._logger.info('executed bid market order %s', order.id())
             return result
 
         # else: is limit order
-        self._logger.info(f'bid order %s is limit', order.id())
+        self._logger.info('bid order %s is limit', order.id())
 
         result = ResultBuilder.new_limit(order.id())
 
@@ -438,14 +455,14 @@ class Orderbook:
         with self._bidside.lock(): self._bidside.place(order)
 
         result.set_success(True)
-        self._logger.info(f'order %s successfully placed', order.id())
+        self._logger.info('order %s successfully placed', order.id())
         return result
 
     def _process_ask_order(self, order: AskOrder) -> ResultBuilder:
-        self._logger.info(f'processing ask order %s', order.id())
+        self._logger.info('processing ask order %s', order.id())
 
         if self._bidside.is_market(order):
-            self._logger.info(f'ask order %s is market', order.id())
+            self._logger.info('ask order %s is market', order.id())
 
             if (error := self._bidside.check_market_order(order)) is not None:
                 order.set_status(OrderStatus.ERROR)
@@ -459,7 +476,7 @@ class Orderbook:
                 result = engine.execute(order, self._bidside)
 
             if not result.success():
-                self._logger.error(f'ask market order %s could not be executed by engine', order.id())
+                self._logger.error('ask market order %s could not be executed by engine', order.id())
                 return result
 
             if order.status() == OrderStatus.PARTIAL:
@@ -469,11 +486,11 @@ class Orderbook:
                     self._logger.info(msg)
                     result.add_message(msg)
 
-            self._logger.info(f'executed ask market order %s', order.id())
+            self._logger.info('executed ask market order %s', order.id())
             return result
 
         # else is limit order
-        self._logger.info(f'ask order %s is limit', order.id())
+        self._logger.info('ask order %s is limit', order.id())
 
         result = ResultBuilder.new_limit(order.id())
 
@@ -488,14 +505,16 @@ class Orderbook:
         with self._askside.lock(): self._askside.place(order)
 
         result.set_success(True)
-        self._logger.info(f'order %s successfully placed', order.id())
+        self._logger.info('order %s successfully placed', order.id())
         return result
 
     def _save_order(self, order: Order, result: ResultBuilder):
         self._logger.info('adding order to history')
         self._orders[order.id()] = order
 
-        if order.otype() == OrderType.GTD: # and result._KIND == ResultType.LIMIT: <- doesnt work in the case where the order is a partially filling market (then placed in limit), but how to not add market orders then ?
+        if order.otype() == OrderType.GTD: # and result._KIND == ResultType.LIMIT:
+            # <- TODO: doesnt work in the case where the order is a partially filling market (then placed in limit),
+            # but how to not add market orders then ?
             self._logger.info('order is a limit GTD order, adding order to expiry map')
             if order.expiry() not in self._expirymap.keys(): self._expirymap[order.expiry()] = list()
             self._expirymap[order.expiry()].append(order)
@@ -512,7 +531,7 @@ class Orderbook:
         for key in keys_outdated:
             expired_orders = self._expirymap[key]
 
-            self._logger.info(f'GTD orders: cancelling %s with t=%s', len(expired_orders), key)
+            self._logger.info('GTD orders: cancelling %s with t=%s', len(expired_orders), key)
 
             for order in expired_orders:
                 if not order.valid(): continue
