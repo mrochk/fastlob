@@ -1,3 +1,5 @@
+'''Global utility functions.'''
+
 import time
 from decimal import Decimal
 from numbers import Number
@@ -15,4 +17,6 @@ def todecimal(n: Number | str) -> Decimal:
 
 def zero(): return Decimal('0')
 
-def time_asint() -> int: return int(time.time())
+def time_asint() -> int:
+    '''Return rounded time.time() as int.'''
+    return int(time.time())

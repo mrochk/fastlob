@@ -24,11 +24,12 @@ def execute(order: Order, side: Side) -> ResultBuilder:
 
 def fill_whole_limits(side: Side, order: Order, result: ResultBuilder) -> bool:
     '''While the order to execute is larger than entire limits, fill them.'''
+
     while order.quantity() > 0 and not side.empty():
         lim = side.best()
 
         if oop(order, lim.price()): # if out of price break
-            result.add_message(make_oop_msg(lim.price(), order.quantity()))
+            result.add_message(mk_oop_msg(lim.price(), order.quantity()))
             return True
 
         if order.quantity() < lim.volume(): return False # if can not match whole limits anymore, break
@@ -46,12 +47,13 @@ def fill_whole_limits(side: Side, order: Order, result: ResultBuilder) -> bool:
 
 def fill_whole_orders(side: Side, order: Order, result: ResultBuilder) -> bool:
     '''While the order to execute is larger than whole orders, fill them.'''
+
     if side.empty(): return False
 
     lim = side.best()
 
     if oop(order, lim.price()):
-        result.add_message(make_oop_msg(lim.price(), order.quantity()))
+        result.add_message(mk_oop_msg(lim.price(), order.quantity()))
         return True
 
     while order.quantity() > 0:
@@ -70,6 +72,7 @@ def fill_whole_orders(side: Side, order: Order, result: ResultBuilder) -> bool:
 
 def fill_last_order(side: Side, order: Order, result: ResultBuilder):
     '''**Partially** fill the last order left with what's left of our order.'''
+
     if side.empty(): return
 
     lim = side.best()
@@ -85,8 +88,9 @@ def fill_last_order(side: Side, order: Order, result: ResultBuilder):
 
 def oop(order: Order, lim_price: Decimal) -> bool:
     '''True if order is out of price.'''
+
     match order.side():
         case OrderSide.BID: return order.price() < lim_price
         case OrderSide.ASK: return order.price() > lim_price
 
-def make_oop_msg(p, q): return f'<matching engine>: order out of price at ({p}), quantity left: ({q})'
+def mk_oop_msg(p, q): return f'<matching engine>: order out-of-price at ({p}), quantity left: ({q})'
