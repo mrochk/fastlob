@@ -6,12 +6,12 @@ import time
 from fastlob.limit import Limit
 from fastlob.enums import OrderSide, OrderStatus, OrderType
 from fastlob.order import OrderParams, BidOrder, AskOrder
-from fastlob.consts import MIN_VALUE, MAX_VALUE
-from fastlob.utils import todecimal
+from fastlob.consts import TICK_SIZE_PRICE, TICK_SIZE_QTY, MAX_VALUE
+from fastlob.utils import todecimal_price, todecimal_quantity
 
 valid_side = st.sampled_from(OrderSide)
-valid_price = st.floats(min_value=float(MIN_VALUE), max_value=float(MAX_VALUE), allow_nan=False, allow_infinity=False)
-valid_qty = st.floats(min_value=float(MIN_VALUE), max_value=float(MAX_VALUE), allow_nan=False, allow_infinity=False)
+valid_price = st.floats(min_value=float(TICK_SIZE_PRICE), max_value=float(MAX_VALUE), allow_nan=False, allow_infinity=False)
+valid_qty = st.floats(min_value=float(TICK_SIZE_QTY), max_value=float(MAX_VALUE), allow_nan=False, allow_infinity=False)
 valid_otype_noGTD = st.sampled_from([OrderType.FOK, OrderType.GTC])
 valid_expiry_noGTD = st.one_of(st.none(), st.floats(min_value=time.time()+5, allow_nan=False, allow_infinity=False))
 
@@ -23,7 +23,7 @@ class TestLimit(unittest.TestCase):
 
     @given(valid_price)
     def test_init(self, price):
-        price = todecimal(price)
+        price = todecimal_price(price)
         limit = Limit(price)
         self.assertEqual(limit.price(), price)
 

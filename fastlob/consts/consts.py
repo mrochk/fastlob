@@ -3,17 +3,23 @@
 import os
 from decimal import Decimal
 
-DECIMAL_PRECISION_ENV_VARNAME: str = 'PYLOB_DECIMAL_PRECISION'
+ENV_DECIMAL_PRECISION_PRICE: str = 'FASTLOB_DECIMAL_PRECISION_PRICE'
 
-DEFAULT_DECIMAL_PRECISION: int = 2
+ENV_DECIMAL_PRECISION_QTY: str = 'FASTLOB_DECIMAL_PRECISION_QTY'
 
-def _get_precision() -> int:
-    precision = os.environ.get(DECIMAL_PRECISION_ENV_VARNAME)
-    return int(precision) if precision else DEFAULT_DECIMAL_PRECISION
+DECIMAL_PRECISION_DEFAULT: int = 2
 
-DECIMAL_PRECISION: int = _get_precision()
+def _get_precision(env_varname: str) -> int:
+    precision = os.environ.get(env_varname)
+    return int(precision) if precision else DECIMAL_PRECISION_DEFAULT
 
-MIN_VALUE = UNIT = Decimal('0.' + ('0' * (DECIMAL_PRECISION - 1)) + '1')
+DECIMAL_PRECISION_PRICE: int = _get_precision(ENV_DECIMAL_PRECISION_PRICE)
+
+DECIMAL_PRECISION_QTY: int = _get_precision(ENV_DECIMAL_PRECISION_QTY)
+
+TICK_SIZE_PRICE = Decimal('0.' + ('0' * (DECIMAL_PRECISION_PRICE - 1)) + '1')
+
+TICK_SIZE_QTY = Decimal('0.' + ('0' * (DECIMAL_PRECISION_QTY - 1)) + '1')
 
 MAX_VALUE = Decimal(int(10e10))
 

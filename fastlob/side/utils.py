@@ -1,6 +1,13 @@
 '''Utility functions for side.'''
 
 from numbers import Number
+from decimal import Decimal
+
+from fastlob.utils import todecimal_price, todecimal_quantity
+
+def todecimal_pair(pair: tuple[Number, Number]) -> tuple[Decimal, Decimal]:
+    price, volume = pair
+    return todecimal_price(price), todecimal_quantity(volume)
 
 def check_update_pair(pair) -> None:
     '''Raise an exception if the pair provided can not be processed as update.'''

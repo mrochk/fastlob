@@ -11,10 +11,10 @@ from sortedcollections import SortedDict
 
 from fastlob.limit import Limit
 from fastlob.order import Order, BidOrder, AskOrder, OrderParams
-from fastlob.utils import zero, todecimal
+from fastlob.utils import zero, todecimal_price, todecimal_quantity
 from fastlob.enums import OrderSide, OrderType
 
-from .utils import check_snapshot_pair, check_update_pair
+from .utils import check_snapshot_pair, check_update_pair, todecimal_pair
 
 class Side(abc.ABC):
     '''The Side is a collection of limits, whose ordering (by price) depends wether it is a bid or ask side.'''
@@ -222,10 +222,7 @@ class BidSide(Side):
         # apply updates to bid side
         for pair in bids:
             check_update_pair(pair)
-            price, volume = pair
-
-            price  = todecimal(price)
-            volume = todecimal(volume)
+            price, volume = todecimal_pair(pair)
 
             if volume == 0:
                 self.delete_fakeorder(price)
@@ -291,10 +288,7 @@ class AskSide(Side):
         # apply updates to ask side
         for pair in asks:
             check_update_pair(pair)
-            price, volume = pair
-
-            price  = todecimal(price)
-            volume = todecimal(volume)
+            price, volume = todecimal_pair(pair)
 
             if volume == 0:
                 self.delete_fakeorder(price)
