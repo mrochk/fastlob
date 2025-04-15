@@ -49,7 +49,7 @@ To run the tests and check that everything is okay, run `make test` or `python3 
 
 ## Usage
 
-This book runs at a fixed decimal precision through the Python `decimal` package. The precision (also called *Tick Size*) can be set via the `PYLOB_DECIMAL_PRECISION` environment variable, the default value is 2.
+This book runs at a fixed decimal precision through the Python `decimal` package. The decimal precision (also called *tick size*) can be set via the `FASTLOB_DECIMAL_PRECISION_PRICE` and 'FASTLOB_DECIMAL_PRECISION_QTY' environment variables, if not set it defaults to 2.
 
 ```python
 # examples/basics.py
