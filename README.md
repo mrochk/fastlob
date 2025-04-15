@@ -12,7 +12,7 @@
 **Functionalities:**
 - Place limit orders.
 - Execute market orders.
-- Orders can be Good-Till-Cancel (GTC), Fill-or-Kill (FOK) or Good-Till-Date (GTD).
+- Orders can be good-rill-cancel (GTC), fill-or-kill (FOK) or good-till-date (GTD).
 - Cancel pending or partially filled orders.
 - Query order status (pending, filled, partially filled, canceled...).
 - Set custom tick size for price and quantities.
