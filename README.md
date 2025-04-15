@@ -15,6 +15,7 @@
 - Orders can be Good-Till-Cancel (GTC), Fill-or-Kill (FOK) or Good-Till-Date (GTD).
 - Cancel pending or partially filled orders.
 - Query order status (pending, filled, partially filled, canceled...).
+- Set custom tick size for price and quantities.
 - Extract spread, midprice, volume, etc.
 - Simulate on historical data.
 
