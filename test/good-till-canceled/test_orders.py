@@ -1,12 +1,13 @@
 import unittest, logging
 from hypothesis import given, strategies as st
 
-from fastlob import Orderbook, OrderParams, OrderSide, OrderType, OrderStatus, todecimal, ResultType
-from fastlob.consts import MIN_VALUE, MAX_VALUE
+from fastlob import Orderbook, OrderParams, OrderSide, OrderType, OrderStatus, ResultType
+from fastlob.utils import todecimal_price, todecimal_quantity
+from fastlob.consts import TICK_SIZE_PRICE, TICK_SIZE_QTY, MAX_VALUE
 
 valid_side = st.sampled_from(OrderSide)
-valid_price = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
-valid_qty = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
+valid_price = st.decimals(min_value=TICK_SIZE_PRICE, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
+valid_qty = st.decimals(min_value=TICK_SIZE_QTY, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
 
 class TestOrdersGTC(unittest.TestCase):
     def setUp(self): 
@@ -144,7 +145,7 @@ class TestOrdersGTC(unittest.TestCase):
 
         for p in params[:len(params)//2]:
             self.assertTrue(p.price in ep.keys())
-            self.assertEqual(ep[p.price], todecimal(10))
+            self.assertEqual(ep[p.price], todecimal_price(10))
 
         matching_bid = OrderParams(OrderSide.ASK, 1, 400_000, OrderType.GTC)
         mr2 = self.lob(matching_bid)
@@ -153,7 +154,7 @@ class TestOrdersGTC(unittest.TestCase):
 
         for p in params[len(params)//2:]:
             self.assertTrue(p.price in ep.keys())
-            self.assertEqual(ep[p.price], todecimal(10))
+            self.assertEqual(ep[p.price], todecimal_price(10))
 
         self.assertTrue(mr2.success())
         self.assertEqual(self.lob.n_bids(), 0)
@@ -283,7 +284,7 @@ class TestOrdersGTC(unittest.TestCase):
         s, q = self.lob.get_status(mr.orderid())
 
         self.assertEqual(s, OrderStatus.PENDING)
-        self.assertEqual(q, todecimal(4.67))
+        self.assertEqual(q, todecimal_quantity(4.67))
 
         for r in result:
             self.assertEqual(mr.kind(), ResultType.MARKET)

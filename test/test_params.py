@@ -4,13 +4,13 @@ from hypothesis import given
 import hypothesis.strategies as st
 
 from fastlob import OrderParams
-from fastlob.consts import MIN_VALUE, MAX_VALUE
+from fastlob.consts import TICK_SIZE_PRICE, TICK_SIZE_QTY, MAX_VALUE
 from fastlob.enums import OrderSide, OrderType
-from fastlob.utils import todecimal
+from fastlob.utils import todecimal_price, todecimal_quantity
 
 valid_side = st.sampled_from(OrderSide)
-valid_price = st.floats(min_value=float(MIN_VALUE), max_value=float(MAX_VALUE), allow_nan=False, allow_infinity=False)
-valid_qty = st.floats(min_value=float(MIN_VALUE), max_value=float(MAX_VALUE), allow_nan=False, allow_infinity=False)
+valid_price = st.floats(min_value=float(TICK_SIZE_PRICE), max_value=float(MAX_VALUE), allow_nan=False, allow_infinity=False)
+valid_qty = st.floats(min_value=float(TICK_SIZE_QTY), max_value=float(MAX_VALUE), allow_nan=False, allow_infinity=False)
 valid_otype = st.sampled_from(OrderType)
 valid_otype_noGTD = st.sampled_from([OrderType.FOK, OrderType.GTC])
 valid_expiry = st.one_of(st.floats(min_value=time.time()+5, allow_nan=False, allow_infinity=False))
@@ -24,8 +24,8 @@ class TestOrderParams(unittest.TestCase):
         params = OrderParams(side, price, qty, otype, expiry)
 
         self.assertEqual(params.side, side)
-        self.assertEqual(params.price, todecimal(price))
-        self.assertEqual(params.quantity, todecimal(qty))
+        self.assertEqual(params.price, todecimal_price(price))
+        self.assertEqual(params.quantity, todecimal_quantity(qty))
         self.assertEqual(params.otype, otype)
         if expiry is None: self.assertEqual(params.expiry, expiry)
         else: self.assertEqual(params.expiry, int(expiry))
@@ -35,8 +35,8 @@ class TestOrderParams(unittest.TestCase):
         params = OrderParams(side, price, qty, otype, expiry)
 
         self.assertEqual(params.side, side)
-        self.assertEqual(params.price, todecimal(price))
-        self.assertEqual(params.quantity, todecimal(qty))
+        self.assertEqual(params.price, todecimal_price(price))
+        self.assertEqual(params.quantity, todecimal_quantity(qty))
         self.assertEqual(params.otype, otype)
         if expiry is None: self.assertEqual(params.expiry, expiry)
         else: self.assertEqual(params.expiry, int(expiry))

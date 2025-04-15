@@ -5,14 +5,14 @@ import hypothesis.strategies as st
 import time
 
 from fastlob import OrderParams
-from fastlob.consts import MAX_VALUE, MIN_VALUE
+from fastlob.consts import TICK_SIZE_PRICE, TICK_SIZE_QTY, MAX_VALUE
 from fastlob.enums import OrderSide, OrderType, OrderStatus
-from fastlob.utils import todecimal
+from fastlob.utils import todecimal_quantity
 from fastlob.order import Order, BidOrder, AskOrder
 
 valid_side = st.sampled_from(OrderSide)
-valid_price = st.floats(min_value=float(MIN_VALUE), max_value=float(MAX_VALUE), allow_nan=False, allow_infinity=False)
-valid_qty = st.floats(min_value=float(MIN_VALUE), max_value=float(MAX_VALUE), allow_nan=False, allow_infinity=False)
+valid_price = st.floats(min_value=float(TICK_SIZE_PRICE), max_value=float(MAX_VALUE), allow_nan=False, allow_infinity=False)
+valid_qty = st.floats(min_value=float(TICK_SIZE_QTY), max_value=float(MAX_VALUE), allow_nan=False, allow_infinity=False)
 valid_otype_noGTD = st.sampled_from([OrderType.FOK, OrderType.GTC])
 valid_expiry_noGTD = st.one_of(st.none(), st.floats(min_value=time.time()+5, allow_nan=False, allow_infinity=False))
 
@@ -53,7 +53,7 @@ class TestOrder(unittest.TestCase):
         self.assertEqual(order.quantity(), 0)
         self.assertEqual(order.status(), OrderStatus.FILLED)
 
-        tofill = todecimal(tofill)
+        tofill = todecimal_quantity(tofill)
 
         order = self.mkorder(params)
         qty = order.quantity()

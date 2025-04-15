@@ -7,8 +7,8 @@ from numbers import Number
 from typing import Optional
 
 from fastlob.enums import OrderSide, OrderType
-from fastlob.utils import todecimal
-from fastlob.consts import MIN_VALUE, MAX_VALUE
+from fastlob.utils import todecimal_price, todecimal_quantity
+from fastlob.consts import TICK_SIZE_PRICE, TICK_SIZE_QTY, MAX_VALUE
 
 class OrderParams:
     '''
@@ -29,8 +29,8 @@ class OrderParams:
         OrderParams.check_args(side, price, quantity, otype, expiry)
 
         self.side     = side
-        self.price    = todecimal(price)
-        self.quantity = todecimal(quantity)
+        self.price    = todecimal_price(price)
+        self.quantity = todecimal_quantity(quantity)
         self.otype    = otype
         self.expiry   = int(expiry) if expiry is not None else None
 
@@ -65,12 +65,12 @@ class OrderParams:
             if expiry <= now:
                 raise ValueError(f'order expiry ({expiry}) is less than current timestamp ({now}), or too close')
 
-        price_decimal = todecimal(price)
-        quantity_decimal = todecimal(quantity)
+        price_decimal = todecimal_price(price)
+        quantity_decimal = todecimal_quantity(quantity)
 
-        if price_decimal < MIN_VALUE: raise ValueError(f'price ({price}) must be greater than {MIN_VALUE}')
+        if price_decimal < TICK_SIZE_PRICE: raise ValueError(f'price ({price}) must be greater than {TICK_SIZE_PRICE}')
 
-        if quantity_decimal < MIN_VALUE: raise ValueError(f'quantity ({quantity}) must be greater than {MIN_VALUE}')
+        if quantity_decimal < TICK_SIZE_QTY: raise ValueError(f'quantity ({quantity}) must be greater than {TICK_SIZE_QTY}')
 
         if price_decimal > MAX_VALUE: raise ValueError(f'price ({price}) is too large')
 

@@ -1,13 +1,13 @@
 import unittest, logging, time
 from hypothesis import given, strategies as st
 
-from fastlob import Orderbook, OrderStatus, OrderParams, OrderSide, OrderType, todecimal
-from fastlob.consts import MIN_VALUE, MAX_VALUE
+from fastlob import Orderbook, OrderStatus, OrderParams, OrderSide, OrderType
+from fastlob.consts import TICK_SIZE_PRICE, TICK_SIZE_QTY, MAX_VALUE
 
 valid_side = st.sampled_from(OrderSide)
-valid_price = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
-valid_qty = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE - MIN_VALUE, allow_nan=False, allow_infinity=False)
-valid_qty2 = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE // 1000 - MIN_VALUE, allow_nan=False, allow_infinity=False)
+valid_price = st.decimals(min_value=TICK_SIZE_PRICE, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
+valid_qty = st.decimals(min_value=TICK_SIZE_QTY, max_value=MAX_VALUE - TICK_SIZE_QTY, allow_nan=False, allow_infinity=False)
+valid_qty2 = st.decimals(min_value=TICK_SIZE_QTY, max_value=MAX_VALUE // 1000 - TICK_SIZE_QTY, allow_nan=False, allow_infinity=False)
 
 def valid_expiry(x:int = 5): return int(time.time()) + x
 

@@ -2,11 +2,11 @@ import unittest, logging
 from hypothesis import given, strategies as st
 
 from fastlob import Orderbook, OrderParams, OrderSide, OrderType, OrderStatus
-from fastlob.consts import MIN_VALUE, MAX_VALUE
+from fastlob.consts import TICK_SIZE_PRICE, TICK_SIZE_QTY, MAX_VALUE
 
 valid_side = st.sampled_from(OrderSide)
-valid_price = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
-valid_qty = st.decimals(min_value=MIN_VALUE, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
+valid_price = st.decimals(min_value=TICK_SIZE_PRICE, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
+valid_qty = st.decimals(min_value=TICK_SIZE_QTY, max_value=MAX_VALUE, allow_nan=False, allow_infinity=False)
 
 class TestCancelGTC(unittest.TestCase):
     def setUp(self): 
