@@ -12,18 +12,18 @@
 **Functionalities:**
 - Place limit orders.
 - Execute market orders.
-- Orders can be good-rill-cancel (GTC), fill-or-kill (FOK) or good-till-date (GTD).
+- Orders can be good-till-cancel (GTC), fill-or-kill (FOK) or good-till-date (GTD).
 - Cancel pending or partially filled orders.
 - Query order status (pending, filled, partially filled, canceled...).
 - Set custom tick size for price and quantities.
 - Extract spread, midprice, volume, etc.
 - Simulate on historical data.
 
-The goal is to build an efficient easy to use package with a clean and comprehensible API. 
+The goal is to build an efficient and easy to use package, with a clean and comprehensible API. 
 
 We aim to keep it minimalist and simple, while keeping reasonable performances (for a pure Python implementation). We intend the final project to contain no more than ~1000 lines of code.
 
-We implement three types of orders: *FOK*, *GTC* and *GTD*. Every order is defined as a limit order, but will be executed as a market order if its price matches the best (bid or ask) limit price in the book.
+We implement three types of orders: *FOK*, *GTC* and *GTD*. Every order is initially defined as limit, but will be executed as a market order if its price matches the best (bid or ask) limit price in the book.
 
 *In the case of GTD orders, the book only supports whole seconds for the order expiry (order can not be set to expire in 3.8 seconds, in this case it will be rounded to 4, nearest integer).*
 
@@ -31,7 +31,7 @@ We implement three types of orders: *FOK*, *GTC* and *GTD*. Every order is defin
 
 ## Installation
 
-The package available on [PyPI](https://pypi.org/project/fastlob/), you can simply install it using
+The package is available on [PyPI](https://pypi.org/project/fastlob/), you can simply install it using
 ```
 pip install fastlob
 ```
