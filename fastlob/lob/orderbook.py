@@ -322,10 +322,10 @@ class Orderbook:
 
         return buffer.getvalue()
 
-    def render(self) -> None:
-        '''Pretty-print the lob.'''
+    def render(self, n: int = DEFAULT_LIMITS_VIEW) -> None:
+        '''Pretty-print the best `n` limits on each side of the lob.'''
 
-        print(self.view(), flush=True)
+        print(self.view(n), flush=True)
 
     def __repr__(self) -> str:
         buffer = io.StringIO()
