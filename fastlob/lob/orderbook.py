@@ -24,8 +24,9 @@ class Orderbook:
     The `Orderbook` is a collection of bid and ask limits. 
     It is reponsible for:
     - Calling `engine` when order is market.
-    - Placing order when order is limit.
-    - All the safety checking.
+    - Placing order in correct `side` when order is limit.
+    - All the safety checking before and after order has been processed.
+    - Logging informations.
     '''
 
     _name: str
@@ -41,7 +42,8 @@ class Orderbook:
     def __init__(self, name: Optional[str] = 'LOB-1', start: Optional[bool] = False):
         '''
         Args:
-            name (Optional[str]): Defaults to "LOB".
+            name (str, optional): Name. Defaults to 'LOB-1'.
+            start (bool, optional): Whether the LOB should be started after it's creation. Defaults to False.
         '''
         self._name       = name
         self._askside    = AskSide()
@@ -59,8 +61,8 @@ class Orderbook:
 
     #### MAIN FUNCS
 
-    def start(self):
-        '''Start the lob.'''
+    def start(self) -> None:
+        '''Start the lob. Required before orders can be placed.'''
 
         def clean_expired_orders():
             while self._alive:
@@ -73,8 +75,8 @@ class Orderbook:
         threading.Thread(target=clean_expired_orders).start()
         self._logger.info('lob started properly, ready to receive orders')
 
-    def stop(self):
-        '''Stop the lob.'''
+    def stop(self) -> None:
+        '''Stop the lob and its background processes.'''
 
         if not self._alive:
             self._logger.error('lob is not running')
@@ -85,7 +87,7 @@ class Orderbook:
         self._logger.info('lob stopped properly')
 
     def reset(self) -> None:
-        '''Reset the lob.'''
+        '''Reset the lob. Equivalent to re-instantiating it.'''
 
         if self._alive:
             self._logger.error('lob must be stopped (using <ob.stop>) before reset can be called')
@@ -93,53 +95,68 @@ class Orderbook:
 
         self.__init__(self._name)
 
-    def __call__(self, order_params: OrderParams | Iterable[OrderParams]) -> ExecutionResult | list[ExecutionResult]:
-        '''Process one or many orders: equivalent to calling `process_one` or `process_many`.'''
-
-        if not isinstance(order_params, Iterable):
-            return self.process_one(order_params)
-
-        return self.process_many(order_params)
-
-    def process_many(self, orders_params: Iterable[OrderParams]) -> list[ExecutionResult]:
-        '''Process many orders at once.
+    def __call__(self, orderparams: OrderParams | Iterable[OrderParams]) -> ExecutionResult | list[ExecutionResult]:
+        '''Process one or more order parameters.
 
         Args:
-            orders_params (Iterable[OrderParams]): Orders to create and process.
+            orderparams (OrderParams | Iterable[OrderParams]): OrderParams to process.
+
+        Returns:
+            ExecutionResult | list[ExecutionResult]: The result of the execution of each order.
         '''
+
+        if not isinstance(orderparams, Iterable): return self.process_one(orderparams)
+        return self.process_many(orderparams)
+
+    def process_many(self, ordersparams: Iterable[OrderParams]) -> list[ExecutionResult]:
+        '''Process many order parameters.
+
+        Args:
+            ordersparams (Iterable[OrderParams]): Iterable of OrderParams to process.
+
+        Returns:
+            list[ExecutionResult]: The result of the execution of each order.
+        '''
+
         if not self._alive:
-            return [not_running_error(self._logger).build() for _ in orders_params]
+            return [not_running_error(self._logger).build() for _ in ordersparams]
+        return [self.process_one(params) for params in ordersparams]
 
-        return [self.process_one(params) for params in orders_params]
+    def process_one(self, orderparams: OrderParams) -> ExecutionResult:
+        '''Process one order params instance.
 
-    def process_one(self, order_params: OrderParams) -> ExecutionResult:
-        '''Creates and processes the order corresponding to the corresponding order params.'''
+        Args:
+            orderparams (OrderParams): OrderParams to process.
+
+        Returns:
+            ExecutionResult: The result of the execution of the order.
+        '''
 
         if not self._alive:
             return not_running_error(self._logger).build()
 
-        if not isinstance(order_params, OrderParams):
+        if not isinstance(orderparams, OrderParams):
             result = ResultBuilder.new_error()
-            errmsg = 'order_params is not an instance of fastlob.OrderParams'
+            errmsg = 'orderparams is not an instance of fastlob.OrderParams'
             result.add_message(errmsg); self._logger.error(errmsg)
             return result.build()
 
         #                                         (params const already checks that expiry is set)
-        if order_params.otype == OrderType.GTD and order_params.expiry <= (t := time_asint()):
+        if orderparams.otype == OrderType.GTD and orderparams.expiry <= (t := time_asint()):
             result = ResultBuilder.new_error()
-            errmsg = f'GTD order must expire in the future (but {order_params.expiry} <= {t})'
+            errmsg = f'GTD order must expire in the future (but {orderparams.expiry} <= {t})'
             result.add_message(errmsg); self._logger.error(errmsg)
             return result.build()
 
         self._logger.info('processing order params')
 
-        match order_params.side:
+        match orderparams.side:
             case OrderSide.ASK:
-                order = AskOrder(order_params)
+                order = AskOrder(orderparams)
                 result = self._process_ask_order(order)
 
             case OrderSide.BID:
-                order = BidOrder(order_params)
+                order = BidOrder(orderparams)
                 result = self._process_bid_order(order)
 
         if result.success():
@@ -156,7 +173,14 @@ class Orderbook:
         return result.build()
 
     def cancel(self, orderid: str) -> ExecutionResult:
-        '''Cancel an order sitting in the lob given its id.'''
+        '''Cancel an order sitting in the lob given it's identifier.
+
+        Args:
+            orderid (str): Identifier of the order to cancel.
+
+        Returns:
+            ExecutionResult: The result of the cancellation.
+        '''
 
         if not self._alive:
             return not_running_error(self._logger).build()
@@ -200,13 +224,20 @@ class Orderbook:
         return result.build()
 
     def running_time(self) -> int:
-        '''Get time since lob is running.'''
+        '''Number of seconds since the lob has been started.
+
+        Returns:
+            int: Time in seconds since the lob has been started.
+        '''
 
         if not self._alive: return 0
         return time_asint() - self._start_time
 
     def best_asks(self, n: int) -> list[tuple[Decimal, Decimal, int]]:
-        '''Return best `n` asks (price, volume, #orders) triplets. If `n > #asks`, returns `#asks` elements.'''
+        '''
+        Return best `n` asks (price, volume, #orders) triplets. 
+        If `n > #asks`, returns `#asks` elements.
+        '''
 
         if (nasks := self.n_asks()) < n:
             self._logger.warning('asking for %s limits in <ob.best_asks> but lob only contains %s', n, nasks)
@@ -214,7 +245,10 @@ class Orderbook:
         return self._askside.best_limits(n)
 
     def best_bids(self, n: int) -> list[tuple[Decimal, Decimal, int]]:
-        '''Return best `n` bids (price, volume, #orders) triplets. If `n > #bids`, returns `#bids` elements.'''
+        '''
+        Return best `n` bids (price, volume, #orders) triplets. 
+        If `n > #bids`, returns `#bids` elements.
+        '''
 
         if (nbids := self.n_bids()) < n:
             self._logger.warning('asking for %s limits in <ob.best_bids> but lob only contains %s', n, nbids)
@@ -365,6 +399,8 @@ class Orderbook:
         lob._askside.apply_snapshot(asks)
         lob._bidside.apply_snapshot(bids)
 
+        lob._logger('snapshot applied successfully')
+
         if start: lob.start()
         return lob
 
@@ -379,6 +415,7 @@ class Orderbook:
                 '{"bids|asks": <iterable_of_(price, volume)_pairs>}')
 
         self._updates = iter(updates)
+        self._logger.info('updates iterator loaded')
 
     def step(self):
         '''Apply the updates in `next(updates)` to the lob.'''
@@ -405,6 +442,8 @@ class Orderbook:
 
             # apply updates to bid side
             self._bidside.apply_updates(bids)
+
+        self._logger.info('updates applied successfully')
 
     #### AUXILIARY FUNCS (where most of the work happens)
 
