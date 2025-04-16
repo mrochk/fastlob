@@ -399,7 +399,7 @@ class Orderbook:
         lob._askside.apply_snapshot(asks)
         lob._bidside.apply_snapshot(bids)
 
-        lob._logger('snapshot applied successfully')
+        lob._logger.info('snapshot applied successfully')
 
         if start: lob.start()
         return lob
