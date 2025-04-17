@@ -79,7 +79,7 @@ class Order(abc.ABC):
         return self.id() == other.id()
 
     def __repr__(self) -> str:
-        return f'{self._side.name}Order(id={self.id()}, status={self.status()}, price={self.price()}, ' + \
+        return f'{self._side.name}Order(id=[{self.id()}], status={self.status()}, price={self.price()}, ' + \
             f'quantity={self.quantity()}, type={self.otype()})'
 
 @dataclass

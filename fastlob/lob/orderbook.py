@@ -12,7 +12,7 @@ from termcolor import colored
 from fastlob import engine
 from fastlob.side import AskSide, BidSide
 from fastlob.order import OrderParams, Order, AskOrder, BidOrder
-from fastlob.enums import OrderSide, OrderStatus, OrderType
+from fastlob.enums import OrderSide, OrderStatus, OrderType, ResultType
 from fastlob.result import ResultBuilder, ExecutionResult
 from fastlob.utils import time_asint
 from fastlob.consts import DEFAULT_LIMITS_VIEW
@@ -160,13 +160,13 @@ class Orderbook:
                 result = self._process_bid_order(order)
 
         if result.success():
-            self._logger.info('order %s was processed successfully', order.id())
+            self._logger.info('order [%s] was processed successfully', order.id())
             self._save_order(order, result)
 
         else: self._logger.warning('order was not successfully processed')
 
         if order.status() == OrderStatus.PARTIAL:
-            msg = f'order {order.id()} partially filled by engine, {order.quantity()} placed at {order.price()}'
+            msg = f'order [{order.id()}] partially filled by engine, {order.quantity()} placed at {order.price()}'
             self._logger.info(msg)
             result.add_message(msg)
 
@@ -185,21 +185,21 @@ class Orderbook:
         if not self._alive:
             return not_running_error(self._logger).build()
 
-        self._logger.info('attempting to cancel order with id %s', orderid)
+        self._logger.info('attempting to cancel order with id [%s]', orderid)
 
         result = ResultBuilder.new_cancel(orderid)
 
         try: order = self._orders[orderid]
         except KeyError:
             result.set_success(False)
-            errmsg = f'order {orderid} not found in lob'
+            errmsg = f'order [{orderid}] not found in lob'
             result.add_message(errmsg)
             self._logger.warning(errmsg)
             return result.build()
 
         if not order.valid():
             result.set_success(False)
-            errmsg = f'order {orderid} can not be canceled (status={order.status()})'
+            errmsg = f'order [{orderid}] can not be canceled (status={order.status()})'
             result.add_message(errmsg)
             self._logger.warning(errmsg)
             return result.build()
@@ -209,15 +209,15 @@ class Orderbook:
         match order.side():
             case OrderSide.BID:
                 with self._bidside.lock():
-                    self._logger.info('cancelling bid order %s', orderid)
+                    self._logger.info('cancelling bid order [%s]', orderid)
                     self._bidside.cancel_order(order)
 
             case OrderSide.ASK:
                 with self._askside.lock():
-                    self._logger.info('cancelling ask order %s', orderid)
+                    self._logger.info('cancelling ask order [%s]', orderid)
                     self._askside.cancel_order(order)
 
-        msg = f'order {order.id()} canceled properly'
+        msg = f'order [{order.id()}] canceled properly'
         result.set_success(True)
         result.add_message(msg)
         self._logger.info(msg)
@@ -325,10 +325,10 @@ class Orderbook:
 
         try:
             order = self._orders[orderid]
-            self._logger.info('order %s found in lob', orderid)
+            self._logger.info('order [%s] found in lob', orderid)
             return order.status(), order.quantity()
         except KeyError:
-            self._logger.warning('order %s not found in lob', orderid)
+            self._logger.warning('order [%s] not found in lob', orderid)
             return None
 
     def view(self, n : int = DEFAULT_LIMITS_VIEW) -> str:
@@ -448,10 +448,10 @@ class Orderbook:
     #### AUXILIARY FUNCS (where most of the work happens)
 
     def _process_bid_order(self, order: BidOrder) -> ResultBuilder:
-        self._logger.info('processing bid order %s', order.id())
+        self._logger.info('processing bid order [%s]', order.id())
 
         if self._askside.is_market(order):
-            self._logger.info('bid order %s is market', order.id())
+            self._logger.info('bid order [%s] is market', order.id())
 
             if (error := self._askside.check_market_order(order)) is not None:
                 order.set_status(OrderStatus.ERROR)
@@ -465,21 +465,24 @@ class Orderbook:
                 result = engine.execute(order, self._askside)
 
             if not result.success():
-                self._logger.error('bid market order %s could not be executed by engine', order.id())
+                self._logger.error('bid market order [%s] could not be executed by engine', order.id())
                 return result
 
             if order.status() == OrderStatus.PARTIAL:
+
+                result = ResultBuilder.market_to_partial(result)
+
                 with self._bidside.lock():
                     self._bidside.place(order)
-                    msg = f'order {order.id()} partially executed, {order.quantity()} was placed as a bid limit order'
+                    msg = f'order [{order.id()}] partially executed, {order.quantity()} was placed as a bid limit order'
                     self._logger.info(msg)
                     result.add_message(msg)
 
-            self._logger.info('executed bid market order %s', order.id())
+            self._logger.info('executed bid market order [%s]', order.id())
             return result
 
         # else: is limit order
-        self._logger.info('bid order %s is limit', order.id())
+        self._logger.info('bid order [%s] is limit', order.id())
 
         result = ResultBuilder.new_limit(order.id())
 
@@ -494,14 +497,14 @@ class Orderbook:
         with self._bidside.lock(): self._bidside.place(order)
 
         result.set_success(True)
-        self._logger.info('order %s successfully placed', order.id())
+        self._logger.info('order [%s] successfully placed', order.id())
         return result
 
     def _process_ask_order(self, order: AskOrder) -> ResultBuilder:
-        self._logger.info('processing ask order %s', order.id())
+        self._logger.info('processing ask order [%s]', order.id())
 
         if self._bidside.is_market(order):
-            self._logger.info('ask order %s is market', order.id())
+            self._logger.info('ask order [%s] is market', order.id())
 
             if (error := self._bidside.check_market_order(order)) is not None:
                 order.set_status(OrderStatus.ERROR)
@@ -515,21 +518,24 @@ class Orderbook:
                 result = engine.execute(order, self._bidside)
 
             if not result.success():
-                self._logger.error('ask market order %s could not be executed by engine', order.id())
+                self._logger.error('ask market order [%s] could not be executed by engine', order.id())
                 return result
 
             if order.status() == OrderStatus.PARTIAL:
+
+                result = ResultBuilder.market_to_partial(result)
+
                 with self._askside.lock():
                     self._askside.place(order)
                     msg = f'order {order.id()} partially executed, {order.quantity()} was placed as an ask limit order'
                     self._logger.info(msg)
                     result.add_message(msg)
 
-            self._logger.info('executed ask market order %s', order.id())
+            self._logger.info('executed ask market order [%s]', order.id())
             return result
 
         # else is limit order
-        self._logger.info('ask order %s is limit', order.id())
+        self._logger.info('ask order [%s] is limit', order.id())
 
         result = ResultBuilder.new_limit(order.id())
 
@@ -544,16 +550,15 @@ class Orderbook:
         with self._askside.lock(): self._askside.place(order)
 
         result.set_success(True)
-        self._logger.info('order %s successfully placed', order.id())
+        self._logger.info('order [%s] successfully placed', order.id())
         return result
 
     def _save_order(self, order: Order, result: ResultBuilder):
         self._logger.info('adding order to history')
         self._orders[order.id()] = order
 
-        if order.otype() == OrderType.GTD: # and result._KIND == ResultType.LIMIT:
-            # <- TODO: doesnt work in the case where the order is a partially filling market (then placed in limit),
-            # but how to not add market orders then ?
+        if order.otype() == OrderType.GTD and result._kind.in_limit():
+
             self._logger.info('order is a limit GTD order, adding order to expiry map')
             if order.expiry() not in self._expirymap.keys(): self._expirymap[order.expiry()] = list()
             self._expirymap[order.expiry()].append(order)

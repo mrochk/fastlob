@@ -121,21 +121,22 @@ class TestOrdersGTC(unittest.TestCase):
 
         params = list()
 
-        N = 10
+        N = 100
+        qty = 10
 
         for i in range(N):
-            p = OrderParams(OrderSide.ASK, 50_000+i, 10, OrderType.GTC, expiry=None)
+            p = OrderParams(OrderSide.ASK, 50_000+i, qty, OrderType.GTC, expiry=None)
             params.append(p)
 
         for i in range(N):
-            p = OrderParams(OrderSide.BID, 50_000-1-i, 10, OrderType.GTC, expiry=None)
+            p = OrderParams(OrderSide.BID, 50_000-1-i, qty, OrderType.GTC, expiry=None)
             params.append(p)
 
         results = self.lob(params)
 
         self.assertTrue(all([r.success() for r in results]))
 
-        matching_ask = OrderParams(OrderSide.BID, 90_000, 400_000, OrderType.GTC)
+        matching_ask = OrderParams(OrderSide.BID, 90_000, N*qty+1, OrderType.GTC)
         mr1 = self.lob(matching_ask)
 
         self.assertTrue(mr1.success())
@@ -147,7 +148,8 @@ class TestOrdersGTC(unittest.TestCase):
             self.assertTrue(p.price in ep.keys())
             self.assertEqual(ep[p.price], todecimal_price(10))
 
-        matching_bid = OrderParams(OrderSide.ASK, 1, 400_000, OrderType.GTC)
+        matching_bid = OrderParams(OrderSide.ASK, 1, N*qty+2, OrderType.GTC)
+        # +2 because matching_ask placed a limit with qty 1
         mr2 = self.lob(matching_bid)
 
         ep = mr2.execprices()
@@ -159,12 +161,18 @@ class TestOrdersGTC(unittest.TestCase):
         self.assertTrue(mr2.success())
         self.assertEqual(self.lob.n_bids(), 0)
 
-        self.assertEqual(mr1.kind(), ResultType.MARKET)
-        self.assertEqual(mr2.kind(), ResultType.MARKET)
+        self.assertEqual(mr1.kind(), ResultType.PARTIAL_MARKET)
+        self.assertEqual(mr2.kind(), ResultType.PARTIAL_MARKET)
 
-        for r in results + [mr1, mr2]:
+        for r in results:
             s, _ = self.lob.get_status(r.orderid())
             self.assertEqual(s, OrderStatus.FILLED)
+
+        s, _ = self.lob.get_status(mr1.orderid())
+        self.assertEqual(s, OrderStatus.FILLED)
+
+        s, _ = self.lob.get_status(mr2.orderid())
+        self.assertEqual(s, OrderStatus.PENDING)
 
         self.lob.stop()
 
@@ -248,7 +256,7 @@ class TestOrdersGTC(unittest.TestCase):
         matching_order = OrderParams(OrderSide.invert(side), price, 15)
         mr = self.lob(matching_order)
 
-        self.assertEqual(mr.kind(), ResultType.MARKET)
+        self.assertEqual(mr.kind(), ResultType.PARTIAL_MARKET)
 
         self.assertDictEqual(mr.execprices(), {params.price: 10})
 
@@ -277,7 +285,7 @@ class TestOrdersGTC(unittest.TestCase):
         matching_order = OrderParams(OrderSide.invert(side), price, 104.67)
         mr = self.lob(matching_order)
 
-        self.assertEqual(mr.kind(), ResultType.MARKET)
+        self.assertEqual(mr.kind(), ResultType.PARTIAL_MARKET)
 
         self.assertDictEqual(mr.execprices(), {params[0].price: 100})
 
@@ -287,7 +295,7 @@ class TestOrdersGTC(unittest.TestCase):
         self.assertEqual(q, todecimal_quantity(4.67))
 
         for r in result:
-            self.assertEqual(mr.kind(), ResultType.MARKET)
+            self.assertEqual(r.kind(), ResultType.LIMIT)
 
 
             s, q = self.lob.get_status(r.orderid())

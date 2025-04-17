@@ -25,22 +25,28 @@ class ResultBuilder:
 
     @staticmethod
     def new_limit(orderid: str):
-        '''Instantiate a new limit result.'''
+        '''Instantiate a new LIMIT result.'''
         return ResultBuilder(ResultType.LIMIT, orderid)
 
     @staticmethod
     def new_market(orderid: str):
-        '''Instantiate a new market result.'''
+        '''Instantiate a new MARKET result.'''
         return ResultBuilder(ResultType.MARKET, orderid)
 
     @staticmethod
+    def market_to_partial(result_market):
+        '''Change the kind of a MARKET result to PARTIAL_MARKET.'''
+        result_market._kind = ResultType.PARTIAL_MARKET
+        return result_market
+
+    @staticmethod
     def new_cancel(orderid: str):
-        '''Instantiate a new cancel result.'''
+        '''Instantiate a new CANCEL result.'''
         return ResultBuilder(ResultType.CANCEL, orderid)
 
     @staticmethod
     def new_error():
-        '''Instantiate a new error result.'''
+        '''Instantiate a new ERROR result.'''
         result = ResultBuilder(ResultType.ERROR, None)
         result.set_success(False)
         return result
@@ -111,5 +117,8 @@ class ExecutionResult:
         return self._execprices.copy()
 
     def __repr__(self) -> str:
-        return f'ExecutionResult(type={self.kind().name}, success={self.success()}, ' + \
-            f'orderid={self.orderid()}, messages={self.messages()})'
+        if self._messages:
+            return f'ExecutionResult(type={self.kind().name}, success={self.success()}, ' + \
+                f'orderid={self.orderid()}, messages={self.messages()})'
+
+        return f'ExecutionResult(type={self.kind().name}, success={self.success()}, orderid={self.orderid()})'

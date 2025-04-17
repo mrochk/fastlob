@@ -41,13 +41,13 @@ class OrderStatus(Enum):
     PENDING = 2
     '''Order in line in limit to be filled but not modified in any ways yet.'''
     FILLED = 3
-    '''Order in limit entirely filled, removed from the limit.'''
+    '''Order entirely filled, not in limit.'''
     PARTIAL = 4
-    '''Order in limit partially filled.'''
+    '''Order partially filled.'''
     CANCELED = 5
     '''Order canceled, can not be fully or partially filled anymore.'''
     ERROR = 6
-    '''Set by the lob if the order can not be accepted.'''
+    '''Set by the lob if the order can not be processed.'''
 
     @staticmethod
     def valid_states() -> set: 
@@ -56,11 +56,17 @@ class OrderStatus(Enum):
 
 class ResultType(Enum):
     '''The type of execution result.'''
-    LIMIT  = 0
+
+    LIMIT = 1
     '''If the order was placed in a limit.'''
-    MARKET = 1
+    MARKET = 2
     '''If the order was executed as market.'''
-    CANCEL = 2
+    PARTIAL_MARKET = 3
+    '''If the order was partially executed as market, and then placed in limit.'''
+    CANCEL = 4
     '''If the operation was an order cancellation.'''
-    ERROR  = 3
-    '''If the query could not be processed.'''
+    ERROR = 5
+    '''If the query could not be processed by the lob.'''
+
+    def in_limit(self) -> bool:
+        return self in {ResultType.LIMIT, ResultType.PARTIAL_MARKET}
