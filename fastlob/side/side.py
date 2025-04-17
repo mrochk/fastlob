@@ -11,7 +11,7 @@ from sortedcollections import SortedDict
 
 from fastlob.limit import Limit
 from fastlob.order import Order, BidOrder, AskOrder, OrderParams
-from fastlob.utils import zero, todecimal_price, todecimal_quantity
+from fastlob.utils import zero
 from fastlob.enums import OrderSide, OrderType
 
 from .utils import check_snapshot_pair, check_update_pair, todecimal_pair
