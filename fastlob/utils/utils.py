@@ -26,7 +26,7 @@ def _todecimal(price: Number | str, precision: int) -> Decimal:
 
     return dec.quantize(exp)
 
-def zero(): 
+def zero():
     '''Decimal('0')'''
 
     return Decimal('0')

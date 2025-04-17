@@ -68,13 +68,17 @@ class OrderParams:
         price_decimal = todecimal_price(price)
         quantity_decimal = todecimal_quantity(quantity)
 
-        if price_decimal < TICK_SIZE_PRICE: raise ValueError(f'price ({price}) must be greater than {TICK_SIZE_PRICE}')
+        if price_decimal < TICK_SIZE_PRICE:
+            raise ValueError(f'price ({price}) must be greater than {TICK_SIZE_PRICE}')
 
-        if quantity_decimal < TICK_SIZE_QTY: raise ValueError(f'quantity ({quantity}) must be greater than {TICK_SIZE_QTY}')
+        if quantity_decimal < TICK_SIZE_QTY:
+            raise ValueError(f'quantity ({quantity}) must be greater than {TICK_SIZE_QTY}')
 
-        if price_decimal > MAX_VALUE: raise ValueError(f'price ({price}) is too large')
+        if price_decimal > MAX_VALUE:
+            raise ValueError(f'price ({price}) is too large')
 
-        if quantity_decimal > MAX_VALUE: raise ValueError(f'quantity ({quantity}) is too large')
+        if quantity_decimal > MAX_VALUE:
+            raise ValueError(f'quantity ({quantity}) is too large')
 
     def unwrap(self) -> tuple[Decimal, Decimal, OrderType, Optional[int]]:
         return self.price, self.quantity, self.otype, self.expiry

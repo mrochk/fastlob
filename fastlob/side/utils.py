@@ -3,7 +3,7 @@
 from numbers import Number
 from decimal import Decimal
 
-from fastlob.utils import todecimal_price, todecimal_quantity
+from fastlob.utils import zero, todecimal_price, todecimal_quantity
 
 def todecimal_pair(pair: tuple[Number, Number]) -> tuple[Decimal, Decimal]:
     price, volume = pair
@@ -20,7 +20,7 @@ def check_update_pair(pair) -> None:
     if not isinstance(price, Number) or not isinstance(volume, Number):
         raise ValueError('(price, volume) must be both instances of Number')
 
-    if price <= 0: raise ValueError(f'price must be strictly positive but is {price}')
+    if todecimal_price(price) <= zero(): raise ValueError(f'price must be strictly positive but is {price}')
 
 def check_snapshot_pair(pair):
     '''Raise an exception if the pair provided can not be processed as snapshot.'''

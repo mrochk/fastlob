@@ -12,7 +12,7 @@ from termcolor import colored
 from fastlob import engine
 from fastlob.side import AskSide, BidSide
 from fastlob.order import OrderParams, Order, AskOrder, BidOrder
-from fastlob.enums import OrderSide, OrderStatus, OrderType, ResultType
+from fastlob.enums import OrderSide, OrderStatus, OrderType
 from fastlob.result import ResultBuilder, ExecutionResult
 from fastlob.utils import time_asint
 from fastlob.consts import DEFAULT_LIMITS_VIEW

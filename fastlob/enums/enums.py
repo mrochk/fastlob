@@ -50,7 +50,7 @@ class OrderStatus(Enum):
     '''Set by the lob if the order can not be processed.'''
 
     @staticmethod
-    def valid_states() -> set: 
+    def valid_states() -> set:
         '''Returns the set of states in which an order is considered valid.'''
         return {OrderStatus.CREATED, OrderStatus.PENDING, OrderStatus.PARTIAL}
 
@@ -69,4 +69,5 @@ class ResultType(Enum):
     '''If the query could not be processed by the lob.'''
 
     def in_limit(self) -> bool:
+        '''True if the operation results in the order sitting in the limit.'''
         return self in {ResultType.LIMIT, ResultType.PARTIAL_MARKET}

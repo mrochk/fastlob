@@ -21,6 +21,9 @@ test-GTD:
 	@echo "\n-- TESTING FOR GTD ORDERS:"
 	@python3 -m unittest discover test/good-till-date -vvv
 
+lint:
+	@pylint --max-line-length=120 --disable=multiple-statements --disable=use-list-literal fastlob/
+
 typecheck: 
 	@mypy fastlob
 
