@@ -38,9 +38,17 @@ class TestSide(unittest.TestCase):
 
         for a, b in zip(lob.best_bids(lob.n_bids()), list(reversed(snapshot['bids']))):
             self.assertTupleEqual(a[:2], b)
+            price = a[0]
+            self.assertTrue(lob._bidside.get_limit(price).fakeorder_exists())
+            self.assertEqual(lob._bidside.get_limit(price).valid_orders(), 1)
+            self.assertEqual(lob._bidside.get_limit(price).real_orders(), 0)
 
         for a, b in zip(lob.best_asks(lob.n_asks()), snapshot['asks']):
             self.assertTupleEqual(a[:2], b)
+            price = a[0]
+            self.assertTrue(lob._askside.get_limit(price).fakeorder_exists())
+            self.assertEqual(lob._askside.get_limit(price).valid_orders(), 1)
+            self.assertEqual(lob._askside.get_limit(price).real_orders(), 0)
 
     def test_load_updates_and_step(self):
         lob = Orderbook()

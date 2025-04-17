@@ -51,7 +51,7 @@ class Limit:
     def real_orders(self) -> int:
         '''Getter for number of orders placed by the user = (valid_orders - 1 if limit has a fake order).'''
 
-        return self.valid_orders() - (1 if self.fakeorder_exists() else 0)
+        return self.valid_orders() - int(self.fakeorder_exists())
 
     def empty(self) -> bool:
         '''Check if limit contains zero **valid** orders, not if the limit queue is empty.'''
