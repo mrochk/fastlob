@@ -1,9 +1,11 @@
 import unittest, logging
 from hypothesis import given, strategies as st
 
-from fastlob import Orderbook
+from fastlob import Orderbook, OrderSide, OrderParams
+from fastlob.consts import TICK_SIZE_PRICE, TICK_SIZE_QTY, MAX_VALUE
 
 valid_name = st.text(max_size=1000)
+valid_qty = st.decimals(min_value=TICK_SIZE_QTY, max_value=MAX_VALUE, places=2)
 valid_n_snapshot = st.integers(min_value=1, max_value=100)
 
 class TestSide(unittest.TestCase):
@@ -91,3 +93,31 @@ class TestSide(unittest.TestCase):
         lob.step()  # No-op, should not throw
         self.assertEqual(lob.n_bids(), 1)
         self.assertEqual(lob.n_asks(), 1)
+
+    @given(valid_qty, valid_qty)
+    def test_imbalance1(self, qty_ask, qty_bid):
+        lob = Orderbook()
+        lob.start()
+
+        lob(OrderParams(OrderSide.ASK, 120, qty_ask))
+        lob(OrderParams(OrderSide.BID, 95, qty_bid))
+
+        self.assertEqual(lob.imbalance(), qty_bid / (qty_ask + qty_bid))
+
+        lob.stop()
+
+    @given(valid_qty)
+    def test_imbalance2(self, qty):
+        lob = Orderbook()
+        lob.start()
+
+        N = 1_000
+
+        for i in range(N-10):
+
+            lob(OrderParams(OrderSide.ASK, N+i, qty))
+            lob(OrderParams(OrderSide.BID, N-i, qty))
+
+        self.assertEqual(lob.imbalance(), 0.5)
+
+        lob.stop()

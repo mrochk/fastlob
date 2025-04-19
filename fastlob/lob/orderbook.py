@@ -309,12 +309,12 @@ class Orderbook:
         return lim.price(), lim.volume(), lim.valid_orders()
 
     def n_bids(self) -> int:
-        '''Get the number of bids limits.'''
+        '''Get the number of bid limits.'''
 
         return self._bidside.size()
 
     def n_asks(self) -> int:
-        '''Get the number of asks limits.'''
+        '''Get the number of ask limits.'''
 
         return self._askside.size()
 
@@ -332,6 +332,11 @@ class Orderbook:
         '''Total volume on the ask side.'''
 
         return self._askside.volume()
+
+    def total_volume(self) -> Decimal:
+        '''Total volume on ask and bid side.'''
+
+        return self.asks_volume() + self.bids_volume()
 
     def midprice(self) -> Optional[Decimal]:
         '''Get the lob midprice.'''
@@ -352,6 +357,24 @@ class Orderbook:
 
         askprice, bidprice = self.best_ask()[0], self.best_bid()[0]
         return askprice - bidprice
+
+    def imbalance(self, n: Optional[int] = None) -> Decimal:
+        '''Get the lob imbalance for the `n` best limits on each side. 
+        If `n` is not provided, takes all limits on each side.'''
+
+        if n is None:
+            bidvol = self.bids_volume()
+            askvol = self.asks_volume()
+            return bidvol / (askvol + bidvol)
+
+        max_prices = max(self.n_asks(), self.n_bids())
+        if n > max_prices:
+            self._logger.error('calling ob.imbalance with n = %s, but max(nasks, nbids) = %s', n, max_prices)
+            return None
+
+        bidvol = sum([lim[1] for lim in self.best_bids(n)])
+        askvol = sum([lim[1] for lim in self.best_asks(n)])
+        return bidvol / (askvol + bidvol)
 
     def get_status(self, orderid: str) -> Optional[tuple[OrderStatus, Decimal]]:
         '''Get the status and the quantity left for a given order or None if order was not accepted by the lob.'''
@@ -384,6 +407,7 @@ class Orderbook:
 
         footer =  f'\n - spread = {self.spread()}'
         footer += f' | midprice = {self.midprice()}'
+        footer += f' | imbalance = {self.imbalance()}'
         footer += f'\n - asks volume = {self.asks_volume()}'
         footer += f' | bids volume = {self.bids_volume()}'
 
