@@ -348,6 +348,18 @@ class Orderbook:
         askprice, bidprice = self.best_ask()[0], self.best_bid()[0]
         return Decimal(0.5) * (askprice + bidprice)
 
+    def weighted_midprice(self) -> Optional[Decimal]:
+        '''Get the lob weighted midprice.'''
+
+        if self._askside.empty() or self._bidside.empty():
+            self._logger.warning('calling <ob.weighted_midprice> but lob does not contain limits on both sides')
+            return None
+
+        ask_price, ask_volume, _ = self.best_ask()
+        bid_price, bid_volume, _ = self.best_bid()
+
+        return (ask_volume * ask_price + bid_volume * bid_price) / (ask_volume + bid_volume)
+
     def spread(self) -> Decimal:
         '''Get the lob spread.'''
 

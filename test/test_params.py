@@ -13,8 +13,8 @@ valid_price = st.floats(min_value=float(TICK_SIZE_PRICE), max_value=float(MAX_VA
 valid_qty = st.floats(min_value=float(TICK_SIZE_QTY), max_value=float(MAX_VALUE), allow_nan=False, allow_infinity=False)
 valid_otype = st.sampled_from(OrderType)
 valid_otype_noGTD = st.sampled_from([OrderType.FOK, OrderType.GTC])
-valid_expiry = st.one_of(st.floats(min_value=time.time()+10, allow_nan=False, allow_infinity=False))
-valid_expiry_noGTD = st.one_of(st.none(), st.floats(min_value=time.time()+10, allow_nan=False, allow_infinity=False))
+valid_expiry = st.one_of(st.floats(min_value=time.time()+100, allow_nan=False, allow_infinity=False))
+valid_expiry_noGTD = st.one_of(st.none(), st.floats(min_value=time.time()+100, allow_nan=False, allow_infinity=False))
 
 class TestOrderParams(unittest.TestCase):
     def setUp(self): pass

@@ -121,3 +121,22 @@ class TestSide(unittest.TestCase):
         self.assertEqual(lob.imbalance(), 0.5)
 
         lob.stop()
+
+    @given(valid_qty, valid_qty)
+    def test_weighted_midprice(self, qty_ask, qty_bid):
+        lob = Orderbook()
+        lob.start()
+
+        N = 1_000
+
+        for i in range(N-10):
+
+            lob(OrderParams(OrderSide.ASK, N+i, qty_ask))
+            lob(OrderParams(OrderSide.BID, N-i, qty_bid))
+
+        if qty_bid != qty_ask:
+            self.assertNotEqual(lob.midprice(), lob.weighted_midprice())
+        else:
+            self.assertEqual(lob.midprice(), lob.weighted_midprice())
+
+        lob.stop()
