@@ -59,7 +59,38 @@ class Orderbook:
 
         if start: self.start()
 
-    #### MAIN FUNCS
+    @staticmethod
+    def from_snapshot(snapshot: dict, name: Optional[str] = 'LOB', start: Optional[bool] = False):
+        '''
+        Instantiate a new LOB from a given snapshot. A "snapshot" is a dictionary of the following 
+        form `{"bids": <list_of_(price, volume)_pairs>, "asks": <list_of_(price, volume)_pairs>}`.
+
+        It does so by placing a "fake" order. These orders are also not added to the history. 
+        They are simply added to each price level.
+
+        Returns:
+            Orderbook: A new LOB initialized with `snapshot`.
+        '''
+
+        if not isinstance(snapshot, dict) or snapshot.keys() != {'bids', 'asks'}:
+            raise ValueError('snapshot must be a dictionary containing "bids" and "asks" keys')
+
+        if not isinstance(snapshot['bids'], Iterable) or not isinstance(snapshot['asks'], Iterable):
+            raise ValueError('snapshot[bids|asks] must be an iterable of (price, volume) pairs')
+
+        lob = Orderbook(name=name, start=False)
+
+        asks, bids = snapshot['asks'], snapshot['bids']
+
+        lob._askside.apply_snapshot(asks)
+        lob._bidside.apply_snapshot(bids)
+
+        lob._logger.info('snapshot applied successfully')
+
+        if start: lob.start()
+        return lob
+
+    # ORDERS PROCESSING ########################################################
 
     def start(self) -> None:
         '''Start the lob. Required before orders can be placed.'''
@@ -223,6 +254,8 @@ class Orderbook:
         self._logger.info(msg)
         return result.build()
 
+    # DATA-COLLECTION ########################################################## 
+
     def running_time(self) -> int:
         '''Number of seconds since the lob has been started.
 
@@ -331,6 +364,8 @@ class Orderbook:
             self._logger.warning('order [%s] not found in lob', orderid)
             return None
 
+    # DISPLAYING ###############################################################
+
     def view(self, n : int = DEFAULT_LIMITS_VIEW) -> str:
         '''Get a pretty-printed view of the lob state.'''
 
@@ -371,40 +406,7 @@ class Orderbook:
         buffer.write(f'- #bids={self.n_bids()}')
         return buffer.getvalue()
 
-    #### SNAPSHOT RELATED FUNCS
-
-    @staticmethod
-    def from_snapshot(snapshot: dict, name: Optional[str] = 'LOB', start: Optional[bool] = False):
-        '''
-        Instantiate a new LOB from a given snapshot. A "snapshot" is a dictionary of the following 
-        form `{"bids": <list_of_(price, volume)_pairs>, "asks": <list_of_(price, volume)_pairs>}`.
-
-        It does so by placing a "fake" order. These orders are also not added to the history. 
-        They are simply added to each price level.
-
-        Returns:
-            Orderbook: A new LOB initialized with `snapshot`.
-        '''
-
-        if not isinstance(snapshot, dict) or snapshot.keys() != {'bids', 'asks'}:
-            raise ValueError('snapshot must be a dictionary containing "bids" and "asks" keys')
-
-        if not isinstance(snapshot['bids'], Iterable) or not isinstance(snapshot['asks'], Iterable):
-            raise ValueError('snapshot[bids|asks] must be an iterable of (price, volume) pairs')
-
-        lob = Orderbook(name=name, start=False)
-
-        asks, bids = snapshot['asks'], snapshot['bids']
-
-        lob._askside.apply_snapshot(asks)
-        lob._bidside.apply_snapshot(bids)
-
-        lob._logger.info('snapshot applied successfully')
-
-        if start: lob.start()
-        return lob
-
-    #### UPDATES RELATED FUNCS
+    # RUNNING ON HISTORICAL DATA ###############################################
 
     def load_updates(self, updates: Iterable[dict]):
         '''Load `updates` so that every time `step` is called, the lob gets updated (using fake orders).'''
@@ -445,7 +447,7 @@ class Orderbook:
 
         self._logger.info('updates applied successfully')
 
-    #### AUXILIARY FUNCS (where most of the work happens)
+    # AUXILIARY FUNCS (where most of the work happens) #########################
 
     def _process_bid_order(self, order: BidOrder) -> ResultBuilder:
         self._logger.info('processing bid order [%s]', order.id())
