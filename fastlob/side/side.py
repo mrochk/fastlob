@@ -1,4 +1,4 @@
-'''The Side is a collection of limits, whose ordering (by price) depends wether it is a bid or ask side.'''
+'''The side is a collection of limits, whose ordering (by price) depends wether it is a bid or ask side.'''
 
 import io
 import abc

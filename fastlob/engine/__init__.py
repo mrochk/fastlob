@@ -1,3 +1,3 @@
-'''The engine module is responsible for executing market orders.'''
+'''The engine module is **only** responsible for executing market orders.'''
 
 from .engine import execute

@@ -1,3 +1,5 @@
+'''Various constants and parameters used in the project.'''
+
 from .consts import (
     TICK_SIZE_PRICE,
     TICK_SIZE_QTY,

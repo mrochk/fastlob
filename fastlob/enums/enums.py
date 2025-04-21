@@ -1,4 +1,4 @@
-'''All the project enumerations are here.'''
+'''All the project enumerations are grouped here for simplicity.'''
 
 from enum import Enum
 
