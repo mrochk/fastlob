@@ -7,7 +7,7 @@
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
         <title>fastlob</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -16,7 +16,7 @@
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
+    --color-code-background: #eeffcc;
   --color-code-foreground: black;
   
   }
@@ -198,7 +198,7 @@
   <input type="hidden" name="area" value="default">
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
-  <p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+  <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api/lob.html">lob package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/engine.html">engine package</a></li>
@@ -250,8 +250,69 @@
         </div>
         <article role="main" id="furo-main-content">
           <div style="text-align: center;"><h1>fastlob</h1></div>
-<div style="text-align: center;">Fast & minimalist limit-order-book implementation in pure Python. This package can be used for both live order processing and simulating historical high-frequency market data.</div><div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<div style="text-align: center;">Fast & minimalist limit-order-book implementation in pure Python. This package can be used for both live order processing and simulating historical high-frequency market data.</div><div class="line-block">
+<div class="line"><br /></div>
+</div>
+<a class="reference internal image-reference" href="_images/logo.png"><img alt="Logo" src="_images/logo.png" style="width: 800px;" />
+</a>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/mrochk/fastlob">Link to Github repository.</a></p></li>
+<li><p><a class="reference external" href="https://pypi.org/project/fastlob">Link to latest PyPI release.</a></p></li>
+</ul>
+<hr class="docutils" />
+<div style="text-align: center;"><h3>Quickstart</h3></div><div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p>To install the package you can either install it using pip:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>fastlob
+</pre></div>
+</div>
+<p>Otherwise, you can build the project from source:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:mrochk/fastlob.git
+<span class="nb">cd</span><span class="w"> </span>fastlob
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+pip<span class="w"> </span>install<span class="w"> </span>.
+</pre></div>
+</div>
+<hr class="docutils" />
+<div style="text-align: center;"><h3>Examples</h3></div><div class="line-block">
+<div class="line"><br /></div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">Placing a limit GTD order and getting his status.</span><a class="headerlink" href="#id1" title="Link to this code">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span><span class="w"> </span><span class="nn">time</span><span class="o">,</span><span class="w"> </span><span class="nn">logging</span>
+<span class="linenos"> 2</span><span class="kn">from</span><span class="w"> </span><span class="nn">fastlob</span><span class="w"> </span><span class="kn">import</span> <span class="n">Orderbook</span><span class="p">,</span> <span class="n">OrderParams</span><span class="p">,</span> <span class="n">OrderSide</span><span class="p">,</span> <span class="n">OrderType</span>
+<span class="linenos"> 3</span>
+<span class="linenos"> 4</span> <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span> <span class="c1"># set maximum logging level</span>
+<span class="linenos"> 5</span>
+<span class="linenos"> 6</span> <span class="n">lob</span> <span class="o">=</span> <span class="n">Orderbook</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;ABCD&#39;</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># create a lob an start it</span>
+<span class="linenos"> 7</span>
+<span class="linenos"> 8</span> <span class="c1"># create an order</span>
+<span class="linenos"> 9</span> <span class="n">params</span> <span class="o">=</span> <span class="n">OrderParams</span><span class="p">(</span>
+<span class="linenos">10</span>     <span class="n">side</span><span class="o">=</span><span class="n">OrderSide</span><span class="o">.</span><span class="n">BID</span><span class="p">,</span>
+<span class="linenos">11</span>     <span class="n">price</span><span class="o">=</span><span class="mf">123.32</span><span class="p">,</span>
+<span class="linenos">12</span>     <span class="n">quantity</span><span class="o">=</span><span class="mf">3.4</span><span class="p">,</span>
+<span class="linenos">13</span>     <span class="n">otype</span><span class="o">=</span><span class="n">OrderType</span><span class="o">.</span><span class="n">GTD</span><span class="p">,</span>
+<span class="linenos">14</span>     <span class="n">expiry</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">+</span> <span class="mi">120</span> <span class="c1"># order will expire in two minutes</span>
+<span class="linenos">15</span> <span class="p">)</span>
+<span class="linenos">16</span>
+<span class="linenos">17</span> <span class="n">result</span> <span class="o">=</span> <span class="n">lob</span><span class="p">(</span><span class="n">params</span><span class="p">);</span> <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="p">()</span> <span class="c1"># place order</span>
+<span class="linenos">18</span>
+<span class="linenos">19</span> <span class="n">status</span><span class="p">,</span> <span class="n">qty_left</span> <span class="o">=</span> <span class="n">lob</span><span class="o">.</span><span class="n">get_status</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">orderid</span><span class="p">())</span> <span class="c1"># query status of order</span>
+<span class="linenos">20</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Current order status: </span><span class="si">{</span><span class="n">status</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">, quantity left: </span><span class="si">{</span><span class="n">qty_left</span><span class="si">}</span><span class="s1">.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="linenos">21</span>
+<span class="linenos">22</span> <span class="n">lob</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="c1"># pretty-print the lob</span>
+<span class="linenos">23</span>
+<span class="linenos">24</span> <span class="n">lob</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span> <span class="c1"># stop background processes</span>
+</pre></div>
+</div>
+</div>
+<hr class="docutils" />
+<div style="text-align: center;"><h3>API Reference</h3></div><div class="line-block">
+<div class="line"><br /></div>
+</div>
+<div class="toctree-wrapper compound" id="apiref">
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api/lob.html">lob package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/engine.html">engine package</a></li>

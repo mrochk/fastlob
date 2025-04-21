@@ -19,6 +19,8 @@ extensions = [
     'sphinx_autodoc_typehints',  # Optional, for type hints
 ]
 
+pygments_style = 'sphinx'
+
 templates_path = ['_templates']
 exclude_patterns = []
 
