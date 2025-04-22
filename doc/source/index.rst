@@ -3,19 +3,20 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. raw:: html
-
-   <div style="text-align: center;"><h1>fastlob</h1></div>
-   <div style="text-align: center;">Fast & minimalist limit-order-book implementation in pure Python. This package can be used for both live order processing and simulating historical high-frequency market data.</div>
-
-|
-
-.. image:: ../../logo.png
+.. image:: _static/fastlob-logo.png
   :width: 800
   :alt: Logo
 
-* `Link to Github repository. <https://github.com/mrochk/fastlob>`_
-* `Link to latest PyPI release. <https://pypi.org/project/fastlob>`_
+.. raw:: html
+
+   <!--<div style="text-align: center;"><h1><code>fastlob</code></h1></div>-->
+   <div style="text-align: center;">Fast & minimalist limit-order-book implementation in pure Python. This package can be used for both live order processing and simulating historical high-frequency market data.</div>
+   <br>
+   <div style="text-align: center;"><a href="https://github.com/mrochk/fastlob">GitHub</a>  |  <a href="https://pypi.org/project/fastlob">PyPI</a></div>
+
+|
+
+*This package is still being developed, bugs are expected. Do not use in production.*
 
 ----------------
 

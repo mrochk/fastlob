@@ -35,3 +35,6 @@ html_theme = 'furo'
 html_static_path = ['_static']
 html_title = "fastlob"
 html_favicon = "_static/logo-square.png" 
+html_theme_options = {
+    "top_of_page_buttons": [],
+}
