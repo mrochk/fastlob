@@ -1,28 +1,40 @@
 [build-system]
 requires = ["hatchling"]
+
 build-backend = "hatchling.build"
 
 [project]
 name = "fastlob"
+
 version = "0.0.19"
-description = "Fast & minimalist limit-order-book (LOB) implementation in pure Python with almost no dependencies."
+
+description = "Fast & minimalist limit-order-book (LOB) implementation in pure Python."
+
 authors = [{name = "Maxime Rochkoulets", email = "mrochkoulets@gmail.com"}]
+
 maintainers = [{name = "Maxime Rochkoulets", email = "mrochkoulets@gmail.com"}]
+
 keywords = ["limit-order-book", "order-book", "trading", "finance", "market", "exchange"]
+
 readme = "README.md"
+
 license = "MIT" 
+
 license-files = ["LICEN[CS]E.*"]
+
 requires-python = ">=3.10"
+
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
     "Development Status :: 3 - Alpha",
 ]
+
 dependencies = [
     "sortedcollections==2.1.0",
     "termcolor==2.5.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/mrochk/fastlob"
+Homepage = "https://fastlob.com"
 Repository = "https://github.com/mrochk/fastlob"
