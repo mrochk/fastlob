@@ -18,6 +18,8 @@ extensions = [
     'sphinx_autodoc_typehints',  # Optional, for type hints
 ]
 
+autodoc_mock_imports = ["sortedcontainers"]
+
 pygments_style = 'sphinx'
 
 templates_path = ['_templates']
@@ -25,7 +27,7 @@ exclude_patterns = []
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../src'))
+sys.path.insert(0, os.path.abspath('../..'))
 
 
 # -- Options for HTML output -------------------------------------------------

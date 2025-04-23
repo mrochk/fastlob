@@ -371,6 +371,18 @@ They are simply added to each price level.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="fastlob.lob.orderbook.Orderbook.imbalance">
+<span class="sig-name descname"><span class="pre">imbalance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fastlob.lob.orderbook.Orderbook.imbalance" title="Link to this definition">¶</a></dt>
+<dd><p>Get the lob imbalance for the <cite>n</cite> best limits on each side. 
+If <cite>n</cite> is not provided, takes all limits on each side.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Decimal</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="fastlob.lob.orderbook.Orderbook.load_updates">
 <span class="sig-name descname"><span class="pre">load_updates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">updates</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fastlob.lob.orderbook.Orderbook.load_updates" title="Link to this definition">¶</a></dt>
 <dd><p>Load <cite>updates</cite> so that every time <cite>step</cite> is called, the lob gets updated (using fake orders).</p>
@@ -390,7 +402,7 @@ They are simply added to each price level.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="fastlob.lob.orderbook.Orderbook.n_asks">
 <span class="sig-name descname"><span class="pre">n_asks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fastlob.lob.orderbook.Orderbook.n_asks" title="Link to this definition">¶</a></dt>
-<dd><p>Get the number of asks limits.</p>
+<dd><p>Get the number of ask limits.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
@@ -401,7 +413,7 @@ They are simply added to each price level.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="fastlob.lob.orderbook.Orderbook.n_bids">
 <span class="sig-name descname"><span class="pre">n_bids</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fastlob.lob.orderbook.Orderbook.n_bids" title="Link to this definition">¶</a></dt>
-<dd><p>Get the number of bids limits.</p>
+<dd><p>Get the number of bid limits.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
@@ -531,12 +543,34 @@ They are simply added to each price level.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="fastlob.lob.orderbook.Orderbook.total_volume">
+<span class="sig-name descname"><span class="pre">total_volume</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fastlob.lob.orderbook.Orderbook.total_volume" title="Link to this definition">¶</a></dt>
+<dd><p>Total volume on ask and bid side.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Decimal</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="fastlob.lob.orderbook.Orderbook.view">
 <span class="sig-name descname"><span class="pre">view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fastlob.lob.orderbook.Orderbook.view" title="Link to this definition">¶</a></dt>
 <dd><p>Get a pretty-printed view of the lob state.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fastlob.lob.orderbook.Orderbook.weighted_midprice">
+<span class="sig-name descname"><span class="pre">weighted_midprice</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fastlob.lob.orderbook.Orderbook.weighted_midprice" title="Link to this definition">¶</a></dt>
+<dd><p>Get the lob weighted midprice.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Decimal</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -572,6 +606,7 @@ They are simply added to each price level.</p>
 </section>
 <section id="module-fastlob.lob">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-fastlob.lob" title="Link to this heading">¶</a></h2>
+<p>Main module containing the Orderbook class.</p>
 </section>
 </section>
 
@@ -643,6 +678,7 @@ They are simply added to each price level.</p>
 <li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.cancel"><code class="docutils literal notranslate"><span class="pre">Orderbook.cancel()</span></code></a></li>
 <li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.from_snapshot"><code class="docutils literal notranslate"><span class="pre">Orderbook.from_snapshot()</span></code></a></li>
 <li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.get_status"><code class="docutils literal notranslate"><span class="pre">Orderbook.get_status()</span></code></a></li>
+<li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.imbalance"><code class="docutils literal notranslate"><span class="pre">Orderbook.imbalance()</span></code></a></li>
 <li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.load_updates"><code class="docutils literal notranslate"><span class="pre">Orderbook.load_updates()</span></code></a></li>
 <li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.midprice"><code class="docutils literal notranslate"><span class="pre">Orderbook.midprice()</span></code></a></li>
 <li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.n_asks"><code class="docutils literal notranslate"><span class="pre">Orderbook.n_asks()</span></code></a></li>
@@ -657,7 +693,9 @@ They are simply added to each price level.</p>
 <li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.start"><code class="docutils literal notranslate"><span class="pre">Orderbook.start()</span></code></a></li>
 <li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.step"><code class="docutils literal notranslate"><span class="pre">Orderbook.step()</span></code></a></li>
 <li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.stop"><code class="docutils literal notranslate"><span class="pre">Orderbook.stop()</span></code></a></li>
+<li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.total_volume"><code class="docutils literal notranslate"><span class="pre">Orderbook.total_volume()</span></code></a></li>
 <li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.view"><code class="docutils literal notranslate"><span class="pre">Orderbook.view()</span></code></a></li>
+<li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.weighted_midprice"><code class="docutils literal notranslate"><span class="pre">Orderbook.weighted_midprice()</span></code></a></li>
 </ul>
 </li>
 </ul>
