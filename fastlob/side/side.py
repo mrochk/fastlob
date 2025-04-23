@@ -7,7 +7,7 @@ from numbers import Number
 from typing import Optional, Iterable
 from decimal import Decimal
 from collections.abc import Sequence
-from sortedcollections import SortedDict
+from sortedcontainers import SortedDict
 
 from fastlob.limit import Limit
 from fastlob.order import Order, BidOrder, AskOrder, OrderParams

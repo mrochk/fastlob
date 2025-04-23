@@ -6,7 +6,7 @@ import logging
 import threading
 from decimal import Decimal
 from typing import Optional, Iterable
-from sortedcollections import SortedDict
+from sortedcontainers import SortedDict
 from termcolor import colored
 
 from fastlob import engine
