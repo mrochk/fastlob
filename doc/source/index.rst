@@ -12,7 +12,7 @@
    <!--<div style="text-align: center;"><h1><code>fastlob</code></h1></div>-->
    <div style="text-align: center;">Fast & minimalist limit-order-book implementation in pure Python. This package can be used for both live order processing and simulating historical high-frequency market data.</div>
    <br>
-   <div style="text-align: center;"><a href="https://github.com/mrochk/fastlob">GitHub</a>  |  <a href="https://pypi.org/project/fastlob">PyPI</a></div>
+   <div style="text-align: center;"><a href="https://github.com/mrochk/fastlob">GitHub</a>  |  <a href="https://pypi.org/project/fastlob">PyPI</a></div>
 
 |
 
