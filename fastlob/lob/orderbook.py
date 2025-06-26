@@ -136,7 +136,9 @@ class Orderbook:
             ExecutionResult | list[ExecutionResult]: The result of the execution of each order.
         '''
 
-        if not isinstance(orderparams, Iterable): return self.process_one(orderparams)
+        if isinstance(orderparams, OrderParams):
+            return self.process(orderparams)
+        # else if many orders
         return self.process_many(orderparams)
 
     def process_many(self, ordersparams: Iterable[OrderParams]) -> list[ExecutionResult]:
@@ -151,9 +153,9 @@ class Orderbook:
 
         if not self._alive:
             return [not_running_error(self._logger).build() for _ in ordersparams]
-        return [self.process_one(params) for params in ordersparams]
+        return [self.process(params) for params in ordersparams]
 
-    def process_one(self, orderparams: OrderParams) -> ExecutionResult:
+    def process(self, orderparams: OrderParams) -> ExecutionResult:
         '''Process one order params instance.
 
         Args:

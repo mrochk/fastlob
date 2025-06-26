@@ -433,6 +433,23 @@ If <cite>n</cite> is not provided, takes all limits on each side.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="fastlob.lob.orderbook.Orderbook.process">
+<span class="sig-name descname"><span class="pre">process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">orderparams</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fastlob.lob.orderbook.Orderbook.process" title="Link to this definition">¶</a></dt>
+<dd><p>Process one order params instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="result.html#fastlob.result.result.ExecutionResult" title="fastlob.result.result.ExecutionResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExecutionResult</span></code></a></span></p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Args:</dt><dd><p>orderparams (OrderParams): OrderParams to process.</p>
+</dd>
+<dt>Returns:</dt><dd><p>ExecutionResult: The result of the execution of the order.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="fastlob.lob.orderbook.Orderbook.process_many">
 <span class="sig-name descname"><span class="pre">process_many</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ordersparams</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fastlob.lob.orderbook.Orderbook.process_many" title="Link to this definition">¶</a></dt>
 <dd><p>Process many order parameters.</p>
@@ -445,23 +462,6 @@ If <cite>n</cite> is not provided, takes all limits on each side.</p>
 <dt>Args:</dt><dd><p>ordersparams (Iterable[OrderParams]): Iterable of OrderParams to process.</p>
 </dd>
 <dt>Returns:</dt><dd><p>list[ExecutionResult]: The result of the execution of each order.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="fastlob.lob.orderbook.Orderbook.process_one">
-<span class="sig-name descname"><span class="pre">process_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">orderparams</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fastlob.lob.orderbook.Orderbook.process_one" title="Link to this definition">¶</a></dt>
-<dd><p>Process one order params instance.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="result.html#fastlob.result.result.ExecutionResult" title="fastlob.result.result.ExecutionResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExecutionResult</span></code></a></span></p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>Args:</dt><dd><p>orderparams (OrderParams): OrderParams to process.</p>
-</dd>
-<dt>Returns:</dt><dd><p>ExecutionResult: The result of the execution of the order.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -684,8 +684,8 @@ If <cite>n</cite> is not provided, takes all limits on each side.</p>
 <li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.n_asks"><code class="docutils literal notranslate"><span class="pre">Orderbook.n_asks()</span></code></a></li>
 <li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.n_bids"><code class="docutils literal notranslate"><span class="pre">Orderbook.n_bids()</span></code></a></li>
 <li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.n_prices"><code class="docutils literal notranslate"><span class="pre">Orderbook.n_prices()</span></code></a></li>
+<li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.process"><code class="docutils literal notranslate"><span class="pre">Orderbook.process()</span></code></a></li>
 <li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.process_many"><code class="docutils literal notranslate"><span class="pre">Orderbook.process_many()</span></code></a></li>
-<li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.process_one"><code class="docutils literal notranslate"><span class="pre">Orderbook.process_one()</span></code></a></li>
 <li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.render"><code class="docutils literal notranslate"><span class="pre">Orderbook.render()</span></code></a></li>
 <li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.reset"><code class="docutils literal notranslate"><span class="pre">Orderbook.reset()</span></code></a></li>
 <li><a class="reference internal" href="#fastlob.lob.orderbook.Orderbook.running_time"><code class="docutils literal notranslate"><span class="pre">Orderbook.running_time()</span></code></a></li>

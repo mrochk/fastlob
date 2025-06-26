@@ -9,6 +9,14 @@
 
 *Package currently in development, bugs are expected.*
 
+***
+
+*I know that it does not make sense to call "fast" a single-threaded order-book implementation written in an interpreted language such as Python. And, in fact, this project is not fast at all yet.*
+
+*This is just the very first version of the project, the idea was to first have a working and clean pure-Python version. The next step is to rewrite the core order processing parts in concurrent C/C++. This will be done during summer 2025 on a separate branch and then merged to the main branch.*
+
+***
+
 **Functionalities:**
 - Place limit orders.
 - Execute market orders.
@@ -90,36 +98,10 @@ In the notebook [`simulate`](examples/simulate.ipynb) you will find an example o
 
 In [`load_snapshot_updates`](examples/load_snapshot_updates.ipynb) you'll find an example of running the lob on historical data.
 
+**For more information and examples check out `https://fastlob.com`.**
+
 ## Contributing
 
 As mentioned earlier, this package is still in early development, and contributions are more than welcome.
 
 Please do not hesitate to contact me or directly submit a pull request if you'd like to contribute, there are also various issues open on Github.
-
-## Lines Count
-```
-  96 fastlob/engine/engine.py
-   3 fastlob/engine/__init__.py
-  22 fastlob/utils/utils.py
-   1 fastlob/utils/__init__.py
- 115 fastlob/result/result.py
-   1 fastlob/result/__init__.py
-  84 fastlob/order/params.py
-   1 fastlob/order/__init__.py
-  99 fastlob/order/order.py
-  66 fastlob/enums/enums.py
-   1 fastlob/enums/__init__.py
-  22 fastlob/consts/consts.py
-   1 fastlob/consts/__init__.py
- 122 fastlob/limit/limit.py
-   1 fastlob/limit/__init__.py
-  24 fastlob/side/utils.py
- 320 fastlob/side/side.py
-   1 fastlob/side/__init__.py
-   5 fastlob/__init__.py
- 546 fastlob/lob/orderbook.py
-  28 fastlob/lob/utils.py
-   1 fastlob/lob/__init__.py
-
-1560 total
-```
