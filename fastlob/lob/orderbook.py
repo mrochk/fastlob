@@ -15,7 +15,7 @@ from fastlob.order import OrderParams, Order, AskOrder, BidOrder
 from fastlob.enums import OrderSide, OrderStatus, OrderType
 from fastlob.result import ResultBuilder, ExecutionResult
 from fastlob.utils import time_asint
-from fastlob.consts import DEFAULT_LIMITS_VIEW
+from fastlob.consts import DEFAULT_LIMITS_VIEW, TICK_SIZE_QTY 
 
 from .utils import not_running_error, check_limit_order
 
@@ -379,7 +379,7 @@ class Orderbook:
         if n is None:
             bidvol = self.bids_volume()
             askvol = self.asks_volume()
-            return bidvol / (askvol + bidvol)
+            return (bidvol / (askvol + bidvol)).quantize(TICK_SIZE_QTY)
 
         max_prices = max(self.n_asks(), self.n_bids())
         if n > max_prices:
@@ -388,7 +388,7 @@ class Orderbook:
 
         bidvol = sum([lim[1] for lim in self.best_bids(n)])
         askvol = sum([lim[1] for lim in self.best_asks(n)])
-        return bidvol / (askvol + bidvol)
+        return (bidvol / (askvol + bidvol)).quantize(TICK_SIZE_QTY)
 
     def get_status(self, orderid: str) -> Optional[tuple[OrderStatus, Decimal]]:
         '''Get the status and the quantity left for a given order or None if order was not accepted by the lob.'''

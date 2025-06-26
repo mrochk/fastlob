@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 [project]
 name = "fastlob"
 
-version = "0.0.20"
+version = "0.0.21"
 
 description = "Fast & minimalist limit-order-book (LOB) implementation in pure Python."
 
