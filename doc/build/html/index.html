@@ -303,6 +303,152 @@ pip<span class="w"> </span>install<span class="w"> </span>.
 </pre></div>
 </div>
 </div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">Simulate the LOB using various distributions.</span><a class="headerlink" href="#id2" title="Link to this code">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span><span class="w"> </span><span class="nn">random</span><span class="o">,</span><span class="w"> </span><span class="nn">time</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span>
+<span class="linenos"> 2</span><span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span>
+<span class="linenos"> 3</span>
+<span class="linenos"> 4</span><span class="kn">from</span><span class="w"> </span><span class="nn">fastlob</span><span class="w"> </span><span class="kn">import</span> <span class="n">Orderbook</span><span class="p">,</span> <span class="n">OrderParams</span><span class="p">,</span> <span class="n">OrderSide</span>
+<span class="linenos"> 5</span>
+<span class="linenos"> 6</span><span class="k">def</span><span class="w"> </span><span class="nf">generate_orders</span><span class="p">(</span><span class="n">T</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">midprice</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+<span class="linenos"> 7</span>   <span class="n">result</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+<span class="linenos"> 8</span>
+<span class="linenos"> 9</span>   <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">T</span><span class="p">):</span>
+<span class="linenos">10</span>
+<span class="linenos">11</span>      <span class="n">n_ask_limits</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">poisson</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
+<span class="linenos">12</span>      <span class="n">n_bid_limits</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">poisson</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
+<span class="linenos">13</span>
+<span class="linenos">14</span>      <span class="n">ask_limits_price</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">expon</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">midprice</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n_ask_limits</span><span class="p">)</span>
+<span class="linenos">15</span>      <span class="n">bid_limits_price</span> <span class="o">=</span> <span class="o">-</span><span class="n">stats</span><span class="o">.</span><span class="n">expon</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">midprice</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n_bid_limits</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">midprice</span>
+<span class="linenos">16</span>
+<span class="linenos">17</span>      <span class="n">ask_limits_quantities</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">uniform</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n_ask_limits</span><span class="p">)</span>
+<span class="linenos">18</span>      <span class="n">bid_limits_quantities</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">uniform</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n_bid_limits</span><span class="p">)</span>
+<span class="linenos">19</span>
+<span class="linenos">20</span>      <span class="n">ask_limits_params</span> <span class="o">=</span> <span class="p">[</span><span class="n">OrderParams</span><span class="p">(</span><span class="n">OrderSide</span><span class="o">.</span><span class="n">ASK</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ask_limits_price</span><span class="p">,</span> <span class="n">ask_limits_quantities</span><span class="p">)]</span>
+<span class="linenos">21</span>      <span class="n">bid_limits_params</span> <span class="o">=</span> <span class="p">[</span><span class="n">OrderParams</span><span class="p">(</span><span class="n">OrderSide</span><span class="o">.</span><span class="n">BID</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">bid_limits_price</span><span class="p">,</span> <span class="n">bid_limits_quantities</span><span class="p">)]</span>
+<span class="linenos">22</span>
+<span class="linenos">23</span>      <span class="n">n_markets</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">poisson</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="linenos">24</span>
+<span class="linenos">25</span>      <span class="n">markets_price</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">midprice</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n_markets</span><span class="p">)</span>
+<span class="linenos">26</span>      <span class="n">markets_quantities</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">uniform</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n_markets</span><span class="p">)</span>
+<span class="linenos">27</span>      <span class="n">markets_bid_or_ask</span> <span class="o">=</span> <span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">((</span><span class="n">OrderSide</span><span class="o">.</span><span class="n">BID</span><span class="p">,</span> <span class="n">OrderSide</span><span class="o">.</span><span class="n">ASK</span><span class="p">))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_markets</span><span class="p">)]</span>
+<span class="linenos">28</span>
+<span class="linenos">29</span>      <span class="n">markets_params</span> <span class="o">=</span> <span class="p">[</span><span class="n">OrderParams</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">markets_bid_or_ask</span><span class="p">,</span> <span class="n">markets_price</span><span class="p">,</span> <span class="n">markets_quantities</span><span class="p">)]</span>
+<span class="linenos">30</span>
+<span class="linenos">31</span>      <span class="n">orders</span> <span class="o">=</span> <span class="n">ask_limits_params</span> <span class="o">+</span> <span class="n">bid_limits_params</span> <span class="o">+</span> <span class="n">markets_params</span>
+<span class="linenos">32</span>      <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">orders</span><span class="p">)</span>
+<span class="linenos">33</span>
+<span class="linenos">34</span>      <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">orders</span><span class="p">)</span>
+<span class="linenos">35</span>
+<span class="linenos">36</span>   <span class="k">return</span> <span class="n">result</span>
+<span class="linenos">37</span>
+<span class="linenos">38</span><span class="k">def</span><span class="w"> </span><span class="nf">simulate</span><span class="p">(</span><span class="n">orders</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">speed</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+<span class="linenos">39</span>   <span class="n">ob</span> <span class="o">=</span> <span class="n">Orderbook</span><span class="p">(</span><span class="s1">&#39;Simulation&#39;</span><span class="p">)</span>
+<span class="linenos">40</span>   <span class="n">ob</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="linenos">41</span>
+<span class="linenos">42</span>   <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">orders</span><span class="p">:</span>
+<span class="linenos">43</span>      <span class="n">ob</span><span class="o">.</span><span class="n">process_many</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+<span class="linenos">44</span>      <span class="nb">print</span><span class="p">()</span>
+<span class="linenos">45</span>      <span class="n">ob</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+<span class="linenos">46</span>      <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">speed</span><span class="p">)</span>
+<span class="linenos">47</span>      <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;clear&#39;</span><span class="p">)</span>
+<span class="linenos">48</span>
+<span class="linenos">49</span>   <span class="n">ob</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+<span class="linenos">50</span>
+<span class="linenos">51</span><span class="n">orders</span> <span class="o">=</span> <span class="n">generate_orders</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="linenos">52</span><span class="n">simulate</span><span class="p">(</span><span class="n">orders</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text">Use historical data.</span><a class="headerlink" href="#id3" title="Link to this code">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">from</span><span class="w"> </span><span class="nn">fastlob</span><span class="w"> </span><span class="kn">import</span> <span class="n">Orderbook</span><span class="p">,</span> <span class="n">OrderParams</span><span class="p">,</span> <span class="n">OrderSide</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span><span class="n">snapshot</span> <span class="o">=</span> <span class="p">{</span>
+<span class="linenos"> 4</span>   <span class="s1">&#39;bids&#39;</span><span class="p">:</span> <span class="p">[</span>
+<span class="linenos"> 5</span>      <span class="p">(</span><span class="mf">98.78</span><span class="p">,</span> <span class="mf">11.56</span><span class="p">),</span>
+<span class="linenos"> 6</span>      <span class="p">(</span><span class="mf">95.65</span><span class="p">,</span> <span class="mf">67.78</span><span class="p">),</span>
+<span class="linenos"> 7</span>      <span class="p">(</span><span class="mf">94.23</span><span class="p">,</span> <span class="mf">56.76</span><span class="p">),</span>
+<span class="linenos"> 8</span>      <span class="p">(</span><span class="mf">93.23</span><span class="p">,</span> <span class="mf">101.59</span><span class="p">),</span>
+<span class="linenos"> 9</span>      <span class="p">(</span><span class="mf">90.03</span><span class="p">,</span> <span class="mf">200.68</span><span class="p">),</span>
+<span class="linenos">10</span>   <span class="p">],</span>
+<span class="linenos">11</span>   <span class="s1">&#39;asks&#39;</span><span class="p">:</span> <span class="p">[</span>
+<span class="linenos">12</span>      <span class="p">(</span><span class="mf">99.11</span><span class="p">,</span> <span class="mf">12.87</span><span class="p">),</span>
+<span class="linenos">13</span>      <span class="p">(</span><span class="mf">100.89</span><span class="p">,</span> <span class="mf">45.87</span><span class="p">),</span>
+<span class="linenos">14</span>      <span class="p">(</span><span class="mf">101.87</span><span class="p">,</span> <span class="mf">88.56</span><span class="p">),</span>
+<span class="linenos">15</span>      <span class="p">(</span><span class="mf">103.78</span><span class="p">,</span> <span class="mf">98.77</span><span class="p">),</span>
+<span class="linenos">16</span>      <span class="p">(</span><span class="mf">105.02</span><span class="p">,</span> <span class="mf">152.43</span><span class="p">),</span>
+<span class="linenos">17</span>   <span class="p">]</span>
+<span class="linenos">18</span><span class="p">}</span>
+<span class="linenos">19</span>
+<span class="linenos">20</span><span class="n">updates</span> <span class="o">=</span> <span class="p">[</span>
+<span class="linenos">21</span>   <span class="c1"># update 1</span>
+<span class="linenos">22</span>   <span class="p">{</span>
+<span class="linenos">23</span>   <span class="s1">&#39;bids&#39;</span><span class="p">:</span> <span class="p">[</span>
+<span class="linenos">24</span>      <span class="p">(</span><span class="mf">99.07</span><span class="p">,</span> <span class="mf">10.01</span><span class="p">),</span>
+<span class="linenos">25</span>      <span class="p">(</span><span class="mf">95.65</span><span class="p">,</span> <span class="mf">79.78</span><span class="p">),</span>
+<span class="linenos">26</span>      <span class="p">(</span><span class="mf">93.23</span><span class="p">,</span> <span class="mf">89.59</span><span class="p">),</span>
+<span class="linenos">27</span>      <span class="p">(</span><span class="mf">90.03</span><span class="p">,</span> <span class="mf">250.68</span><span class="p">),</span>
+<span class="linenos">28</span>   <span class="p">],</span>
+<span class="linenos">29</span>   <span class="s1">&#39;asks&#39;</span><span class="p">:</span> <span class="p">[</span>
+<span class="linenos">30</span>      <span class="p">(</span><span class="mf">99.11</span><span class="p">,</span> <span class="mf">5.81</span><span class="p">),</span>
+<span class="linenos">31</span>   <span class="p">]},</span>
+<span class="linenos">32</span>
+<span class="linenos">33</span>   <span class="c1"># update 2</span>
+<span class="linenos">34</span>   <span class="p">{</span>
+<span class="linenos">35</span>   <span class="s1">&#39;bids&#39;</span><span class="p">:</span> <span class="p">[</span>
+<span class="linenos">36</span>      <span class="p">(</span><span class="mf">99.07</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">),</span>
+<span class="linenos">37</span>      <span class="p">(</span><span class="mf">98.78</span><span class="p">,</span> <span class="mf">3.56</span><span class="p">),</span>
+<span class="linenos">38</span>      <span class="p">(</span><span class="mf">79.90</span><span class="p">,</span> <span class="mf">100.56</span><span class="p">),</span>
+<span class="linenos">39</span>   <span class="p">],</span>
+<span class="linenos">40</span>   <span class="s1">&#39;asks&#39;</span><span class="p">:</span> <span class="p">[</span>
+<span class="linenos">41</span>      <span class="p">(</span><span class="mf">103.78</span><span class="p">,</span> <span class="mf">90.77</span><span class="p">),</span>
+<span class="linenos">42</span>      <span class="p">(</span><span class="mf">105.02</span><span class="p">,</span> <span class="mf">123.43</span><span class="p">),</span>
+<span class="linenos">43</span>   <span class="p">]},</span>
+<span class="linenos">44</span>
+<span class="linenos">45</span>   <span class="c1"># update 3</span>
+<span class="linenos">46</span>   <span class="p">{</span>
+<span class="linenos">47</span>   <span class="s1">&#39;bids&#39;</span><span class="p">:</span> <span class="p">[</span>
+<span class="linenos">48</span>      <span class="p">(</span><span class="mf">98.78</span><span class="p">,</span> <span class="mf">11.56</span><span class="p">),</span>
+<span class="linenos">49</span>      <span class="p">(</span><span class="mf">95.65</span><span class="p">,</span> <span class="mf">67.78</span><span class="p">),</span>
+<span class="linenos">50</span>      <span class="p">(</span><span class="mf">94.23</span><span class="p">,</span> <span class="mf">56.76</span><span class="p">),</span>
+<span class="linenos">51</span>      <span class="p">(</span><span class="mf">93.23</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">),</span>
+<span class="linenos">52</span>      <span class="p">(</span><span class="mf">90.03</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">),</span>
+<span class="linenos">53</span>   <span class="p">],</span>
+<span class="linenos">54</span>   <span class="s1">&#39;asks&#39;</span><span class="p">:</span> <span class="p">[</span>
+<span class="linenos">55</span>      <span class="p">(</span><span class="mf">99.11</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">),</span>
+<span class="linenos">56</span>      <span class="p">(</span><span class="mf">100.89</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">),</span>
+<span class="linenos">57</span>      <span class="p">(</span><span class="mf">101.87</span><span class="p">,</span> <span class="mf">0.00</span><span class="p">),</span>
+<span class="linenos">58</span>      <span class="p">(</span><span class="mf">103.78</span><span class="p">,</span> <span class="mf">1.23</span><span class="p">),</span>
+<span class="linenos">59</span>      <span class="p">(</span><span class="mf">105.02</span><span class="p">,</span> <span class="mf">152.43</span><span class="p">),</span>
+<span class="linenos">60</span>   <span class="p">]}]</span>
+<span class="linenos">61</span>
+<span class="linenos">62</span> <span class="n">ob</span> <span class="o">=</span> <span class="n">Orderbook</span><span class="o">.</span><span class="n">from_snapshot</span><span class="p">(</span><span class="n">snapshot</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="linenos">63</span> <span class="n">ob</span><span class="o">.</span><span class="n">load_updates</span><span class="p">(</span><span class="n">updates</span><span class="p">)</span>
+<span class="linenos">64</span>
+<span class="linenos">65</span> <span class="n">ob</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+<span class="linenos">66</span>
+<span class="linenos">67</span> <span class="n">ob</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+<span class="linenos">68</span> <span class="n">ob</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+<span class="linenos">69</span>
+<span class="linenos">70</span> <span class="n">ob</span><span class="p">(</span><span class="n">OrderParams</span><span class="p">(</span><span class="n">OrderSide</span><span class="o">.</span><span class="n">BID</span><span class="p">,</span> <span class="mf">99.07</span><span class="p">,</span> <span class="mf">1.98</span><span class="p">))</span>
+<span class="linenos">71</span>
+<span class="linenos">72</span> <span class="n">ob</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+<span class="linenos">73</span> <span class="n">ob</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+<span class="linenos">74</span>
+<span class="linenos">75</span> <span class="n">ob</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+<span class="linenos">76</span> <span class="n">ob</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+<span class="linenos">77</span>
+<span class="linenos">78</span> <span class="n">ob</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
 <hr class="docutils" />
 <div style="text-align: center;"><h3>API Reference</h3></div><div class="line-block">
 <div class="line"><br /></div>

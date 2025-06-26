@@ -94,11 +94,7 @@ lob.render() # pretty-print the book
 lob.stop() # stop the background processes
 ```
 
-In the notebook [`simulate`](examples/simulate.ipynb) you will find an example of simulating the arrival of many orders using different distributions.
-
-In [`load_snapshot_updates`](examples/load_snapshot_updates.ipynb) you'll find an example of running the lob on historical data.
-
-**For more information and examples check out `https://fastlob.com`.**
+**For more examples please check out `https://fastlob.com`.**
 
 ## Contributing
 
