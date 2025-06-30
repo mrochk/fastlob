@@ -16,9 +16,9 @@
 
 |
 
-*This package is still being developed, bugs are expected. Do not use in production.*
+*This package is still being developed, bugs are expected.*
 
-*This is the very first version of the project, the idea was to have a working, correct and clean single-threaded version before making it fast. The next step is to rewrite the core parts in a concurrent fashion using multiprocessing. This should be done during summer 2025 on a separate branch and then merged to the main branch.*
+*This is the very first version of the project, the idea was to have a working, correct and clean single-threaded version before making it fast. The next step is to rewrite the core parts in a concurrent fashion using multiprocessing. This should be done during summer 2025 (checkout branch ``fast``).*
 
 *For now, I have decided to keep it written only in Python (no interfacing with C/C++), but that may change in the future.*
 
