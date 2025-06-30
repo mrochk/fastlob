@@ -138,7 +138,7 @@ class Limit:
         self.enqueue(self._fakeorder)
 
     def delete_fakeorder(self) -> None:
-        '''Deletes the current fake order, if no fake order is set it does nothing.'''
+        '''Deletes the current fake order, if fake order is not set, it does nothing.'''
 
         if self._fakeorder is None: return
         self.cancel_order(self._fakeorder)

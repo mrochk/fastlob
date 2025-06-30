@@ -10,7 +10,7 @@
 .. raw:: html
 
    <!--<div style="text-align: center;"><h1><code>fastlob</code></h1></div>-->
-   <div style="text-align: center;">Fast & minimalist limit-order-book implementation in Python.</div>
+   <div style="text-align: center;">Fast & minimalist limit-order-book implementation in Python, with almost no dependencies.</div>
    <br>
    <div style="text-align: center;"><a href="https://github.com/mrochk/fastlob">GitHub</a>  |  <a href="https://pypi.org/project/fastlob">PyPI</a></div>
 
@@ -18,11 +18,9 @@
 
 *This package is still being developed, bugs are expected. Do not use in production.*
 
-----------------
+*This is the very first version of the project, the idea was to have a working, correct and clean single-threaded version before making it fast. The next step is to rewrite the core parts in a concurrent fashion using multiprocessing. This should be done during summer 2025 on a separate branch and then merged to the main branch.*
 
-*I know that it does not make sense to call "fast" a single-threaded order-book implementation written in an interpreted language such as Python. And, in fact, this project is not fast at all yet.*
-
-*This is just the very first version of the project, the idea was to first have a working and clean pure-Python version. The next step is to rewrite the core order processing parts in concurrent C/C++. This will be done during summer 2025 on a separate branch and then merged to the main branch.*
+*For now, I have decided to keep it written only in Python (no interfacing with C/C++), but that may change in the future.*
 
 ----------------
 

@@ -9,11 +9,9 @@
 
 *Package currently in development, bugs are expected.*
 
-***
+*This is the very first version of the project, the idea was to have a working, correct and clean single-threaded version before making it fast. The next step is to rewrite the core parts in a concurrent fashion using multiprocessing. This should be done during summer 2025 on a separate branch and then merged to the main branch.*
 
-*I know that it does not make sense to call "fast" a single-threaded order-book implementation written in an interpreted language such as Python. And, in fact, this project is not fast at all yet.*
-
-*This is just the very first version of the project, the idea was to first have a working and clean pure-Python version. The next step is to rewrite the core order processing parts in concurrent C/C++. This will be done during summer 2025 on a separate branch and then merged to the main branch.*
+*For now, I have decided to keep it written only in Python (no interfacing with C/C++), but that may change in the future.*
 
 ***
 
@@ -101,3 +99,5 @@ lob.stop() # stop the background processes
 As mentioned earlier, this package is still in early development, and contributions are more than welcome.
 
 Please do not hesitate to contact me or directly submit a pull request if you'd like to contribute, there are also various issues open on Github.
+
+My e-mail: `mrochkoulets@gmail.com`
