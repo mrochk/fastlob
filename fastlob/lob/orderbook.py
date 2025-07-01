@@ -15,7 +15,7 @@ from fastlob.order import OrderParams, Order, AskOrder, BidOrder
 from fastlob.enums import OrderSide, OrderStatus, OrderType
 from fastlob.result import ResultBuilder, ExecutionResult
 from fastlob.utils import time_asint
-from fastlob.consts import DEFAULT_LIMITS_VIEW, TICK_SIZE_QTY 
+from fastlob.consts import * 
 
 from .utils import not_running_error, check_limit_order
 
@@ -184,13 +184,13 @@ class Orderbook:
         self._logger.info('processing order params')
 
         match orderparams.side:
-            case OrderSide.ASK:
-                order = AskOrder(orderparams)
-                result = self._process_ask_order(order)
-
             case OrderSide.BID:
                 order = BidOrder(orderparams)
                 result = self._process_bid_order(order)
+
+            case OrderSide.ASK:
+                order = AskOrder(orderparams)
+                result = self._process_ask_order(order)
 
         if result.success():
             self._logger.info('order [%s] was processed successfully', order.id())
@@ -379,16 +379,15 @@ class Orderbook:
         if n is None:
             bidvol = self.bids_volume()
             askvol = self.asks_volume()
-            return (bidvol / (askvol + bidvol)).quantize(TICK_SIZE_QTY)
+            return (bidvol / (askvol + bidvol))
 
-        max_prices = max(self.n_asks(), self.n_bids())
-        if n > max_prices:
+        if n > (max_prices := max(self.n_asks(), self.n_bids())):
             self._logger.error('calling ob.imbalance with n = %s, but max(nasks, nbids) = %s', n, max_prices)
             return None
 
         bidvol = sum([lim[1] for lim in self.best_bids(n)])
         askvol = sum([lim[1] for lim in self.best_asks(n)])
-        return (bidvol / (askvol + bidvol)).quantize(TICK_SIZE_QTY)
+        return (bidvol / (askvol + bidvol))
 
     def get_status(self, orderid: str) -> Optional[tuple[OrderStatus, Decimal]]:
         '''Get the status and the quantity left for a given order or None if order was not accepted by the lob.'''
@@ -421,7 +420,7 @@ class Orderbook:
 
         footer =  f'\n - spread = {self.spread()}'
         footer += f' | midprice = {self.midprice()}'
-        footer += f' | imbalance = {self.imbalance()}'
+        footer += f' | imbalance = {self.imbalance().quantize(TICK_SIZE_QTY)}'
         footer += f'\n - asks volume = {self.asks_volume()}'
         footer += f' | bids volume = {self.bids_volume()}'
 
