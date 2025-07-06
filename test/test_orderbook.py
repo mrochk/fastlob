@@ -103,7 +103,7 @@ class TestSide(unittest.TestCase):
         lob(OrderParams(OrderSide.ASK, 120, qty_ask))
         lob(OrderParams(OrderSide.BID, 95, qty_bid))
 
-        self.assertEqual(lob.imbalance(), (qty_bid / (qty_ask + qty_bid)).quantize(TICK_SIZE_QTY))
+        self.assertEqual(lob.imbalance(), qty_bid / (qty_ask + qty_bid))
 
         lob.stop()
 
