@@ -456,17 +456,8 @@ class Orderbook:
         self._updates = iter(updates)
         self._logger.info('updates iterator loaded')
 
-    def step(self):
-        '''Apply the updates in `next(updates)` to the lob.'''
-
-        if self._updates is None:
-            self._logger.warning('calling <ob.step> but nothing was loaded using <ob.load_updates>')
-            return
-
-        try: updates = next(self._updates)
-        except StopIteration:
-            self._logger.warning('calling <ob.step> but iterator is exhausted')
-            return
+    def step_updates(self, updates: dict):
+        '''Apply the updates directly to the lob.'''
 
         if not isinstance(updates, dict) or updates.keys() != {'bids', 'asks'}:
             raise ValueError('updates must be a dictionary containing "bids" and "asks" keys')
@@ -483,6 +474,20 @@ class Orderbook:
             self._bidside.apply_updates(bids)
 
         self._logger.info('updates applied successfully')
+
+    def step(self):
+        '''Apply the updates in `next(updates)` to the lob.'''
+
+        if self._updates is None:
+            self._logger.warning('calling <ob.step> but nothing was loaded using <ob.load_updates>')
+            return
+
+        try: updates = next(self._updates)
+        except StopIteration:
+            self._logger.warning('calling <ob.step> but iterator is exhausted')
+            return
+
+        self.step_updates(updates)
 
     # AUXILIARY FUNCS (where most of the work happens) #########################
 
