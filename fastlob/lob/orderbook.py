@@ -90,8 +90,6 @@ class Orderbook:
         if start: lob.start()
         return lob
 
-    # ORDERS PROCESSING ########################################################
-
     def start(self) -> None:
         '''Start the lob. Required before orders can be placed.'''
 
@@ -125,6 +123,21 @@ class Orderbook:
             return
 
         self.__init__(self._name)
+
+    def is_running(self) -> bool: return self._alive
+
+    # CONTEXT MANAGERS #########################################################
+
+    def __enter__(self): 
+        '''Start the LOB if not running.'''
+        if not self.is_running(): self.start()
+        return self
+
+    def __exit__(self, a, b, c):
+        '''Stop the LOB if running. Use default Python exceptions handling.'''
+        if self.is_running(): self.stop()
+
+    # ORDERS PROCESSING ########################################################
 
     def __call__(self, orderparams: OrderParams | Iterable[OrderParams]) -> ExecutionResult | list[ExecutionResult]:
         '''Process one or more order parameters.

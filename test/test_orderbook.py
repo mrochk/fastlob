@@ -140,3 +140,23 @@ class TestSide(unittest.TestCase):
         else: self.assertEqual(lob.midprice(), lob.weighted_midprice())
 
         lob.stop()
+
+    def test_context_manager(self):
+        with Orderbook() as lob:
+            self.assertTrue(lob.is_running())
+
+        with Orderbook(start=True) as lob:
+            self.assertTrue(lob.is_running())
+
+        with Orderbook(start=False) as lob:
+            self.assertTrue(lob.is_running())
+
+        lob = Orderbook(start=False)
+        with lob as l: self.assertTrue(l.is_running())
+        self.assertFalse(lob.is_running())
+
+        lob = Orderbook(start=True)
+        with lob as l: self.assertTrue(l.is_running())
+        self.assertFalse(lob.is_running())
+
+        
