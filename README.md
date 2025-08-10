@@ -59,40 +59,45 @@ To run the tests and check that everything is okay, run `make test` or `python3 
 This book runs at a fixed decimal precision through the Python `decimal` package. The decimal precision (also called *tick size*) can be set via the `FASTLOB_DECIMAL_PRECISION_PRICE` and `FASTLOB_DECIMAL_PRECISION_QTY` environment variables, if not set it defaults to 2.
 
 ```python
-# examples/basics.py
+# examples/quickstart.py
 
 import time, logging
 
-from fastlob import Orderbook, OrderParams, OrderSide, OrderType
+from fastlob import (
+    Orderbook, 
+    OrderParams, 
+    OrderSide, 
+    OrderType,
+)
 
 logging.basicConfig(level=logging.INFO) # maximum logging
 
-lob = Orderbook(name='MYLOB', start=True) # init and start lob
+with Orderbook(name='example') as lob: # init and start lob in cm
 
-# every order must be created this way 
-params = OrderParams(
-    side=OrderSide.BID, # is it a buy or sell order
-    price=123.32, quantity=3.42, # by default runs at 2 digits decimal precision
-    otype=OrderType.GTD, # good-till-date order
-    expiry=time.time() + 120 # order will expire in two minutes
-    # since order is GTD, expiry must be set to some future timestamp
-)
+    # every order must be created this way 
+    params = OrderParams(
+        side=OrderSide.BID, # is it a buy or sell order
+        price=123.32, quantity=3.42, # by default runs at 2 digits decimal precision
+        otype=OrderType.GTD, # good-till-date order
+        expiry=time.time() + 120 # order will expire in two minutes
+        # since order is GTD, expiry must be set to some future timestamp
+    )
 
-# -> at this point an exception will be raised if invalid attributes are provided
+    # -> at this point an exception will be raised if invalid attributes are provided
 
-result = lob(params) # let the book process the order
-assert result.success() # result object can be used to see various infos about the order execution
+    result = lob(params) # let the book process the order
+    assert result.success() # result object can be used to see various infos about the order execution
 
-# order uuid is used to query our order after it's been placed
-status, quantity_left = lob.get_order_status(result.orderid())
-print(f'Current order status: {status.name}, quantity left: {quantity_left}.\n')
+    # order uuid is used to query our order after it's been placed
+    status, quantity_left = lob.get_status(result.orderid())
+    print(f'Current order status: {status.name}, quantity left: {quantity_left}.\n')
 
-lob.render() # pretty-print the book
+    lob.render() # pretty-print the book state
 
-lob.stop() # stop the background processes
+# if lob not started using context manager, must call lob.stop() before terminating
 ```
 
-**For more examples please check out `https://fastlob.com`.**
+**For more examples please check out [`fastlob.com`](https://fastlob.com/).**
 
 ## Contributing
 
