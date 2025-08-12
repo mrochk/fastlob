@@ -53,7 +53,7 @@ Otherwise, one can build the project from source:
 
 .. code-block:: python
    :linenos:
-   :caption: Placing a limit GTD order and getting his status.
+   :caption: Placing a limit GTD order and getting its status.
 
    import time, logging
 
@@ -94,7 +94,7 @@ Otherwise, one can build the project from source:
 
 .. code-block:: python
    :linenos:
-   :caption: Simulate the LOB using various distributions.
+   :caption: Run a market simulation using various distributions.
 
    import random, time, os
    from scipy import stats
@@ -158,7 +158,7 @@ Otherwise, one can build the project from source:
 
 .. code-block:: python
    :linenos:
-   :caption: Using historical data. 
+   :caption: Running the lob using historical price levels data. 
 
    from fastlob import (
       Orderbook, 
