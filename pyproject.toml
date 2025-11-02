@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fastlob"
-version = "0.0.22"
+version = "0.0.23"
 description = "Fast & minimalist limit-order-book (LOB) implementation in pure Python."
 authors = [{name = "Maxime Rochkoulets", email = "mrochkoulets@gmail.com"}]
 maintainers = [{name = "Maxime Rochkoulets", email = "mrochkoulets@gmail.com"}]
