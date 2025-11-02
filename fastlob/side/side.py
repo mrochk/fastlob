@@ -90,6 +90,13 @@ class Side(abc.ABC):
         self.get_limit(price).enqueue(order)
         self._volume += order.quantity()
 
+    def update_order(self, order: Order, new_qty: Decimal) -> None:
+        '''Update an order sitting in the side.'''
+        diff = new_qty - order.quantity()
+        self._volume += diff
+        lim = self.get_limit(order.price())
+        lim.update_order(order, new_qty)
+
     def cancel_order(self, order: Order) -> None:
         '''Cancel an order sitting in the side.'''
 

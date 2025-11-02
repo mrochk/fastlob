@@ -1,39 +1,43 @@
 # fastlob | Python Limit-Order-Book
 <br>
 
-**Fast & minimalist limit-order-book (LOB) implementation in Python, with almost no dependencies.**
+**Limit-order-book (LOB) implementation in Python, with almost no dependencies.**
 
 <br>
 
 <img src="https://github.com/mrochk/pylob/raw/main/logo.png" width=800>
 
-*Package currently in development, bugs are expected.*
+*Package currently in development.*
 
-*This is the very first version of the project, the idea was to have a working, correct and clean single-threaded version before making it fast. The next step is to rewrite the core parts in a faster and concurrent fashion.*
-
-*For now, I have decided to keep it written only in Python (no interfacing with C/C++), but that may change in the future.*
+*For now, I have decided to keep this project in pure Python (no interfacing with C/C++), but that may change in the future.*
 
 ***
+
+A limit-order book is a useful tool for anyone working with high-frequency market data, and sometimes you just want to be able to quickly start one, feed your data and extract features.
+
+`fastlob` is not well named, the goal is not to be fast, but rather to provide a simple and useful implementation. Otherwise this would not be written in Python.  
+
+But if you want to quickly prototype a trading strategy, or analyze some historical data, this is the right package for you.
+
+This project was mainly born from the lack of good order-book packages in Python.  
 
 **Functionalities:**
 - Place limit orders.
 - Execute market orders.
 - Orders can be good-till-cancel (GTC), fill-or-kill (FOK) or good-till-date (GTD).
-- Cancel pending or partially filled orders.
+- Cancel / update pending or partially filled orders.
 - Query order status (pending, filled, partially filled, canceled...).
 - Set custom tick size for price and quantities.
-- Extract spread, midprice, volume, etc.
-- Simulate on historical data.
+- Extract lob features: spread, midprice, volume, imbalance...
+- Simulate historical market data.
 
 The goal is to build an efficient and easy to use package, with a clean and comprehensible API. 
 
-We aim to keep it minimalist and simple, while keeping reasonable performances (for a pure Python implementation). We intend the final project to contain no more than ~1000 lines of code.
+We aim to keep it minimalist and simple, while keeping reasonable performances (for a pure Python implementation). We intend the final project to contain no more than 2000 lines of code.
 
 We implement three types of orders: *FOK*, *GTC* and *GTD*. Every order is initially defined as limit, but will be executed as a market order if its price matches the best (bid or ask) limit price in the book.
 
 *In the case of GTD orders, the book only supports whole seconds for the order expiry (order can not be set to expire in 3.8 seconds, in this case it will be rounded to 4, nearest integer).*
-
-*We do not implement multi-threaded order processing yet, check out the corresponding issue for more infos.*
 
 ## Installation
 

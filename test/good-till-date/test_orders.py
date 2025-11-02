@@ -193,3 +193,32 @@ class TestOrdersGTD(unittest.TestCase):
         self.assertEqual(s, OrderStatus.CANCELED)
 
         lob.stop()
+
+    def test_update_after_expiry(self):
+        self.setUp()
+        lob = Orderbook('TestOrdersGTD'); lob.start()
+
+        p = OrderParams(OrderSide.ASK, 100, 10, OrderType.GTD, expiry=valid_expiry(2))
+        r = lob(p)
+
+        self.assertTrue(r.success())
+        self.assertEqual(lob.n_prices(), 1)
+        self.assertEqual(lob.asks_volume(), 10)
+        
+        s, _ = lob.get_status(r.orderid())
+        self.assertEqual(s, OrderStatus.PENDING)
+
+        u = lob.update(r.orderid(), 25)
+        self.assertTrue(u.success())
+        self.assertEqual(lob.asks_volume(), 25)
+
+        time.sleep(3.11)
+
+        s, _ = lob.get_status(r.orderid())
+        self.assertEqual(s, OrderStatus.CANCELED)
+
+        u = lob.update(r.orderid(), 30)
+        self.assertFalse(u.success())
+        self.assertEqual(lob.asks_volume(), 0)
+
+        lob.stop()

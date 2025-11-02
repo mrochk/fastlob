@@ -16,9 +16,9 @@
 
 |
 
-*This is the very first version of the project, the idea was to have a working, correct and clean single-threaded version before making it fast. The next step is to rewrite the core parts in a faster and concurrent fashion.*
+*Package currently in development.*
 
-*For now, I have decided to keep it written only in Python (no interfacing with C/C++), but that may change in the future.*
+*For now, I have decided to keep this project in pure Python (no interfacing with C/C++), but that may change in the future.*
 
 ----------------
 
