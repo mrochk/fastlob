@@ -304,3 +304,34 @@ class TestOrdersGTC(unittest.TestCase):
             self.assertEqual(q, 0)
 
         self.lob.stop()
+
+    def test_update_one(self):
+        with Orderbook('TEST_UPDATE_ONE') as lob:
+            self.assertEqual(lob.n_prices(), 0)
+
+            # placing a limit order
+            params = OrderParams(OrderSide.BID, 100.0, 1)
+            result = lob.process(params)
+            self.assertTrue(result.success())
+            p, v, n = lob.best_bid()
+            self.assertEqual(p, 100)
+            self.assertEqual(v, 1)
+            self.assertEqual(n, 1)
+            self.assertEqual(lob.n_prices(), 1)
+            self.assertEqual(lob.bids_volume(), 1)
+
+            result = lob.update(result.orderid(), 2)
+            p, v, n = lob.best_bid()
+            self.assertEqual(p, 100)
+            self.assertEqual(v, 2)
+            self.assertEqual(n, 1)
+            self.assertEqual(lob.bids_volume(), 2)
+            self.assertTrue(result.success())
+
+            result = lob.update(result.orderid(), -1)
+            self.assertFalse(result.success())
+            p, v, n = lob.best_bid()
+            self.assertEqual(p, 100)
+            self.assertEqual(v, 2)
+            self.assertEqual(n, 1)
+            self.assertEqual(lob.bids_volume(), 2)

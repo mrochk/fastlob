@@ -6,6 +6,7 @@ import logging
 import threading
 from decimal import Decimal
 from typing import Optional, Iterable
+from numbers import Number
 from sortedcontainers import SortedDict
 from termcolor import colored
 
@@ -14,7 +15,7 @@ from fastlob.side import AskSide, BidSide
 from fastlob.order import OrderParams, Order, AskOrder, BidOrder
 from fastlob.enums import OrderSide, OrderStatus, OrderType
 from fastlob.result import ResultBuilder, ExecutionResult
-from fastlob.utils import time_asint
+from fastlob.utils import time_asint, todecimal_quantity
 from fastlob.consts import * 
 
 from .utils import not_running_error, check_limit_order
@@ -218,8 +219,81 @@ class Orderbook:
 
         return result.build()
 
+    def update(self, orderid: str, new_qty: Number) -> ExecutionResult:
+        '''Update the quantity of an order sitting in the lob, given its id.
+
+        Args:
+            orderid (str): Identifier of the order to cancel.
+            new_qty (Number): New quantity of the order. Must be > 0, otherwise you should call `lob.cancel` instead.
+
+        Returns:
+            ExecutionResult: The result of the update.
+        '''
+        if not self._alive:
+            return not_running_error(self._logger).build()
+
+        self._logger.info('attempting to update order with id [%s] with new qty [%f]', orderid, new_qty)
+
+        result = ResultBuilder.new_update(orderid)
+
+        try: new_qty_decimal = todecimal_quantity(new_qty)
+        except:
+            result.set_success(False)
+            errmsg = f'new_qty [{new_qty}] could not be converted to valid decimal quantity'
+            result.add_message(errmsg)
+            self._logger.warning(errmsg)
+            return result.build()
+
+        if new_qty_decimal <= 0:
+            result.set_success(False)
+            errmsg = f'new_qty [{new_qty}] or new_qty_decimal [{new_qty_decimal}] must be > 0'
+            result.add_message(errmsg)
+            self._logger.warning(errmsg)
+            return result.build()
+
+        try: order = self._orders[orderid]
+        except KeyError:
+            result.set_success(False)
+            errmsg = f'order [{orderid}] not found in lob'
+            result.add_message(errmsg)
+            self._logger.warning(errmsg)
+            return result.build()
+
+        match order.side():
+            case OrderSide.BID:
+                with self._bidside.lock():
+
+                    if not order.valid():
+                        result.set_success(False)
+                        errmsg = f'order [{orderid}] can not be update (status={order.status()})'
+                        result.add_message(errmsg)
+                        self._logger.warning(errmsg)
+                        return result.build()
+
+                    self._logger.info('updating bid order [%s] to qty [%f]', orderid, new_qty_decimal)
+                    self._bidside.update_order(order, new_qty_decimal)
+
+            case OrderSide.ASK:
+                with self._askside.lock():
+
+                    if not order.valid():
+                        result.set_success(False)
+                        errmsg = f'order [{orderid}] can not be updated (status={order.status()})'
+                        result.add_message(errmsg)
+                        self._logger.warning(errmsg)
+                        return result.build()
+
+                    self._logger.info('updating ask order [%s] to qty [%f]', orderid, new_qty_decimal)
+                    self._askside.update_order(order, new_qty_decimal)
+
+        msg = f'order [{order.id()}] updated properly to [{new_qty_decimal}]'
+        result.set_success(True)
+        result.add_message(msg)
+        self._logger.info(msg)
+        return result.build()
+
     def cancel(self, orderid: str) -> ExecutionResult:
-        '''Cancel an order sitting in the lob given it's identifier.
+        '''Cancel an order sitting in the lob, given its id.
 
         Args:
             orderid (str): Identifier of the order to cancel.
@@ -243,23 +317,30 @@ class Orderbook:
             self._logger.warning(errmsg)
             return result.build()
 
-        if not order.valid():
-            result.set_success(False)
-            errmsg = f'order [{orderid}] can not be canceled (status={order.status()})'
-            result.add_message(errmsg)
-            self._logger.warning(errmsg)
-            return result.build()
-
-        self._logger.info('order %s can be canceled', orderid)
-
         match order.side():
             case OrderSide.BID:
                 with self._bidside.lock():
+
+                    if not order.valid():
+                        result.set_success(False)
+                        errmsg = f'order [{orderid}] can not be canceled (status={order.status()})'
+                        result.add_message(errmsg)
+                        self._logger.warning(errmsg)
+                        return result.build()
+
                     self._logger.info('cancelling bid order [%s]', orderid)
                     self._bidside.cancel_order(order)
 
             case OrderSide.ASK:
                 with self._askside.lock():
+
+                    if not order.valid():
+                        result.set_success(False)
+                        errmsg = f'order [{orderid}] can not be canceled (status={order.status()})'
+                        result.add_message(errmsg)
+                        self._logger.warning(errmsg)
+                        return result.build()
+
                     self._logger.info('cancelling ask order [%s]', orderid)
                     self._askside.cancel_order(order)
 

@@ -102,6 +102,12 @@ class Limit:
         self._valid_orders -= 1
         self._volume -= order.quantity()
 
+    def update_order(self, order: Order, new_qty: Decimal) -> None:
+        '''Update an order.'''
+        diff = new_qty - order.quantity()
+        self._volume += diff
+        order.update(new_qty)
+
     def cancel_order(self, order: Order) -> None:
         '''Cancel an order.'''
 

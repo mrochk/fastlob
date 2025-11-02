@@ -57,17 +57,20 @@ class OrderStatus(Enum):
 class ResultType(Enum):
     '''The type of execution result.'''
 
+    ERROR = 0
+    '''If the query could not be processed by the lob.'''
     LIMIT = 1
     '''If the order was placed in a limit.'''
     MARKET = 2
     '''If the order was executed as market.'''
     PARTIAL_MARKET = 3
     '''If the order was partially executed as market, and then placed in limit.'''
-    CANCEL = 4
+    UPDATE = 4
+    '''If the operation was an order update.'''
+    CANCEL = 5
     '''If the operation was an order cancellation.'''
-    ERROR = 5
-    '''If the query could not be processed by the lob.'''
 
     def in_limit(self) -> bool:
         '''True if the operation results in the order sitting in the limit.'''
         return self in {ResultType.LIMIT, ResultType.PARTIAL_MARKET}
+        # TODO add UPDATE ??

@@ -70,6 +70,10 @@ class Order(abc.ABC):
         if self.quantity() == 0: self.set_status(OrderStatus.FILLED); return
         self.set_status(OrderStatus.PARTIAL)
 
+    def update(self, quantity: Decimal):
+        '''Update the quantity of the order to some numerical value'''
+        self._quantity = quantity
+
     def valid(self) -> bool:
         '''True if order is valid (can be matched).'''
         return self.status() in OrderStatus.valid_states()

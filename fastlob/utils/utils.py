@@ -11,10 +11,10 @@ def todecimal_price(price: Number | str) -> Decimal:
 
     return _todecimal(price, DECIMAL_PRECISION_PRICE)
 
-def todecimal_quantity(price: Number | str) -> Decimal:
+def todecimal_quantity(quantity: Number | str) -> Decimal:
     '''Wrapper around the Decimal constructor to properly round numbers to user defined precision.'''
 
-    return _todecimal(price, DECIMAL_PRECISION_QTY)
+    return _todecimal(quantity, DECIMAL_PRECISION_QTY)
 
 def _todecimal(price: Number | str, precision: int) -> Decimal:
     '''Wrapper around the Decimal constructor to properly round numbers to user defined precision.'''
