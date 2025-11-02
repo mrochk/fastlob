@@ -40,6 +40,11 @@ class ResultBuilder:
         return result_market
 
     @staticmethod
+    def new_update(orderid: str):
+        '''Instantiate a new UPDATE result.'''
+        return ResultBuilder(ResultType.UPDATE, orderid)
+
+    @staticmethod
     def new_cancel(orderid: str):
         '''Instantiate a new CANCEL result.'''
         return ResultBuilder(ResultType.CANCEL, orderid)
