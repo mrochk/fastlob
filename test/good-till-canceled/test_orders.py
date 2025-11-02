@@ -335,3 +335,17 @@ class TestOrdersGTC(unittest.TestCase):
             self.assertEqual(v, 2)
             self.assertEqual(n, 1)
             self.assertEqual(lob.bids_volume(), 2)
+
+            market = OrderParams(OrderSide.ASK, 100, 1)
+            result = lob.process(market)
+            self.assertTrue(result.success())
+            p, v, n = lob.best_bid()
+            self.assertEqual(p, 100)
+            self.assertEqual(v, 1)
+            self.assertEqual(n, 1)
+            self.assertEqual(lob.bids_volume(), 1)
+
+            market = OrderParams(OrderSide.ASK, 100, 1)
+            result = lob.process(market)
+            self.assertTrue(result.success())
+            self.assertIsNone(lob.best_bid())
