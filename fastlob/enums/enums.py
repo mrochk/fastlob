@@ -72,5 +72,4 @@ class ResultType(Enum):
 
     def in_limit(self) -> bool:
         '''True if the operation results in the order sitting in the limit.'''
-        return self in {ResultType.LIMIT, ResultType.PARTIAL_MARKET}
-        # TODO add UPDATE ??
+        return self in {ResultType.LIMIT, ResultType.PARTIAL_MARKET, ResultType.UPDATE}
