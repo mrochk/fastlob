@@ -9,6 +9,9 @@ main.py
 #vscode
 .vscode
 
+doc/build/
+doc/build/**
+
 # C extensions
 *.so
 
