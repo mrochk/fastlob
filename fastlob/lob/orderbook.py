@@ -419,15 +419,29 @@ class Orderbook:
 
         return self.n_asks() + self.n_bids()
 
-    def bids_volume(self) -> Decimal:
+    def bids_volume(self, n: int = None) -> Decimal:
         '''Total volume on the bid side.'''
 
-        return self._bidside.volume()
+        if n is None:
+            return self._bidside.volume()
 
-    def asks_volume(self) -> Decimal:
+        sum_volume = 0
+        for (_, volume, _) in self.best_bids(n):
+            sum_volume += volume 
+
+        return sum_volume
+
+    def asks_volume(self, n : int = None) -> Decimal:
         '''Total volume on the ask side.'''
 
-        return self._askside.volume()
+        if n is None:
+            return self._askside.volume()
+
+        sum_volume = 0
+        for (_, volume, _) in self.best_asks(n):
+            sum_volume += volume 
+
+        return sum_volume
 
     def total_volume(self) -> Decimal:
         '''Total volume on ask and bid side.'''
@@ -444,7 +458,7 @@ class Orderbook:
         askprice, bidprice = self.best_ask()[0], self.best_bid()[0]
         return Decimal(0.5) * (askprice + bidprice)
 
-    def weighted_midprice(self) -> Optional[Decimal]:
+    def weighted_midprice(self, n: int = None) -> Optional[Decimal]:
         '''Get the lob weighted midprice.'''
 
         if self._askside.empty() or self._bidside.empty():
@@ -454,7 +468,13 @@ class Orderbook:
         ask_price, ask_volume, _ = self.best_ask()
         bid_price, bid_volume, _ = self.best_bid()
 
-        return (ask_volume * ask_price + bid_volume * bid_price) / (ask_volume + bid_volume)
+        if n is None: 
+            return (ask_volume * ask_price + bid_volume * bid_price) / (ask_volume + bid_volume)
+
+        sum_ask_volume = self.asks_volume(n)
+        sum_bid_volume = self.bids_volume(n)
+
+        return (sum_ask_volume * ask_price + sum_bid_volume * bid_price) / (sum_ask_volume + sum_bid_volume)
 
     def spread(self) -> Decimal:
         '''Get the lob spread.'''
